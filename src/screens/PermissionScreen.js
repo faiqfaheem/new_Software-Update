@@ -12,6 +12,8 @@ import {
   AppState,
 } from 'react-native';
 import { useLanguage } from '../i18n/LanguageContext';
+import { setStoredUsagePermission } from '../utils/storage';
+import { checkAllPermissions } from '../utils/permissions';
 
 const PermissionScreen = ({ navigation }) => {
   const { t } = useLanguage();
@@ -25,8 +27,8 @@ const PermissionScreen = ({ navigation }) => {
   });
 
   useEffect(() => {
-    // Initial sequential permission check on mount
-    evaluatePermissions(false);
+    // Initial sequential permission check on mount (auto-navigate if already complete)
+    evaluatePermissions(true);
 
     // Native AppState foreground listener (Settings Recovery Logic)
     const subscription = AppState.addEventListener('change', (nextAppState) => {
@@ -51,50 +53,14 @@ const PermissionScreen = ({ navigation }) => {
    * @param {boolean} autoNavigateIfComplete - If true and all permissions GRANTED, reset stack to HomeScreen
    */
   const evaluatePermissions = async (autoNavigateIfComplete = false) => {
-    if (Platform.OS !== 'android') {
-      const allTrue = { storage: true, camera: true, microphone: true, usage: true };
-      setPermissions(allTrue);
-      if (autoNavigateIfComplete) {
-        navigateToHome();
-      }
-      return allTrue;
-    }
-
     try {
-      // 1. Storage Permission Verification
-      let isStorageGranted = false;
-      if (Platform.Version >= 33) {
-        const hasImages = await PermissionsAndroid.check(PermissionsAndroid.PERMISSIONS.READ_MEDIA_IMAGES);
-        const hasVideo = await PermissionsAndroid.check(PermissionsAndroid.PERMISSIONS.READ_MEDIA_VIDEO);
-        isStorageGranted = hasImages || hasVideo;
-      } else {
-        isStorageGranted = await PermissionsAndroid.check(PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE);
+      const { isAllGranted, permissions: updated } = await checkAllPermissions();
+      setPermissions(updated);
+
+      // Strict Navigation Barrier: Auto-navigate ONLY if ALL permissions strictly evaluate to GRANTED
+      if (isAllGranted && autoNavigateIfComplete) {
+        setTimeout(() => navigateToHome(), 100);
       }
-
-      // 2. Camera Permission Verification
-      const isCameraGranted = await PermissionsAndroid.check(PermissionsAndroid.PERMISSIONS.CAMERA);
-
-      // 3. Microphone Permission Verification
-      const isMicrophoneGranted = await PermissionsAndroid.check(PermissionsAndroid.PERMISSIONS.RECORD_AUDIO);
-
-      // 4. Usage Access Verification (Preserve local usage state if user enabled it via Settings intent)
-      setPermissions((prev) => {
-        const updated = {
-          storage: isStorageGranted,
-          camera: isCameraGranted,
-          microphone: isMicrophoneGranted,
-          usage: prev.usage,
-        };
-
-        const isAllGranted = updated.storage && updated.camera && updated.microphone && updated.usage;
-
-        // Strict Navigation Barrier: Auto-navigate ONLY if ALL permissions strictly evaluate to GRANTED
-        if (isAllGranted && autoNavigateIfComplete) {
-          setTimeout(() => navigateToHome(), 100);
-        }
-
-        return updated;
-      });
     } catch (err) {
       console.warn('Error during permission evaluation:', err);
     }
@@ -155,7 +121,8 @@ const PermissionScreen = ({ navigation }) => {
           showOpenSettingsAlert('Microphone Permission');
         }
       } else if (type === 'usage') {
-        // Mark usage state as allowed and trigger native Usage Access settings intent
+        // Persist local usage state and trigger native Usage Access settings intent
+        await setStoredUsagePermission(true);
         setPermissions((prev) => ({ ...prev, usage: true }));
         try {
           await Linking.sendIntent('android.settings.USAGE_ACCESS_SETTINGS');

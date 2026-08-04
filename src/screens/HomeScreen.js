@@ -67,7 +67,12 @@ const HomeScreen = () => {
   };
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={styles.content}
+      showsVerticalScrollIndicator={true}
+      alwaysBounceVertical={true}
+    >
       <Text style={styles.headerTitle}>{t('appHeaderTitle')}</Text>
       <Text style={styles.headerSubtitle}>{t('appHeaderSub')}</Text>
 
@@ -125,6 +130,7 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: 20,
+    paddingBottom: 50,
   },
   headerTitle: {
     fontSize: 24,

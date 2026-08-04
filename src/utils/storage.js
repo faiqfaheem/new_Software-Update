@@ -3,6 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 export const KEYS = {
   LANGUAGE: '@user_language',
   FIRST_LAUNCH_COMPLETED: 'isFirstLaunchCompleted',
+  USAGE_PERMISSION_GRANTED: '@usage_permission_granted',
 };
 
 /**
@@ -53,6 +54,30 @@ export const setFirstLaunchCompleted = async (completed) => {
 };
 
 /**
+ * Get stored usage permission status
+ */
+export const getStoredUsagePermission = async () => {
+  try {
+    const value = await AsyncStorage.getItem(KEYS.USAGE_PERMISSION_GRANTED);
+    return value === 'true';
+  } catch (e) {
+    console.error('Error reading usage permission state:', e);
+    return false;
+  }
+};
+
+/**
+ * Save stored usage permission status
+ */
+export const setStoredUsagePermission = async (granted) => {
+  try {
+    await AsyncStorage.setItem(KEYS.USAGE_PERMISSION_GRANTED, granted ? 'true' : 'false');
+  } catch (e) {
+    console.error('Error saving usage permission state:', e);
+  }
+};
+
+/**
  * Reset all stored app preferences
  */
 export const clearAppPreferences = async () => {
@@ -60,6 +85,7 @@ export const clearAppPreferences = async () => {
     await AsyncStorage.multiRemove([
       KEYS.LANGUAGE,
       KEYS.FIRST_LAUNCH_COMPLETED,
+      KEYS.USAGE_PERMISSION_GRANTED,
     ]);
   } catch (e) {
     console.error('Error clearing preferences:', e);
