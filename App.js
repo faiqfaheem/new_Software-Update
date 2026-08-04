@@ -15,6 +15,7 @@ import AllAppsScreen from './src/screens/AllAppsScreen';
 import BulkUninstallerScreen from './src/screens/BulkUninstallerScreen';
 import StorageInfoScreen from './src/screens/StorageInfoScreen';
 import PermissionManagerScreen from './src/screens/PermissionManagerScreen';
+import PhoneSensorScreen from './src/screens/PhoneSensorScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -41,6 +42,7 @@ const App = () => {
           <Stack.Screen name="BulkUninstallerScreen" component={BulkUninstallerScreen} />
           <Stack.Screen name="StorageInfoScreen" component={StorageInfoScreen} />
           <Stack.Screen name="PermissionManagerScreen" component={PermissionManagerScreen} />
+          <Stack.Screen name="PhoneSensorScreen" component={PhoneSensorScreen} />
         </Stack.Navigator>
       </NavigationContainer>
     </LanguageProvider>

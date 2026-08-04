@@ -69,7 +69,7 @@ const HomeScreen = ({ navigation }) => {
   };
 
   const handlePhoneSensor = () => {
-    Alert.alert('Phone Sensor', 'Hardware Sensors & Diagnostics Check\n\n[Action Executed]');
+    navigation.navigate('PhoneSensorScreen');
   };
 
   return (
