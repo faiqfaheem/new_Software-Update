@@ -18,6 +18,8 @@ import PermissionManagerScreen from './src/screens/PermissionManagerScreen';
 import PhoneSensorScreen from './src/screens/PhoneSensorScreen';
 import DisplayTestScreen from './src/screens/DisplayTestScreen';
 import FlashlightTestScreen from './src/screens/FlashlightTestScreen';
+import TapTestScreen from './src/screens/TapTestScreen';
+import ScreenAreaTestScreen from './src/screens/ScreenAreaTestScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -47,6 +49,8 @@ const App = () => {
           <Stack.Screen name="PhoneSensorScreen" component={PhoneSensorScreen} />
           <Stack.Screen name="DisplayTestScreen" component={DisplayTestScreen} />
           <Stack.Screen name="FlashlightTestScreen" component={FlashlightTestScreen} />
+          <Stack.Screen name="TapTestScreen" component={TapTestScreen} />
+          <Stack.Screen name="ScreenAreaTestScreen" component={ScreenAreaTestScreen} />
         </Stack.Navigator>
       </NavigationContainer>
     </LanguageProvider>

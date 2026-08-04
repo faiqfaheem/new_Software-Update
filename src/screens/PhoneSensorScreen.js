@@ -57,6 +57,10 @@ const PhoneSensorScreen = ({ navigation }) => {
       navigation.navigate('DisplayTestScreen');
     } else if (test.title === 'Flash Light' || test.id === '2') {
       navigation.navigate('FlashlightTestScreen');
+    } else if (test.title === 'Tap Test' || test.id === '3') {
+      navigation.navigate('TapTestScreen');
+    } else if (test.title === 'Screen Area' || test.id === '4') {
+      navigation.navigate('ScreenAreaTestScreen');
     } else {
       Alert.alert(test.title, `${test.subtitle}\n\n[Sensor Test Launched]`);
     }
