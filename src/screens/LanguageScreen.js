@@ -12,7 +12,7 @@ const LanguageScreen = ({ navigation }) => {
   const { language, changeLanguage, t, LANGUAGES } = useLanguage();
 
   const handleContinue = async () => {
-    navigation.navigate('PermissionScreen');
+    navigation.navigate('OnboardingScreen');
   };
 
   const renderItem = ({ item }) => {
@@ -115,7 +115,7 @@ const styles = StyleSheet.create({
     borderRadius: 11,
     borderWidth: 2,
     borderColor: '#64748B',
-    justify: 'center',
+    justifyContent: 'center',
     alignItems: 'center',
   },
   radioOuterSelected: {

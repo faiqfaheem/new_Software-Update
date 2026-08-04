@@ -2,8 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export const KEYS = {
   LANGUAGE: '@user_language',
-  PERMISSIONS_GRANTED: '@has_granted_permissions',
-  ONBOARDING_COMPLETED: '@has_completed_onboarding',
+  FIRST_LAUNCH_COMPLETED: 'isFirstLaunchCompleted',
 };
 
 /**
@@ -30,62 +29,37 @@ export const setStoredLanguage = async (languageCode) => {
 };
 
 /**
- * Get permissions granted status from AsyncStorage
+ * Get first launch completed status from AsyncStorage
  */
-export const getPermissionsSavedStatus = async () => {
+export const getFirstLaunchCompleted = async () => {
   try {
-    const value = await AsyncStorage.getItem(KEYS.PERMISSIONS_GRANTED);
+    const value = await AsyncStorage.getItem(KEYS.FIRST_LAUNCH_COMPLETED);
     return value === 'true';
   } catch (e) {
-    console.error('Error reading permissions saved status:', e);
+    console.error('Error reading first launch completed status:', e);
     return false;
   }
 };
 
 /**
- * Save permissions granted status to AsyncStorage
+ * Save first launch completed status to AsyncStorage
  */
-export const setPermissionsSavedStatus = async (granted) => {
+export const setFirstLaunchCompleted = async (completed) => {
   try {
-    await AsyncStorage.setItem(KEYS.PERMISSIONS_GRANTED, granted ? 'true' : 'false');
+    await AsyncStorage.setItem(KEYS.FIRST_LAUNCH_COMPLETED, completed ? 'true' : 'false');
   } catch (e) {
-    console.error('Error saving permissions status:', e);
+    console.error('Error saving first launch completed status:', e);
   }
 };
 
 /**
- * Get onboarding status from AsyncStorage
- */
-export const getOnboardingStatus = async () => {
-  try {
-    const value = await AsyncStorage.getItem(KEYS.ONBOARDING_COMPLETED);
-    return value === 'true';
-  } catch (e) {
-    console.error('Error reading onboarding status:', e);
-    return false;
-  }
-};
-
-/**
- * Save onboarding completion status
- */
-export const setOnboardingStatus = async (completed) => {
-  try {
-    await AsyncStorage.setItem(KEYS.ONBOARDING_COMPLETED, completed ? 'true' : 'false');
-  } catch (e) {
-    console.error('Error saving onboarding status:', e);
-  }
-};
-
-/**
- * Reset all stored preferences (Language, Permissions & Onboarding)
+ * Reset all stored app preferences
  */
 export const clearAppPreferences = async () => {
   try {
     await AsyncStorage.multiRemove([
       KEYS.LANGUAGE,
-      KEYS.PERMISSIONS_GRANTED,
-      KEYS.ONBOARDING_COMPLETED,
+      KEYS.FIRST_LAUNCH_COMPLETED,
     ]);
   } catch (e) {
     console.error('Error clearing preferences:', e);

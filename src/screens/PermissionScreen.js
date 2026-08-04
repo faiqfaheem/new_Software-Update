@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -11,11 +11,12 @@ import {
   Alert,
   AppState,
 } from 'react-native';
-import { setPermissionsSavedStatus } from '../utils/storage';
 import { useLanguage } from '../i18n/LanguageContext';
 
 const PermissionScreen = ({ navigation }) => {
   const { t } = useLanguage();
+  const appStateRef = useRef(AppState.currentState);
+
   const [permissions, setPermissions] = useState({
     storage: false,
     camera: false,
@@ -24,26 +25,43 @@ const PermissionScreen = ({ navigation }) => {
   });
 
   useEffect(() => {
-    checkPermissions();
+    // Initial sequential permission check on mount
+    evaluatePermissions(false);
 
+    // Native AppState foreground listener (Settings Recovery Logic)
     const subscription = AppState.addEventListener('change', (nextAppState) => {
-      if (nextAppState === 'active') {
-        checkPermissions();
+      if (
+        appStateRef.current.match(/inactive|background/) &&
+        nextAppState === 'active'
+      ) {
+        // App returned to foreground (e.g., from Settings) -> Re-verify live permissions
+        evaluatePermissions(true);
       }
+      appStateRef.current = nextAppState;
     });
 
     return () => {
+      // Clean up AppState listener on unmount to prevent memory leaks
       subscription.remove();
     };
   }, []);
 
-  const checkPermissions = async () => {
+  /**
+   * Strictly evaluates all required Android system permissions
+   * @param {boolean} autoNavigateIfComplete - If true and all permissions GRANTED, reset stack to HomeScreen
+   */
+  const evaluatePermissions = async (autoNavigateIfComplete = false) => {
     if (Platform.OS !== 'android') {
-      setPermissions({ storage: true, camera: true, microphone: true, usage: true });
-      return;
+      const allTrue = { storage: true, camera: true, microphone: true, usage: true };
+      setPermissions(allTrue);
+      if (autoNavigateIfComplete) {
+        navigateToHome();
+      }
+      return allTrue;
     }
 
     try {
+      // 1. Storage Permission Verification
       let isStorageGranted = false;
       if (Platform.Version >= 33) {
         const hasImages = await PermissionsAndroid.check(PermissionsAndroid.PERMISSIONS.READ_MEDIA_IMAGES);
@@ -53,24 +71,44 @@ const PermissionScreen = ({ navigation }) => {
         isStorageGranted = await PermissionsAndroid.check(PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE);
       }
 
-      const camera = await PermissionsAndroid.check(PermissionsAndroid.PERMISSIONS.CAMERA);
-      const microphone = await PermissionsAndroid.check(PermissionsAndroid.PERMISSIONS.RECORD_AUDIO);
+      // 2. Camera Permission Verification
+      const isCameraGranted = await PermissionsAndroid.check(PermissionsAndroid.PERMISSIONS.CAMERA);
 
-      setPermissions((prev) => ({
-        ...prev,
-        storage: isStorageGranted,
-        camera: camera,
-        microphone: microphone,
-        usage: prev.usage,
-      }));
+      // 3. Microphone Permission Verification
+      const isMicrophoneGranted = await PermissionsAndroid.check(PermissionsAndroid.PERMISSIONS.RECORD_AUDIO);
+
+      // 4. Usage Access Verification (Preserve local usage state if user enabled it via Settings intent)
+      setPermissions((prev) => {
+        const updated = {
+          storage: isStorageGranted,
+          camera: isCameraGranted,
+          microphone: isMicrophoneGranted,
+          usage: prev.usage,
+        };
+
+        const isAllGranted = updated.storage && updated.camera && updated.microphone && updated.usage;
+
+        // Strict Navigation Barrier: Auto-navigate ONLY if ALL permissions strictly evaluate to GRANTED
+        if (isAllGranted && autoNavigateIfComplete) {
+          setTimeout(() => navigateToHome(), 100);
+        }
+
+        return updated;
+      });
     } catch (err) {
-      console.warn('Error checking permissions:', err);
+      console.warn('Error during permission evaluation:', err);
     }
   };
 
-  const requestPermission = async (type) => {
+  /**
+   * Triggers system permission prompt or Settings intent for a specific permission item
+   */
+  const requestPermissionItem = async (type) => {
     if (Platform.OS !== 'android') {
-      setPermissions((prev) => ({ ...prev, [type]: true }));
+      setPermissions((prev) => {
+        const next = { ...prev, [type]: true };
+        return next;
+      });
       return;
     }
 
@@ -85,24 +123,39 @@ const PermissionScreen = ({ navigation }) => {
           const imagesGranted = granted[PermissionsAndroid.PERMISSIONS.READ_MEDIA_IMAGES] === PermissionsAndroid.RESULTS.GRANTED;
           const videoGranted = granted[PermissionsAndroid.PERMISSIONS.READ_MEDIA_VIDEO] === PermissionsAndroid.RESULTS.GRANTED;
 
-          setPermissions((prev) => ({ ...prev, storage: imagesGranted || videoGranted }));
+          if (!imagesGranted && !videoGranted) {
+            // Permanently denied or blocked -> prompt to Open Settings
+            showOpenSettingsAlert('Storage & Media Access');
+          } else {
+            setPermissions((prev) => ({ ...prev, storage: true }));
+          }
         } else {
           const res = await PermissionsAndroid.request(
             PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE
           );
-          setPermissions((prev) => ({ ...prev, storage: res === PermissionsAndroid.RESULTS.GRANTED }));
+
+          if (res === PermissionsAndroid.RESULTS.GRANTED) {
+            setPermissions((prev) => ({ ...prev, storage: true }));
+          } else if (res === PermissionsAndroid.RESULTS.NEVER_ASK_AGAIN) {
+            showOpenSettingsAlert('Storage Access');
+          }
         }
       } else if (type === 'camera') {
-        const res = await PermissionsAndroid.request(
-          PermissionsAndroid.PERMISSIONS.CAMERA
-        );
-        setPermissions((prev) => ({ ...prev, camera: res === PermissionsAndroid.RESULTS.GRANTED }));
+        const res = await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.CAMERA);
+        if (res === PermissionsAndroid.RESULTS.GRANTED) {
+          setPermissions((prev) => ({ ...prev, camera: true }));
+        } else if (res === PermissionsAndroid.RESULTS.NEVER_ASK_AGAIN) {
+          showOpenSettingsAlert('Camera Permission');
+        }
       } else if (type === 'microphone') {
-        const res = await PermissionsAndroid.request(
-          PermissionsAndroid.PERMISSIONS.RECORD_AUDIO
-        );
-        setPermissions((prev) => ({ ...prev, microphone: res === PermissionsAndroid.RESULTS.GRANTED }));
+        const res = await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.RECORD_AUDIO);
+        if (res === PermissionsAndroid.RESULTS.GRANTED) {
+          setPermissions((prev) => ({ ...prev, microphone: true }));
+        } else if (res === PermissionsAndroid.RESULTS.NEVER_ASK_AGAIN) {
+          showOpenSettingsAlert('Microphone Permission');
+        }
       } else if (type === 'usage') {
+        // Mark usage state as allowed and trigger native Usage Access settings intent
         setPermissions((prev) => ({ ...prev, usage: true }));
         try {
           await Linking.sendIntent('android.settings.USAGE_ACCESS_SETTINGS');
@@ -111,14 +164,44 @@ const PermissionScreen = ({ navigation }) => {
         }
       }
     } catch (err) {
-      console.warn('Error requesting permission:', err);
+      console.warn('Error requesting permission item:', err);
     }
   };
 
-  const allPermissionsGranted = permissions.storage && permissions.camera && permissions.microphone && permissions.usage;
+  /**
+   * Alert prompt offering direct redirection to Android App Settings
+   */
+  const showOpenSettingsAlert = (permissionName) => {
+    Alert.alert(
+      'Permission Blocked',
+      `${permissionName} is permanently denied or blocked. Please enable it manually in Android System Settings.`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Open Settings',
+          onPress: () => Linking.openSettings(),
+        },
+      ]
+    );
+  };
 
-  const handleContinue = async () => {
-    if (!allPermissionsGranted) {
+  /**
+   * Reset navigation stack to HomeScreen (invoked ONLY when all permissions strictly evaluate to GRANTED)
+   */
+  const navigateToHome = () => {
+    navigation.reset({
+      index: 0,
+      routes: [{ name: 'HomeScreen' }],
+    });
+  };
+
+  const isAllGranted = permissions.storage && permissions.camera && permissions.microphone && permissions.usage;
+
+  /**
+   * Main Continue Action Button Handler
+   */
+  const handleProceed = () => {
+    if (!isAllGranted) {
       const missing = [];
       if (!permissions.storage) missing.push(t('storageTitle'));
       if (!permissions.camera) missing.push(t('cameraTitle'));
@@ -127,16 +210,23 @@ const PermissionScreen = ({ navigation }) => {
 
       Alert.alert(
         t('appPermissions'),
-        `${t('allPermissionsRequiredSub')}:\n\n• ${missing.join('\n• ')}`
+        `${t('allPermissionsRequiredSub')}:\n\n• ${missing.join('\n• ')}`,
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Open Settings',
+            onPress: () => Linking.openSettings(),
+          },
+        ]
       );
       return;
     }
 
-    await setPermissionsSavedStatus(true);
-    navigation.navigate('OnboardingScreen');
+    // Strict Barrier Verified -> Reset stack to HomeScreen
+    navigateToHome();
   };
 
-  const PERMISSION_LIST = [
+  const PERMISSION_ITEMS = [
     { key: 'storage', title: t('storageTitle'), subtitle: t('storageSub') },
     { key: 'camera', title: t('cameraTitle'), subtitle: t('cameraSub') },
     { key: 'microphone', title: t('micTitle'), subtitle: t('micSub') },
@@ -149,13 +239,13 @@ const PermissionScreen = ({ navigation }) => {
       <Text style={styles.subtitle}>{t('allPermissionsRequiredSub')}</Text>
 
       <ScrollView style={styles.list}>
-        {PERMISSION_LIST.map((item) => {
+        {PERMISSION_ITEMS.map((item) => {
           const isGranted = permissions[item.key];
           return (
             <TouchableOpacity
               key={item.key}
               style={[styles.item, isGranted && styles.itemGrantedBorder]}
-              onPress={() => requestPermission(item.key)}
+              onPress={() => requestPermissionItem(item.key)}
             >
               <View style={styles.itemTextContainer}>
                 <Text style={styles.itemTitle}>{item.title}</Text>
@@ -171,11 +261,11 @@ const PermissionScreen = ({ navigation }) => {
       </ScrollView>
 
       <TouchableOpacity
-        style={[styles.continueButton, !allPermissionsGranted && styles.disabledButton]}
-        onPress={handleContinue}
+        style={[styles.continueButton, !isAllGranted && styles.disabledButton]}
+        onPress={handleProceed}
       >
         <Text style={styles.continueText}>
-          {allPermissionsGranted ? t('continue') : t('grantAll')}
+          {isAllGranted ? t('continue') : t('grantAll')}
         </Text>
       </TouchableOpacity>
     </View>

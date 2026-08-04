@@ -7,7 +7,7 @@ import {
   FlatList,
   Dimensions,
 } from 'react-native';
-import { setOnboardingStatus } from '../utils/storage';
+import { setFirstLaunchCompleted } from '../utils/storage';
 import { useLanguage } from '../i18n/LanguageContext';
 
 const { width } = Dimensions.get('window');
@@ -44,20 +44,15 @@ const OnboardingScreen = ({ navigation }) => {
       setCurrentIndex(nextIndex);
       flatListRef.current?.scrollToIndex({ index: nextIndex, animated: true });
     } else {
-      await setOnboardingStatus(true);
-      navigation.reset({
-        index: 0,
-        routes: [{ name: 'HomeScreen' }],
-      });
+      // Final slide completed: Write isFirstLaunchCompleted = 'true'
+      await setFirstLaunchCompleted(true);
+      navigation.navigate('PermissionScreen');
     }
   };
 
   const handleSkip = async () => {
-    await setOnboardingStatus(true);
-    navigation.reset({
-      index: 0,
-      routes: [{ name: 'HomeScreen' }],
-    });
+    await setFirstLaunchCompleted(true);
+    navigation.navigate('PermissionScreen');
   };
 
   const renderSlide = ({ item }) => {

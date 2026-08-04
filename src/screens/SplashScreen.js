@@ -1,55 +1,31 @@
 import React, { useEffect } from 'react';
 import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';
-import {
-  getStoredLanguage,
-  getPermissionsSavedStatus,
-  getOnboardingStatus,
-} from '../utils/storage';
+import { getFirstLaunchCompleted } from '../utils/storage';
 
 const SplashScreen = ({ navigation }) => {
   useEffect(() => {
-    checkAppState();
+    checkAppLaunchState();
   }, []);
 
-  const checkAppState = async () => {
+  const checkAppLaunchState = async () => {
     try {
-      // 1. Check Selected Language
-      const language = await getStoredLanguage();
-      if (!language) {
+      const isFirstLaunchCompleted = await getFirstLaunchCompleted();
+
+      if (!isFirstLaunchCompleted) {
+        // First Time User: LanguageScreen -> OnboardingScreen -> PermissionScreen
         navigation.reset({
           index: 0,
           routes: [{ name: 'LanguageScreen' }],
         });
-        return;
-      }
-
-      // 2. Check Permissions Status (If already granted once, skip PermissionScreen)
-      const hasGrantedPermissions = await getPermissionsSavedStatus();
-      if (!hasGrantedPermissions) {
+      } else {
+        // Returning User: Direct to PermissionScreen for live status verification
         navigation.reset({
           index: 0,
           routes: [{ name: 'PermissionScreen' }],
         });
-        return;
       }
-
-      // 3. Check Onboarding Status
-      const hasCompletedOnboarding = await getOnboardingStatus();
-      if (!hasCompletedOnboarding) {
-        navigation.reset({
-          index: 0,
-          routes: [{ name: 'OnboardingScreen' }],
-        });
-        return;
-      }
-
-      // 4. All set -> Navigate directly to HomeScreen
-      navigation.reset({
-        index: 0,
-        routes: [{ name: 'HomeScreen' }],
-      });
     } catch (error) {
-      console.error('Error during app initialization:', error);
+      console.error('Error checking launch state:', error);
       navigation.reset({
         index: 0,
         routes: [{ name: 'LanguageScreen' }],
@@ -59,8 +35,8 @@ const SplashScreen = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
-      <ActivityIndicator size="large" color="#007AFF" />
-      <Text style={styles.loadingText}>Loading App...</Text>
+      <ActivityIndicator size="large" color="#4C82F6" />
+      <Text style={styles.loadingText}>Initializing App...</Text>
     </View>
   );
 };
@@ -70,12 +46,12 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#F5F5F5',
+    backgroundColor: '#0F1424',
   },
   loadingText: {
     marginTop: 15,
     fontSize: 16,
-    color: '#333333',
+    color: '#94A3B8',
   },
 });
 
