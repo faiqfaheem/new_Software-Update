@@ -1,0 +1,258 @@
+import React, { useState } from 'react';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  SafeAreaView,
+  StatusBar,
+  Linking,
+} from 'react-native';
+
+const WhitePlaceholder = ({ size = 22, borderRadius = 4, color = '#FFFFFF' }) => (
+  <View
+    style={{
+      width: size,
+      height: size,
+      backgroundColor: color,
+      borderRadius: borderRadius,
+    }}
+  />
+);
+
+const BackArrow = ({ color = '#FFFFFF', size = 22 }) => (
+  <Text style={{ color, fontSize: size, fontWeight: 'bold' }}>←</Text>
+);
+
+const FlashlightTestScreen = ({ navigation }) => {
+  const [isFlashlightOn, setIsFlashlightOn] = useState(false);
+
+  const handleToggleFlashlight = (status) => {
+    setIsFlashlightOn(status);
+  };
+
+  const handleSettingsPress = () => {
+    Linking.openSettings();
+  };
+
+  const handleResultPress = (passed) => {
+    navigation.goBack();
+  };
+
+  return (
+    <SafeAreaView style={styles.safeArea}>
+      <StatusBar barStyle="light-content" backgroundColor="#0B1120" />
+
+      {/* Header Bar */}
+      <View style={styles.headerBar}>
+        <View style={styles.headerLeftGroup}>
+          <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+            <BackArrow size={22} color="#FFFFFF" />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Flash Light Test</Text>
+        </View>
+
+        <TouchableOpacity style={styles.settingsButton} onPress={handleSettingsPress}>
+          <WhitePlaceholder size={18} borderRadius={4} color="#FFFFFF" />
+        </TouchableOpacity>
+      </View>
+
+      {/* Main Content Body */}
+      <View style={styles.container}>
+        {/* Top Hero Section */}
+        <View style={styles.heroSection}>
+          <View style={styles.placeholderContainer}>
+            <WhitePlaceholder size={70} borderRadius={16} color="#FFFFFF" />
+          </View>
+
+          <Text style={styles.instructionText}>
+            Tap to turn the flashlight ON/OFF.
+          </Text>
+
+          <Text style={styles.sectionTitle}>
+            Flashlight Functionality
+          </Text>
+
+          {/* Toggle Buttons Row (ON / OFF) */}
+          <View style={styles.toggleRow}>
+            {/* ON Button */}
+            <TouchableOpacity
+              style={[styles.togglePill, isFlashlightOn ? styles.onPillActive : styles.onPillInactive]}
+              onPress={() => handleToggleFlashlight(true)}
+            >
+              <View style={styles.dotContainer}>
+                <WhitePlaceholder size={10} borderRadius={5} color={isFlashlightOn ? '#FFFFFF' : '#84CC16'} />
+              </View>
+              <Text style={[styles.toggleText, isFlashlightOn ? styles.toggleTextActive : styles.toggleTextInactive]}>
+                ON
+              </Text>
+            </TouchableOpacity>
+
+            {/* OFF Button */}
+            <TouchableOpacity
+              style={[styles.togglePill, !isFlashlightOn ? styles.offPillActive : styles.offPillInactive]}
+              onPress={() => handleToggleFlashlight(false)}
+            >
+              <View style={styles.dotContainer}>
+                <WhitePlaceholder size={10} borderRadius={5} color={!isFlashlightOn ? '#FFFFFF' : '#EF4444'} />
+              </View>
+              <Text style={[styles.toggleText, !isFlashlightOn ? styles.toggleTextActive : styles.toggleTextInactive]}>
+                OFF
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        {/* Bottom Question & Feedback Buttons (Moved Up & Solid White Placeholder Circles) */}
+        <View style={styles.bottomFeedbackSection}>
+          <Text style={styles.questionText}>Is the flashlight working?</Text>
+
+          <View style={styles.feedbackButtonsRow}>
+            {/* Pass White Circle Placeholder Button */}
+            <TouchableOpacity
+              style={styles.circlePlaceholderButton}
+              onPress={() => handleResultPress(true)}
+            >
+              <WhitePlaceholder size={60} borderRadius={30} color="#FFFFFF" />
+            </TouchableOpacity>
+
+            {/* Fail White Circle Placeholder Button */}
+            <TouchableOpacity
+              style={styles.circlePlaceholderButton}
+              onPress={() => handleResultPress(false)}
+            >
+              <WhitePlaceholder size={60} borderRadius={30} color="#FFFFFF" />
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
+    </SafeAreaView>
+  );
+};
+
+const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: '#0B1120',
+  },
+  headerBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    backgroundColor: '#0B1120',
+    borderBottomWidth: 1,
+    borderBottomColor: '#1E293B',
+  },
+  headerLeftGroup: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  backButton: {
+    padding: 6,
+    marginRight: 12,
+  },
+  headerTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+    letterSpacing: 0.3,
+  },
+  settingsButton: {
+    padding: 6,
+  },
+  container: {
+    flex: 1,
+    backgroundColor: '#0B1120',
+    paddingHorizontal: 24,
+    justifyContent: 'flex-start',
+    paddingTop: 28,
+  },
+  heroSection: {
+    alignItems: 'center',
+  },
+  placeholderContainer: {
+    marginBottom: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  instructionText: {
+    fontSize: 15,
+    color: '#94A3B8',
+    textAlign: 'center',
+    lineHeight: 22,
+    marginBottom: 16,
+  },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+    marginBottom: 20,
+    textAlign: 'center',
+  },
+  toggleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  togglePill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 24,
+    minWidth: 110,
+    marginHorizontal: 8,
+  },
+  onPillActive: {
+    backgroundColor: '#3B82F6',
+  },
+  onPillInactive: {
+    backgroundColor: '#1E293B',
+    borderWidth: 1,
+    borderColor: '#334155',
+  },
+  offPillActive: {
+    backgroundColor: '#D4D4D8',
+  },
+  offPillInactive: {
+    backgroundColor: '#1E293B',
+    borderWidth: 1,
+    borderColor: '#334155',
+  },
+  dotContainer: {
+    marginRight: 8,
+  },
+  toggleText: {
+    fontSize: 15,
+    fontWeight: 'bold',
+  },
+  toggleTextActive: {
+    color: '#FFFFFF',
+  },
+  toggleTextInactive: {
+    color: '#94A3B8',
+  },
+  bottomFeedbackSection: {
+    alignItems: 'center',
+    marginTop: 36,
+  },
+  questionText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+    marginBottom: 20,
+  },
+  feedbackButtonsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  circlePlaceholderButton: {
+    marginHorizontal: 16,
+  },
+});
+
+export default FlashlightTestScreen;
