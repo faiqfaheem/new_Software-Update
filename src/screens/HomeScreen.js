@@ -34,29 +34,17 @@ const HomeScreen = ({ navigation }) => {
   const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState('home');
 
+  // --- Home Tab Action Handlers ---
   const handleScanAppUpdates = () => {
-    Alert.alert(t('feature1Title'), `${t('feature1Desc')}...\n\n[Action Executed]`);
+    navigation.navigate('ScanAppsScreen');
   };
 
   const handleAllApps = () => {
-    Alert.alert('All Apps', 'All Installed Apps Overview\n\n[Action Executed]');
+    navigation.navigate('AllAppsScreen');
   };
 
-  const handleSystemOSUpdate = async () => {
-    try {
-      if (Platform.OS === 'android') {
-        await Linking.sendIntent('android.settings.SYSTEM_UPDATE_SETTINGS').catch(
-          async () => {
-            await Linking.openSettings();
-          }
-        );
-      } else {
-        await Linking.openSettings();
-      }
-    } catch (error) {
-      console.warn('Could not launch OS update settings:', error);
-      Linking.openSettings();
-    }
+  const handleSystemOSUpdate = () => {
+    navigation.navigate('OSUpdateScreen');
   };
 
   const handleAIAssistantGuide = () => {
@@ -64,11 +52,24 @@ const HomeScreen = ({ navigation }) => {
   };
 
   const handleBulkUninstaller = () => {
-    Alert.alert(t('feature4Title'), `${t('feature4Desc')}...\n\n[Action Executed]`);
+    navigation.navigate('BulkUninstallerScreen');
   };
 
   const handleSettingsPress = () => {
     Linking.openSettings();
+  };
+
+  // --- Tools Tab Action Handlers ---
+  const handleStorageInfo = () => {
+    navigation.navigate('StorageInfoScreen');
+  };
+
+  const handlePermissionManager = () => {
+    navigation.navigate('PermissionManagerScreen');
+  };
+
+  const handlePhoneSensor = () => {
+    Alert.alert('Phone Sensor', 'Hardware Sensors & Diagnostics Check\n\n[Action Executed]');
   };
 
   return (
@@ -84,107 +85,152 @@ const HomeScreen = ({ navigation }) => {
         </TouchableOpacity>
       </View>
 
-      {/* Main Scrollable Content */}
-      <ScrollView
-        style={styles.container}
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-        alwaysBounceVertical={true}
-      >
-        {/* Hero Card - Scan Apps */}
-        <View style={styles.heroCard}>
-          <TouchableOpacity style={styles.heroCircleButton} onPress={handleScanAppUpdates}>
-            <View style={styles.heroIconWrapper}>
-              <WhitePlaceholder size={32} borderRadius={6} color="#1D4ED8" />
-            </View>
-            <Text style={styles.heroTitle}>Scan Apps</Text>
-            <Text style={styles.heroSub}>Check Updates</Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* All Apps Full Width Card */}
-        <TouchableOpacity style={styles.rowCard} onPress={handleAllApps}>
-          <View style={[styles.iconSquare, { backgroundColor: '#1E293B' }]}>
-            <WhitePlaceholder size={22} borderRadius={4} color="#FFFFFF" />
+      {/* Conditional Rendering Based on Active Tab */}
+      {activeTab === 'home' ? (
+        /* HOME TAB CONTENT */
+        <ScrollView
+          style={styles.container}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+          alwaysBounceVertical={true}
+        >
+          {/* Hero Card - Scan Apps */}
+          <View style={styles.heroCard}>
+            <TouchableOpacity style={styles.heroCircleButton} onPress={handleScanAppUpdates}>
+              <View style={styles.heroIconWrapper}>
+                <WhitePlaceholder size={32} borderRadius={6} color="#1D4ED8" />
+              </View>
+              <Text style={styles.heroTitle}>Scan Apps</Text>
+              <Text style={styles.heroSub}>Check Updates</Text>
+            </TouchableOpacity>
           </View>
-          <View style={styles.rowCardTextContainer}>
-            <Text style={styles.rowCardTitle}>All Apps</Text>
-            <Text style={styles.rowCardSub}>All Installed Apps</Text>
-          </View>
-          <ChevronRight />
-        </TouchableOpacity>
 
-        {/* Two Column Grid (OS Update & AI Assistant) */}
-        <View style={styles.gridRow}>
-          {/* OS Update Card */}
-          <TouchableOpacity style={styles.gridCard} onPress={handleSystemOSUpdate}>
-            <View style={[styles.iconSquare, { backgroundColor: '#991B1B', marginBottom: 16 }]}>
+          {/* All Apps Full Width Card */}
+          <TouchableOpacity style={styles.rowCard} onPress={handleAllApps}>
+            <View style={[styles.iconSquare, { backgroundColor: '#1E293B' }]}>
               <WhitePlaceholder size={22} borderRadius={4} color="#FFFFFF" />
             </View>
-            <Text style={styles.gridCardTitle}>OS Update</Text>
-            <Text style={styles.gridCardSub}>UPDATE AVAILABLE</Text>
+            <View style={styles.rowCardTextContainer}>
+              <Text style={styles.rowCardTitle}>All Apps</Text>
+              <Text style={styles.rowCardSub}>All Installed Apps</Text>
+            </View>
+            <ChevronRight />
           </TouchableOpacity>
 
-          {/* AI Assistant Card (Orange Gradient Accent) */}
-          <TouchableOpacity
-            style={[styles.gridCard, styles.aiCardGradient]}
-            onPress={handleAIAssistantGuide}
-          >
-            <View style={[styles.iconSquare, { backgroundColor: 'rgba(255,255,255,0.25)', marginBottom: 16 }]}>
+          {/* Two Column Grid (OS Update & AI Assistant) */}
+          <View style={styles.gridRow}>
+            {/* OS Update Card */}
+            <TouchableOpacity style={styles.gridCard} onPress={handleSystemOSUpdate}>
+              <View style={[styles.iconSquare, { backgroundColor: '#991B1B', marginBottom: 16 }]}>
+                <WhitePlaceholder size={22} borderRadius={4} color="#FFFFFF" />
+              </View>
+              <Text style={styles.gridCardTitle}>OS Update</Text>
+              <Text style={styles.gridCardSub}>UPDATE AVAILABLE</Text>
+            </TouchableOpacity>
+
+            {/* AI Assistant Card (Orange Gradient Accent) */}
+            <TouchableOpacity
+              style={[styles.gridCard, styles.aiCardGradient]}
+              onPress={handleAIAssistantGuide}
+            >
+              <View style={[styles.iconSquare, { backgroundColor: 'rgba(255,255,255,0.25)', marginBottom: 16 }]}>
+                <WhitePlaceholder size={22} borderRadius={4} color="#FFFFFF" />
+              </View>
+              <Text style={[styles.gridCardTitle, { color: '#FFFFFF' }]}>AI Assistant</Text>
+              <Text style={[styles.gridCardSub, { color: 'rgba(255,255,255,0.85)' }]}>SMART OPTIMIZATION</Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* Bulk Uninstaller Card */}
+          <TouchableOpacity style={styles.rowCard} onPress={handleBulkUninstaller}>
+            <View style={[styles.iconSquare, { backgroundColor: '#371B36' }]}>
               <WhitePlaceholder size={22} borderRadius={4} color="#FFFFFF" />
             </View>
-            <Text style={[styles.gridCardTitle, { color: '#FFFFFF' }]}>AI Assistant</Text>
-            <Text style={[styles.gridCardSub, { color: 'rgba(255,255,255,0.85)' }]}>SMART OPTIMIZATION</Text>
+            <View style={styles.rowCardTextContainer}>
+              <Text style={styles.rowCardTitle}>Bulk Uninstaller</Text>
+              <Text style={styles.rowCardSub}>Remove Multiple Apps At Once</Text>
+            </View>
+            <ChevronRight />
           </TouchableOpacity>
-        </View>
 
-        {/* Bulk Uninstaller Card */}
-        <TouchableOpacity style={styles.rowCard} onPress={handleBulkUninstaller}>
-          <View style={[styles.iconSquare, { backgroundColor: '#371B36' }]}>
-            <WhitePlaceholder size={22} borderRadius={4} color="#FFFFFF" />
-          </View>
-          <View style={styles.rowCardTextContainer}>
-            <Text style={styles.rowCardTitle}>Bulk Uninstaller</Text>
-            <Text style={styles.rowCardSub}>Remove Multiple Apps At Once</Text>
-          </View>
-          <ChevronRight />
-        </TouchableOpacity>
-
-        {/* Storage Health & Analytics Card */}
-        <View style={styles.statsCard}>
-          <View style={styles.statsHeaderRow}>
-            <Text style={styles.statsTitle}>Storage Health</Text>
-            <Text style={styles.statsHealthBadge}>82% Healthy</Text>
-          </View>
-
-          {/* Progress Bar */}
-          <View style={styles.progressBarTrack}>
-            <View style={[styles.progressBarFill, { width: '82%' }]} />
-          </View>
-
-          {/* Stats Columns */}
-          <View style={styles.statsColumnsRow}>
-            <View style={styles.statCol}>
-              <Text style={styles.statLabel}>UPDATED</Text>
-              <Text style={styles.statVal}>125</Text>
+          {/* Storage Health & Analytics Card */}
+          <View style={styles.statsCard}>
+            <View style={styles.statsHeaderRow}>
+              <Text style={styles.statsTitle}>Storage Health</Text>
+              <Text style={styles.statsHealthBadge}>82% Healthy</Text>
             </View>
 
-            <View style={styles.statDivider} />
-
-            <View style={styles.statCol}>
-              <Text style={styles.statLabel}>PENDING</Text>
-              <Text style={[styles.statVal, { color: '#FB923C' }]}>12</Text>
+            {/* Progress Bar */}
+            <View style={styles.progressBarTrack}>
+              <View style={[styles.progressBarFill, { width: '82%' }]} />
             </View>
 
-            <View style={styles.statDivider} />
+            {/* Stats Columns */}
+            <View style={styles.statsColumnsRow}>
+              <View style={styles.statCol}>
+                <Text style={styles.statLabel}>UPDATED</Text>
+                <Text style={styles.statVal}>125</Text>
+              </View>
 
-            <View style={styles.statCol}>
-              <Text style={styles.statLabel}>OPTIMIZED</Text>
-              <Text style={styles.statVal}>98%</Text>
+              <View style={styles.statDivider} />
+
+              <View style={styles.statCol}>
+                <Text style={styles.statLabel}>PENDING</Text>
+                <Text style={[styles.statVal, { color: '#FB923C' }]}>12</Text>
+              </View>
+
+              <View style={styles.statDivider} />
+
+              <View style={styles.statCol}>
+                <Text style={styles.statLabel}>OPTIMIZED</Text>
+                <Text style={styles.statVal}>98%</Text>
+              </View>
             </View>
           </View>
-        </View>
-      </ScrollView>
+        </ScrollView>
+      ) : (
+        /* TOOLS TAB CONTENT */
+        <ScrollView
+          style={styles.container}
+          contentContainerStyle={styles.toolsScrollContent}
+          showsVerticalScrollIndicator={false}
+          alwaysBounceVertical={true}
+        >
+          <View style={styles.toolsGrid}>
+            {/* Tool 1: Storage INFO */}
+            <TouchableOpacity style={styles.toolCard} onPress={handleStorageInfo}>
+              <View style={styles.toolIconWrapper}>
+                <WhitePlaceholder size={44} borderRadius={10} color="#FFFFFF" />
+              </View>
+              <Text style={styles.toolCardTitle}>Storage INFO</Text>
+            </TouchableOpacity>
+
+            {/* Tool 2: Permission Manager */}
+            <TouchableOpacity style={styles.toolCard} onPress={handlePermissionManager}>
+              <View style={styles.toolIconWrapper}>
+                <WhitePlaceholder size={44} borderRadius={10} color="#FFFFFF" />
+              </View>
+              <Text style={styles.toolCardTitle}>Permission Manager</Text>
+            </TouchableOpacity>
+
+            {/* Tool 3: Phone Sensor */}
+            <TouchableOpacity style={styles.toolCard} onPress={handlePhoneSensor}>
+              <View style={styles.toolIconWrapper}>
+                <WhitePlaceholder size={44} borderRadius={10} color="#FFFFFF" />
+              </View>
+              <Text style={styles.toolCardTitle}>Phone Sensor</Text>
+            </TouchableOpacity>
+
+            {/* Tool 4: Permission Manager */}
+            <TouchableOpacity style={styles.toolCard} onPress={handlePermissionManager}>
+              <View style={styles.toolIconWrapper}>
+                <WhitePlaceholder size={44} borderRadius={10} color="#FFFFFF" />
+              </View>
+              <Text style={styles.toolCardTitle}>Permission Manager</Text>
+            </TouchableOpacity>
+          </View>
+        </ScrollView>
+      )}
 
       {/* Bottom Navigation Bar */}
       <View style={styles.bottomTabBar}>
@@ -326,7 +372,7 @@ const styles = StyleSheet.create({
   // 2-Column Grid
   gridRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justify: 'space-between',
     marginBottom: 14,
   },
   gridCard: {
@@ -416,6 +462,40 @@ const styles = StyleSheet.create({
     width: 1,
     height: 28,
     backgroundColor: '#1E293B',
+  },
+  // --- Tools Screen Styles ---
+  toolsScrollContent: {
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 30,
+  },
+  toolsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+  },
+  toolCard: {
+    width: '48%',
+    height: 165,
+    backgroundColor: '#131C31',
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#1E293B',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 16,
+    marginBottom: 16,
+  },
+  toolIconWrapper: {
+    marginBottom: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  toolCardTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#FFFFFF',
+    textAlign: 'center',
   },
   // Bottom Tab Bar
   bottomTabBar: {

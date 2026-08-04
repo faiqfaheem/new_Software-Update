@@ -9,6 +9,12 @@ import LanguageScreen from './src/screens/LanguageScreen';
 import PermissionScreen from './src/screens/PermissionScreen';
 import OnboardingScreen from './src/screens/OnboardingScreen';
 import HomeScreen from './src/screens/HomeScreen';
+import ScanAppsScreen from './src/screens/ScanAppsScreen';
+import OSUpdateScreen from './src/screens/OSUpdateScreen';
+import AllAppsScreen from './src/screens/AllAppsScreen';
+import BulkUninstallerScreen from './src/screens/BulkUninstallerScreen';
+import StorageInfoScreen from './src/screens/StorageInfoScreen';
+import PermissionManagerScreen from './src/screens/PermissionManagerScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -29,6 +35,12 @@ const App = () => {
           <Stack.Screen name="PermissionScreen" component={PermissionScreen} />
           <Stack.Screen name="OnboardingScreen" component={OnboardingScreen} />
           <Stack.Screen name="HomeScreen" component={HomeScreen} />
+          <Stack.Screen name="ScanAppsScreen" component={ScanAppsScreen} />
+          <Stack.Screen name="OSUpdateScreen" component={OSUpdateScreen} />
+          <Stack.Screen name="AllAppsScreen" component={AllAppsScreen} />
+          <Stack.Screen name="BulkUninstallerScreen" component={BulkUninstallerScreen} />
+          <Stack.Screen name="StorageInfoScreen" component={StorageInfoScreen} />
+          <Stack.Screen name="PermissionManagerScreen" component={PermissionManagerScreen} />
         </Stack.Navigator>
       </NavigationContainer>
     </LanguageProvider>
