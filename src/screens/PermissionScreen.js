@@ -12,8 +12,10 @@ import {
   AppState,
 } from 'react-native';
 import { setPermissionsSavedStatus } from '../utils/storage';
+import { useLanguage } from '../i18n/LanguageContext';
 
 const PermissionScreen = ({ navigation }) => {
+  const { t } = useLanguage();
   const [permissions, setPermissions] = useState({
     storage: false,
     camera: false,
@@ -86,36 +88,18 @@ const PermissionScreen = ({ navigation }) => {
           setPermissions((prev) => ({ ...prev, storage: imagesGranted || videoGranted }));
         } else {
           const res = await PermissionsAndroid.request(
-            PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE,
-            {
-              title: 'Storage Permission Required',
-              message: 'Allow access to scan installed apps and junk files.',
-              buttonPositive: 'Allow',
-              buttonNegative: 'Deny',
-            }
+            PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE
           );
           setPermissions((prev) => ({ ...prev, storage: res === PermissionsAndroid.RESULTS.GRANTED }));
         }
       } else if (type === 'camera') {
         const res = await PermissionsAndroid.request(
-          PermissionsAndroid.PERMISSIONS.CAMERA,
-          {
-            title: 'Camera Permission Required',
-            message: 'Allow camera access for hardware diagnostic testing.',
-            buttonPositive: 'Allow',
-            buttonNegative: 'Deny',
-          }
+          PermissionsAndroid.PERMISSIONS.CAMERA
         );
         setPermissions((prev) => ({ ...prev, camera: res === PermissionsAndroid.RESULTS.GRANTED }));
       } else if (type === 'microphone') {
         const res = await PermissionsAndroid.request(
-          PermissionsAndroid.PERMISSIONS.RECORD_AUDIO,
-          {
-            title: 'Microphone Permission Required',
-            message: 'Allow microphone access for audio and speaker testing.',
-            buttonPositive: 'Allow',
-            buttonNegative: 'Deny',
-          }
+          PermissionsAndroid.PERMISSIONS.RECORD_AUDIO
         );
         setPermissions((prev) => ({ ...prev, microphone: res === PermissionsAndroid.RESULTS.GRANTED }));
       } else if (type === 'usage') {
@@ -136,34 +120,33 @@ const PermissionScreen = ({ navigation }) => {
   const handleContinue = async () => {
     if (!allPermissionsGranted) {
       const missing = [];
-      if (!permissions.storage) missing.push('Storage Access');
-      if (!permissions.camera) missing.push('Camera Permission');
-      if (!permissions.microphone) missing.push('Microphone Permission');
-      if (!permissions.usage) missing.push('Usage Access Settings');
+      if (!permissions.storage) missing.push(t('storageTitle'));
+      if (!permissions.camera) missing.push(t('cameraTitle'));
+      if (!permissions.microphone) missing.push(t('micTitle'));
+      if (!permissions.usage) missing.push(t('usageTitle'));
 
       Alert.alert(
-        'Permissions Required',
-        `Please allow the following permissions to continue:\n\n• ${missing.join('\n• ')}`
+        t('appPermissions'),
+        `${t('allPermissionsRequiredSub')}:\n\n• ${missing.join('\n• ')}`
       );
       return;
     }
 
-    // Save permissions granted status in AsyncStorage so app never asks again!
     await setPermissionsSavedStatus(true);
     navigation.navigate('OnboardingScreen');
   };
 
   const PERMISSION_LIST = [
-    { key: 'storage', title: 'Storage & Media Access', subtitle: 'To scan app updates & junk files' },
-    { key: 'camera', title: 'Camera Permission', subtitle: 'For screen & hardware testing' },
-    { key: 'microphone', title: 'Microphone Permission', subtitle: 'For speaker & audio diagnostics' },
-    { key: 'usage', title: 'Usage Access Settings', subtitle: 'For battery & app usage analytics' },
+    { key: 'storage', title: t('storageTitle'), subtitle: t('storageSub') },
+    { key: 'camera', title: t('cameraTitle'), subtitle: t('cameraSub') },
+    { key: 'microphone', title: t('micTitle'), subtitle: t('micSub') },
+    { key: 'usage', title: t('usageTitle'), subtitle: t('usageSub') },
   ];
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>App Permissions</Text>
-      <Text style={styles.subtitle}>All permissions must be granted to continue</Text>
+      <Text style={styles.title}>{t('appPermissions')}</Text>
+      <Text style={styles.subtitle}>{t('allPermissionsRequiredSub')}</Text>
 
       <ScrollView style={styles.list}>
         {PERMISSION_LIST.map((item) => {
@@ -180,7 +163,7 @@ const PermissionScreen = ({ navigation }) => {
               </View>
 
               <Text style={[styles.statusBadge, isGranted ? styles.granted : styles.notGranted]}>
-                {isGranted ? '✓ Granted' : 'Allow'}
+                {isGranted ? t('granted') : t('allow')}
               </Text>
             </TouchableOpacity>
           );
@@ -192,7 +175,7 @@ const PermissionScreen = ({ navigation }) => {
         onPress={handleContinue}
       >
         <Text style={styles.continueText}>
-          {allPermissionsGranted ? 'Continue' : 'Grant All Permissions'}
+          {allPermissionsGranted ? t('continue') : t('grantAll')}
         </Text>
       </TouchableOpacity>
     </View>

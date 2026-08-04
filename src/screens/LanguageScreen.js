@@ -1,63 +1,56 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   View,
   Text,
   TouchableOpacity,
   FlatList,
   StyleSheet,
-  Alert,
 } from 'react-native';
-import { setStoredLanguage } from '../utils/storage';
-
-const LANGUAGES = [
-  { code: 'en', label: 'English', native: 'English' },
-  { code: 'es', label: 'Spanish', native: 'Español' },
-  { code: 'ur', label: 'Urdu', native: 'اردو' },
-  { code: 'hi', label: 'Hindi', native: 'हिन्दी' },
-  { code: 'ar', label: 'Arabic', native: 'العربية' },
-];
+import { useLanguage } from '../i18n/LanguageContext';
 
 const LanguageScreen = ({ navigation }) => {
-  const [selectedLang, setSelectedLang] = useState('en');
+  const { language, changeLanguage, t, LANGUAGES } = useLanguage();
 
   const handleContinue = async () => {
-    if (!selectedLang) {
-      Alert.alert('Language Required', 'Please select a language to continue.');
-      return;
-    }
-    await setStoredLanguage(selectedLang);
     navigation.navigate('PermissionScreen');
   };
 
   const renderItem = ({ item }) => {
-    const isSelected = item.code === selectedLang;
+    const isSelected = item.code === language;
     return (
       <TouchableOpacity
         style={[styles.itemContainer, isSelected && styles.itemSelected]}
-        onPress={() => setSelectedLang(item.code)}
+        onPress={() => changeLanguage(item.code)}
       >
-        <Text style={[styles.itemText, isSelected && styles.itemTextSelected]}>
-          {item.label} ({item.native})
-        </Text>
-        <Text style={styles.radioText}>{isSelected ? '[ ✓ ]' : '[   ]'}</Text>
+        <View style={styles.leftContainer}>
+          <Text style={styles.flagText}>{item.flag}</Text>
+          <Text style={[styles.itemText, isSelected && styles.itemTextSelected]}>
+            {item.name}
+          </Text>
+        </View>
+
+        <View style={[styles.radioOuter, isSelected && styles.radioOuterSelected]}>
+          {isSelected && <View style={styles.radioInner} />}
+        </View>
       </TouchableOpacity>
     );
   };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Select Language</Text>
-      <Text style={styles.subtitle}>Choose your preferred language for the app</Text>
+      <Text style={styles.title}>{t('selectLanguage')}</Text>
+      <Text style={styles.subtitle}>{t('chooseLanguageSub')}</Text>
 
       <FlatList
         data={LANGUAGES}
         keyExtractor={(item) => item.code}
         renderItem={renderItem}
         contentContainerStyle={styles.listContainer}
+        showsVerticalScrollIndicator={false}
       />
 
       <TouchableOpacity style={styles.continueButton} onPress={handleContinue}>
-        <Text style={styles.continueText}>Continue / Next</Text>
+        <Text style={styles.continueText}>{t('continueNext')}</Text>
       </TouchableOpacity>
     </View>
   );
@@ -67,21 +60,22 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#0F1424',
   },
   title: {
-    fontSize: 22,
+    fontSize: 24,
     fontWeight: 'bold',
-    color: '#111111',
-    marginTop: 40,
+    color: '#FFFFFF',
+    marginTop: 30,
   },
   subtitle: {
     fontSize: 14,
-    color: '#666666',
-    marginVertical: 10,
+    color: '#94A3B8',
+    marginVertical: 8,
+    marginBottom: 20,
   },
   listContainer: {
-    marginVertical: 15,
+    paddingBottom: 20,
   },
   itemContainer: {
     flexDirection: 'row',
@@ -89,31 +83,55 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 16,
     borderWidth: 1,
-    borderColor: '#CCCCCC',
-    borderRadius: 8,
-    marginBottom: 10,
-    backgroundColor: '#FAF9F6',
+    borderColor: '#1E293B',
+    borderRadius: 12,
+    marginBottom: 12,
+    backgroundColor: '#1E253B',
   },
   itemSelected: {
-    borderColor: '#007AFF',
-    backgroundColor: '#EBF5FF',
+    borderColor: '#5B8DEF',
+    backgroundColor: '#4C82F6',
+  },
+  leftContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  flagText: {
+    fontSize: 24,
+    marginRight: 14,
   },
   itemText: {
     fontSize: 16,
-    color: '#333333',
+    color: '#CBD5E1',
+    fontWeight: '500',
   },
   itemTextSelected: {
     fontWeight: 'bold',
-    color: '#007AFF',
+    color: '#FFFFFF',
   },
-  radioText: {
-    fontSize: 16,
-    color: '#007AFF',
+  radioOuter: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    borderWidth: 2,
+    borderColor: '#64748B',
+    justify: 'center',
+    alignItems: 'center',
+  },
+  radioOuterSelected: {
+    borderColor: '#FFFFFF',
+    backgroundColor: '#FFFFFF',
+  },
+  radioInner: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: '#4C82F6',
   },
   continueButton: {
-    backgroundColor: '#007AFF',
-    paddingVertical: 15,
-    borderRadius: 8,
+    backgroundColor: '#4C82F6',
+    paddingVertical: 16,
+    borderRadius: 12,
     alignItems: 'center',
     marginBottom: 20,
   },

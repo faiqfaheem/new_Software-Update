@@ -9,17 +9,18 @@ import {
   Linking,
   Platform,
 } from 'react-native';
+import { useLanguage } from '../i18n/LanguageContext';
 
 const HomeScreen = () => {
-  // 1. Scan App Updates handler
+  const { t } = useLanguage();
+
   const handleScanAppUpdates = () => {
     Alert.alert(
-      'Scan App Updates',
-      'Scanning installed apps for pending software updates...\n\n[Dummy Action: Feature Ready for Integration]'
+      t('feature1Title'),
+      `${t('feature1Desc')}...\n\n[Dummy Action]`
     );
   };
 
-  // 2. System OS Update handler
   const handleSystemOSUpdate = async () => {
     try {
       if (Platform.OS === 'android') {
@@ -37,85 +38,80 @@ const HomeScreen = () => {
     }
   };
 
-  // 3. Hardware & Sensor Tests handler
   const handleHardwareTests = () => {
     Alert.alert(
-      'Hardware & Sensor Tests',
-      'Opening Hardware Diagnostics (Screen, Touch, Speaker, Mic, Vibrator)...\n\n[Dummy Action]'
+      t('feature3Title'),
+      `${t('feature3Desc')}...\n\n[Dummy Action]`
     );
   };
 
-  // 4. App Uninstaller & Junk Cleaner handler
   const handleAppUninstaller = () => {
     Alert.alert(
-      'App Uninstaller & Junk Cleaner',
-      'Scanning system cache & unused APK files...\n\n[Dummy Action]'
+      t('feature4Title'),
+      `${t('feature4Desc')}...\n\n[Dummy Action]`
     );
   };
 
-  // 5. Usage & Battery Analytics handler
   const handleUsageBatteryAnalytics = () => {
     Alert.alert(
-      'Usage & Battery Analytics',
-      'Loading Battery Health & Screen On Time metrics...\n\n[Dummy Action]'
+      t('feature5Title'),
+      `${t('feature5Desc')}...\n\n[Dummy Action]`
     );
   };
 
-  // 6. AI Assistant Guide handler
   const handleAIAssistantGuide = () => {
     Alert.alert(
-      'AI Assistant Guide',
-      'Launching AI Software Diagnostic Assistant...\n\n[Dummy Action]'
+      t('feature6Title'),
+      `${t('feature6Desc')}...\n\n[Dummy Action]`
     );
   };
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <Text style={styles.headerTitle}>Software Update & Utility Tool</Text>
-      <Text style={styles.headerSubtitle}>System Hub & Diagnostics</Text>
+      <Text style={styles.headerTitle}>{t('appHeaderTitle')}</Text>
+      <Text style={styles.headerSubtitle}>{t('appHeaderSub')}</Text>
 
-      {/* Grid / List of Feature Cards */}
       <View style={styles.gridContainer}>
         {/* Feature 1 */}
         <TouchableOpacity style={styles.card} onPress={handleScanAppUpdates}>
           <Text style={styles.cardIcon}>🔄</Text>
-          <Text style={styles.cardTitle}>Scan App Updates</Text>
-          <Text style={styles.cardDesc}>Check pending store & system app updates</Text>
+          <Text style={styles.cardTitle}>{t('feature1Title')}</Text>
+          <Text style={styles.cardDesc}>{t('feature1Desc')}</Text>
         </TouchableOpacity>
 
         {/* Feature 2 */}
         <TouchableOpacity style={styles.card} onPress={handleSystemOSUpdate}>
           <Text style={styles.cardIcon}>📲</Text>
-          <Text style={styles.cardTitle}>System OS Update</Text>
-          <Text style={styles.cardDesc}>Check Android system software updates</Text>
+          <Text style={styles.cardTitle}>{t('feature2Title')}</Text>
+          <Text style={styles.cardDesc}>{t('feature2Desc')}</Text>
         </TouchableOpacity>
 
         {/* Feature 3 */}
         <TouchableOpacity style={styles.card} onPress={handleHardwareTests}>
           <Text style={styles.cardIcon}>⚡</Text>
-          <Text style={styles.cardTitle}>Hardware & Sensor Tests</Text>
-          <Text style={styles.cardDesc}>Test display, audio, vibration, & sensors</Text>
+          <Text style={styles.cardTitle}>{t('feature3Title')}</Text>
+          <Text style={styles.cardDesc}>{t('feature3Desc')}</Text>
         </TouchableOpacity>
 
         {/* Feature 4 */}
         <TouchableOpacity style={styles.card} onPress={handleAppUninstaller}>
           <Text style={styles.cardIcon}>🧹</Text>
-          <Text style={styles.cardTitle}>App Uninstaller & Junk Cleaner</Text>
-          <Text style={styles.cardDesc}>Clean residual files & batch uninstall apps</Text>
+          <Text style={styles.cardTitle}>{t('feature4Title')}</Text>
+          <Text style={styles.cardDesc}>{t('feature4Desc')}</Text>
         </TouchableOpacity>
 
         {/* Feature 5 */}
         <TouchableOpacity style={styles.card} onPress={handleUsageBatteryAnalytics}>
           <Text style={styles.cardIcon}>🔋</Text>
-          <Text style={styles.cardTitle}>Usage & Battery Analytics</Text>
-          <Text style={styles.cardDesc}>View screen time & battery discharge stats</Text>
+          <Text style={styles.cardTitle}>{t('feature5Title')}</Text>
+          <Text style={styles.cardDesc}>{t('feature5Desc')}</Text>
         </TouchableOpacity>
 
         {/* Feature 6 */}
         <TouchableOpacity style={styles.card} onPress={handleAIAssistantGuide}>
           <Text style={styles.cardIcon}>🤖</Text>
-          <Text style={styles.cardTitle}>AI Assistant Guide</Text>
-          <Text style={styles.cardDesc}>Smart phone diagnostic assistant</Text>
+          <Text style={styles.cardTitle}>{t('feature6Title')}</Text>
+          <Text style={styles.cardDesc}>{t('feature6Desc')}</Text>
         </TouchableOpacity>
       </View>
     </ScrollView>

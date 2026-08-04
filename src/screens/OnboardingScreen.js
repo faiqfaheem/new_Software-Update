@@ -8,33 +8,35 @@ import {
   Dimensions,
 } from 'react-native';
 import { setOnboardingStatus } from '../utils/storage';
+import { useLanguage } from '../i18n/LanguageContext';
 
 const { width } = Dimensions.get('window');
 
-const SLIDES = [
-  {
-    id: '1',
-    title: 'Update Scanner Info',
-    description: 'Scan pending app updates easily and keep all your software up to date with one tap.',
-    iconPlaceholder: '[ 🚀 Update Scanner ]',
-  },
-  {
-    id: '2',
-    title: 'Hardware & Sensor Testing',
-    description: "Check your phone's screen, speaker, camera, and sensors for hardware health diagnostics.",
-    iconPlaceholder: '[ 🛠 Hardware Test ]',
-  },
-  {
-    id: '3',
-    title: 'Storage & Usage Tracker',
-    description: 'Monitor storage usage, app screen time, and detailed battery performance analytics.',
-    iconPlaceholder: '[ 📊 Usage Tracker ]',
-  },
-];
-
 const OnboardingScreen = ({ navigation }) => {
+  const { t } = useLanguage();
   const [currentIndex, setCurrentIndex] = useState(0);
   const flatListRef = useRef(null);
+
+  const SLIDES = [
+    {
+      id: '1',
+      title: t('slide1Title'),
+      description: t('slide1Desc'),
+      iconPlaceholder: '[ 🚀 Update Scanner ]',
+    },
+    {
+      id: '2',
+      title: t('slide2Title'),
+      description: t('slide2Desc'),
+      iconPlaceholder: '[ 🛠 Hardware Test ]',
+    },
+    {
+      id: '3',
+      title: t('slide3Title'),
+      description: t('slide3Desc'),
+      iconPlaceholder: '[ 📊 Usage Tracker ]',
+    },
+  ];
 
   const handleNext = async () => {
     if (currentIndex < SLIDES.length - 1) {
@@ -42,7 +44,6 @@ const OnboardingScreen = ({ navigation }) => {
       setCurrentIndex(nextIndex);
       flatListRef.current?.scrollToIndex({ index: nextIndex, animated: true });
     } else {
-      // Complete Onboarding
       await setOnboardingStatus(true);
       navigation.reset({
         index: 0,
@@ -83,18 +84,16 @@ const OnboardingScreen = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
-      {/* Top Bar with Skip */}
       <View style={styles.topBar}>
         {!isLastSlide ? (
           <TouchableOpacity onPress={handleSkip}>
-            <Text style={styles.skipText}>Skip</Text>
+            <Text style={styles.skipText}>{t('skip')}</Text>
           </TouchableOpacity>
         ) : (
           <View />
         )}
       </View>
 
-      {/* Horizontal Slides List */}
       <FlatList
         ref={flatListRef}
         data={SLIDES}
@@ -107,7 +106,6 @@ const OnboardingScreen = ({ navigation }) => {
         scrollEventThrottle={16}
       />
 
-      {/* Pagination Dots */}
       <View style={styles.paginationContainer}>
         {SLIDES.map((_, index) => (
           <View
@@ -120,11 +118,10 @@ const OnboardingScreen = ({ navigation }) => {
         ))}
       </View>
 
-      {/* Bottom Button */}
       <View style={styles.bottomContainer}>
         <TouchableOpacity style={styles.nextButton} onPress={handleNext}>
           <Text style={styles.nextButtonText}>
-            {isLastSlide ? 'Get Started' : 'Next'}
+            {isLastSlide ? t('getStarted') : t('next')}
           </Text>
         </TouchableOpacity>
       </View>
