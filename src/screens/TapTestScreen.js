@@ -35,14 +35,14 @@ const TapTestScreen = ({ navigation }) => {
   };
 
   const handleCanvasTap = (event) => {
-    const { locationX, locationY } = event.nativeEvent;
+    const { pageX, pageY } = event.nativeEvent;
     setTapCount((prev) => prev + 1);
 
-    // Add ripple effect point on white canvas
+    // Use pageX and pageY so ripples render at exact global screen coordinates
     const newRipple = {
       id: Date.now() + Math.random(),
-      x: locationX,
-      y: locationY,
+      x: pageX,
+      y: pageY,
     };
     setRipples((prev) => [...prev.slice(-6), newRipple]);
   };
@@ -77,12 +77,18 @@ const TapTestScreen = ({ navigation }) => {
           onPress={handleCanvasTap}
         >
           {/* Top Floating Controls */}
-          <View style={styles.canvasHeaderFloating}>
-            <TouchableOpacity style={styles.closeCanvasButton} onPress={handleCloseCanvas}>
+          <View style={styles.canvasHeaderFloating} pointerEvents="box-none">
+            <TouchableOpacity
+              style={styles.closeCanvasButton}
+              onPress={(e) => {
+                e.stopPropagation();
+                handleCloseCanvas();
+              }}
+            >
               <Text style={styles.closeCanvasText}>✕ Exit Test</Text>
             </TouchableOpacity>
 
-            <View style={styles.canvasTapCountBadge}>
+            <View style={styles.canvasTapCountBadge} pointerEvents="none">
               <Text style={styles.canvasTapCountText}>Taps: {tapCount}</Text>
             </View>
           </View>
@@ -91,6 +97,7 @@ const TapTestScreen = ({ navigation }) => {
           {ripples.map((ripple) => (
             <View
               key={ripple.id}
+              pointerEvents="none"
               style={[
                 styles.whiteCanvasRipple,
                 { left: ripple.x - 25, top: ripple.y - 25 },
