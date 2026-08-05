@@ -61,6 +61,10 @@ const PhoneSensorScreen = ({ navigation }) => {
       navigation.navigate('TapTestScreen');
     } else if (test.title === 'Screen Area' || test.id === '4') {
       navigation.navigate('ScreenAreaTestScreen');
+    } else if (test.title === 'Accelerometer' || test.id === '5') {
+      navigation.navigate('AccelerometerTestScreen');
+    } else if (test.title === 'Headphones' || test.id === '6') {
+      navigation.navigate('HeadphonesTestScreen');
     } else {
       Alert.alert(test.title, `${test.subtitle}\n\n[Sensor Test Launched]`);
     }

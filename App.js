@@ -20,6 +20,8 @@ import DisplayTestScreen from './src/screens/DisplayTestScreen';
 import FlashlightTestScreen from './src/screens/FlashlightTestScreen';
 import TapTestScreen from './src/screens/TapTestScreen';
 import ScreenAreaTestScreen from './src/screens/ScreenAreaTestScreen';
+import AccelerometerTestScreen from './src/screens/AccelerometerTestScreen';
+import HeadphonesTestScreen from './src/screens/HeadphonesTestScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -51,6 +53,8 @@ const App = () => {
           <Stack.Screen name="FlashlightTestScreen" component={FlashlightTestScreen} />
           <Stack.Screen name="TapTestScreen" component={TapTestScreen} />
           <Stack.Screen name="ScreenAreaTestScreen" component={ScreenAreaTestScreen} />
+          <Stack.Screen name="AccelerometerTestScreen" component={AccelerometerTestScreen} />
+          <Stack.Screen name="HeadphonesTestScreen" component={HeadphonesTestScreen} />
         </Stack.Navigator>
       </NavigationContainer>
     </LanguageProvider>
