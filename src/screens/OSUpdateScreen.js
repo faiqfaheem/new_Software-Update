@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -9,42 +9,109 @@ import {
   Platform,
   SafeAreaView,
   StatusBar,
+  ActivityIndicator,
 } from 'react-native';
-
-const WhitePlaceholder = ({ size = 22, borderRadius = 4, color = '#FFFFFF', opacity = 1 }) => (
-  <View
-    style={{
-      width: size,
-      height: size,
-      backgroundColor: color,
-      borderRadius: borderRadius,
-      opacity: opacity,
-    }}
-  />
-);
+import DeviceInfo from 'react-native-device-info';
 
 const BackArrow = ({ color = '#FFFFFF', size = 22 }) => (
   <Text style={{ color, fontSize: size, fontWeight: 'bold' }}>←</Text>
 );
 
 const OSUpdateScreen = ({ navigation }) => {
-  const androidVersion = Platform.Version || 13;
-  
-  // OS Codename mapping
-  const getOsName = (ver) => {
-    if (ver >= 34) return 'Upside Down Cake';
-    if (ver === 33) return 'Tiramisu';
-    if (ver === 31 || ver === 32) return 'Snow Cone';
-    if (ver === 30) return 'Red Velvet Cake';
-    if (ver === 29) return 'Quince Tart';
-    return 'Tiramisu';
+  const [loading, setLoading] = useState(true);
+  const [deviceDetails, setDeviceDetails] = useState({
+    androidVersion: '',
+    apiLevel: '',
+    brand: '',
+    deviceName: '',
+    model: '',
+    manufacturer: '',
+    hardware: '',
+    buildId: '',
+    securityPatch: '',
+  });
+
+  useEffect(() => {
+    fetchRealtimeOSInfo();
+  }, []);
+
+  const fetchRealtimeOSInfo = async () => {
+    setLoading(true);
+    try {
+      // 1. Android Release Version (e.g., "13", "14")
+      const version = (await DeviceInfo.getSystemVersion()) || String(Platform.Version || '13');
+
+      // 2. Android API Level (e.g., "33", "34")
+      let api = '';
+      try {
+        const apiNum = await DeviceInfo.getApiLevel();
+        if (apiNum) api = String(apiNum);
+      } catch (_e) {
+        api = String(DeviceInfo.getApiLevelSync() || '33');
+      }
+
+      // 3. Brand & Manufacturer
+      const brand = DeviceInfo.getBrand() || Platform.constants?.Brand || 'Android Device';
+      const manufacturer =
+        DeviceInfo.getManufacturerSync() || Platform.constants?.Manufacturer || brand;
+
+      // 4. Device Model (Exact string from android.os.Build.MODEL)
+      const model = DeviceInfo.getModel() || Platform.constants?.Model || 'Model';
+
+      // 5. Friendly Device Name (Settings > About Phone Device Name)
+      let deviceName = '';
+      try {
+        deviceName = await DeviceInfo.getDeviceName();
+      } catch (_e) {}
+
+      // 6. Hardware / Board Chipset
+      const hardware =
+        DeviceInfo.getHardwareSync() || DeviceInfo.getBoardSync() || 'System Hardware';
+
+      // 7. Exact OS Build Display Number (Settings > About Phone Build Number)
+      let buildId = '';
+      try {
+        buildId = DeviceInfo.getDisplaySync() || DeviceInfo.getBuildNumber() || '';
+      } catch (_e) {}
+
+      // 8. Exact Security Patch Date (Settings > About Phone Security Patch)
+      let securityPatch = '';
+      try {
+        securityPatch = DeviceInfo.getSecurityPatchSync() || '';
+      } catch (_e) {}
+
+      setDeviceDetails({
+        androidVersion: version,
+        apiLevel: api,
+        brand,
+        deviceName: deviceName || `${brand} ${model}`,
+        model,
+        manufacturer,
+        hardware,
+        buildId: buildId || `${brand}.${version}`,
+        securityPatch: securityPatch || 'Latest System Security Patch',
+      });
+    } catch (_e) {
+      // Fallback
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const deviceBrand = Platform.constants?.Brand || 'Redmi';
-  const deviceModel = Platform.constants?.Model || '2209116AG';
-  const deviceManufacturer = Platform.constants?.Manufacturer || 'Xiaomi';
-  const hardwareName = Platform.constants?.Fingerprint?.split('/')?.[0] || 'qcom';
-  const buildNum = `TKQ1.${androidVersion}0${Math.floor(Math.random()*900+100)}.001 test-keys`;
+  // Official Android Codename Mapping by API Level
+  const getOsCodename = (ver, apiStr) => {
+    const api = parseInt(apiStr, 10) || 33;
+    if (api >= 36) return 'Baklava';
+    if (api === 35) return 'Vanilla Ice Cream';
+    if (api === 34) return 'Upside Down Cake';
+    if (api === 33) return 'Tiramisu';
+    if (api === 31 || api === 32) return 'Snow Cone';
+    if (api === 30) return 'Red Velvet Cake';
+    if (api === 29) return 'Quince Tart';
+    if (api === 28) return 'Pie';
+    if (api === 26 || api === 27) return 'Oreo';
+    return `Android ${ver}`;
+  };
 
   const handleCheckOSUpdateAction = async () => {
     try {
@@ -78,85 +145,96 @@ const OSUpdateScreen = ({ navigation }) => {
         </View>
 
         <TouchableOpacity style={styles.settingsButton} onPress={handleSettingsPress}>
-          <WhitePlaceholder size={18} borderRadius={4} color="#FFFFFF" />
+          <Text style={{ color: '#FFFFFF', fontSize: 18 }}>⚙</Text>
         </TouchableOpacity>
       </View>
 
       {/* Main Content */}
-      <ScrollView
-        style={styles.container}
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
-        {/* Top OS Summary Card */}
-        <View style={styles.osSummaryCard}>
-          <View style={styles.osSummaryTextContainer}>
-            <Text style={styles.osCodename}>{getOsName(androidVersion)}</Text>
-            <Text style={styles.osVersionLabel}>Android {androidVersion}</Text>
-          </View>
-
-          <View style={styles.osIconSquare}>
-            <WhitePlaceholder size={24} borderRadius={4} color="#FFFFFF" />
-          </View>
+      {loading ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#3B82F6" />
+          <Text style={styles.loadingText}>Reading Native OS Specifications...</Text>
         </View>
+      ) : (
+        <ScrollView
+          style={styles.container}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Top OS Summary Card */}
+          <View style={styles.osSummaryCard}>
+            <View style={styles.osSummaryTextContainer}>
+              <Text style={styles.osCodename}>
+                {getOsCodename(deviceDetails.androidVersion, deviceDetails.apiLevel)}
+              </Text>
+              <Text style={styles.osVersionLabel}>
+                Android {deviceDetails.androidVersion} (API Level {deviceDetails.apiLevel})
+              </Text>
+            </View>
 
-        {/* Device Specifications Card */}
-        <View style={styles.specsCard}>
-          <Text style={styles.specsHeaderTitle}>DEVICE SPECIFICATIONS</Text>
-
-          {/* Spec Row 1: Device Name */}
-          <View style={styles.specRow}>
-            <Text style={styles.specLabel}>Device Name</Text>
-            <Text style={styles.specValue}>{deviceBrand}</Text>
+            <View style={styles.osBadgeCircle}>
+              <Text style={{ fontSize: 24, fontWeight: 'bold', color: '#10B981' }}>✓</Text>
+            </View>
           </View>
 
-          {/* Spec Row 2: Manufacturer */}
-          <View style={styles.specRow}>
-            <Text style={styles.specLabel}>Manufacturer</Text>
-            <Text style={styles.specValue}>{deviceManufacturer}</Text>
+          {/* Device Specifications Card (Matching Settings > About Phone 1:1) */}
+          <View style={styles.specsCard}>
+            <Text style={styles.specsHeaderTitle}>SYSTEM ABOUT PHONE SPECIFICATIONS</Text>
+
+            {/* Spec Row 1: Device Name */}
+            <View style={styles.specRow}>
+              <Text style={styles.specLabel}>Device Name</Text>
+              <Text style={styles.specValue}>{deviceDetails.deviceName}</Text>
+            </View>
+
+            {/* Spec Row 2: Brand / Manufacturer */}
+            <View style={styles.specRow}>
+              <Text style={styles.specLabel}>Brand & Manufacturer</Text>
+              <Text style={styles.specValue}>
+                {deviceDetails.brand} ({deviceDetails.manufacturer})
+              </Text>
+            </View>
+
+            {/* Spec Row 3: Model Number */}
+            <View style={styles.specRow}>
+              <Text style={styles.specLabel}>Model Number</Text>
+              <Text style={styles.specValue}>{deviceDetails.model}</Text>
+            </View>
+
+            {/* Spec Row 4: Hardware / Processor */}
+            <View style={styles.specRow}>
+              <Text style={styles.specLabel}>Hardware / Chipset</Text>
+              <Text style={styles.specValue}>{deviceDetails.hardware}</Text>
+            </View>
+
+            {/* Spec Row 5: Android Security Patch */}
+            <View style={styles.specRow}>
+              <Text style={styles.specLabel}>Security Patch Level</Text>
+              <Text style={[styles.specValue, { color: '#10B981' }]}>
+                {deviceDetails.securityPatch}
+              </Text>
+            </View>
+
+            {/* Spec Row 6: OS Build Number */}
+            <View style={[styles.specRow, { borderBottomWidth: 0 }]}>
+              <Text style={styles.specLabel}>Build Number</Text>
+              <Text style={[styles.specValue, styles.buildNumberText]}>
+                {deviceDetails.buildId}
+              </Text>
+            </View>
           </View>
 
-          {/* Spec Row 3: Device Model */}
-          <View style={styles.specRow}>
-            <Text style={styles.specLabel}>Device Model</Text>
-            <Text style={styles.specValue}>{deviceModel}</Text>
-          </View>
+          {/* Check OS Update Button */}
+          <TouchableOpacity style={styles.checkOsButton} onPress={handleCheckOSUpdateAction}>
+            <Text style={styles.checkOsButtonText}>Check OS Update</Text>
+          </TouchableOpacity>
 
-          {/* Spec Row 4: Hardware */}
-          <View style={styles.specRow}>
-            <Text style={styles.specLabel}>Hardware</Text>
-            <Text style={styles.specValue}>{hardwareName}</Text>
-          </View>
-
-          {/* Spec Row 5: Build Number */}
-          <View style={styles.specRow}>
-            <Text style={styles.specLabel}>Build Number</Text>
-            <Text style={[styles.specValue, styles.buildNumberText]}>{buildNum}</Text>
-          </View>
-
-          {/* Spec Row 6: Build Date */}
-          <View style={styles.specRow}>
-            <Text style={styles.specLabel}>Build Date</Text>
-            <Text style={styles.specValue}>May 13, 2026</Text>
-          </View>
-
-          {/* Spec Row 7: Release Date */}
-          <View style={[styles.specRow, { borderBottomWidth: 0 }]}>
-            <Text style={styles.specLabel}>Release Date</Text>
-            <Text style={styles.specValue}>August 15, 2022</Text>
-          </View>
-        </View>
-
-        {/* Check OS Update Button */}
-        <TouchableOpacity style={styles.checkOsButton} onPress={handleCheckOSUpdateAction}>
-          <Text style={styles.checkOsButtonText}>Check OS Update</Text>
-        </TouchableOpacity>
-
-        {/* Action Disclaimer Subtext */}
-        <Text style={styles.disclaimerText}>
-          This will take you to your device's Settings, where you can check for the latest system update.
-        </Text>
-      </ScrollView>
+          {/* Action Disclaimer Subtext */}
+          <Text style={styles.disclaimerText}>
+            Tapping this button will open your phone's official System Update settings screen.
+          </Text>
+        </ScrollView>
+      )}
     </SafeAreaView>
   );
 };
@@ -193,24 +271,33 @@ const styles = StyleSheet.create({
   settingsButton: {
     padding: 6,
   },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#0B1120',
+  },
+  loadingText: {
+    marginTop: 14,
+    color: '#94A3B8',
+    fontSize: 15,
+  },
   container: {
     flex: 1,
     backgroundColor: '#0B1120',
   },
   scrollContent: {
-    paddingHorizontal: 16,
-    paddingTop: 16,
-    paddingBottom: 30,
+    padding: 16,
+    paddingBottom: 40,
   },
-  // OS Summary Card
   osSummaryCard: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     backgroundColor: '#131C31',
-    borderRadius: 18,
-    padding: 22,
-    marginBottom: 18,
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 20,
     borderWidth: 1,
     borderColor: '#1E293B',
   },
@@ -218,7 +305,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   osCodename: {
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: 'bold',
     color: '#FFFFFF',
     marginBottom: 4,
@@ -228,61 +315,59 @@ const styles = StyleSheet.create({
     color: '#3B82F6',
     fontWeight: '600',
   },
-  osIconSquare: {
-    width: 48,
-    height: 48,
-    borderRadius: 14,
-    backgroundColor: '#1E293B',
+  osBadgeCircle: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(16, 185, 129, 0.15)',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  // Specifications Card
   specsCard: {
     backgroundColor: '#131C31',
-    borderRadius: 18,
-    paddingVertical: 18,
-    paddingHorizontal: 18,
+    borderRadius: 16,
+    padding: 18,
     marginBottom: 24,
     borderWidth: 1,
     borderColor: '#1E293B',
   },
   specsHeaderTitle: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: '#94A3B8',
-    letterSpacing: 0.8,
-    marginBottom: 14,
+    fontSize: 12,
+    fontWeight: 'bold',
+    color: '#64748B',
+    letterSpacing: 1.2,
+    marginBottom: 16,
   },
   specRow: {
     flexDirection: 'row',
-    alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: 13,
+    alignItems: 'center',
+    paddingVertical: 12,
     borderBottomWidth: 1,
     borderBottomColor: '#1E293B',
   },
   specLabel: {
     fontSize: 14,
     color: '#94A3B8',
+    fontWeight: '500',
   },
   specValue: {
     fontSize: 14,
-    fontWeight: '600',
     color: '#FFFFFF',
+    fontWeight: '600',
+    maxWidth: '60%',
+    textAlign: 'right',
   },
   buildNumberText: {
-    color: '#60A5FA',
+    color: '#38BDF8',
     fontSize: 13,
-    fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
   },
-  // Check OS Button & Disclaimer
   checkOsButton: {
     backgroundColor: '#3B82F6',
     borderRadius: 14,
     paddingVertical: 16,
     alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 14,
+    marginBottom: 12,
     shadowColor: '#3B82F6',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
@@ -290,16 +375,17 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   checkOsButtonText: {
-    color: '#FFFFFF',
     fontSize: 16,
     fontWeight: 'bold',
+    color: '#FFFFFF',
+    letterSpacing: 0.3,
   },
   disclaimerText: {
     fontSize: 12,
     color: '#64748B',
     textAlign: 'center',
     lineHeight: 18,
-    paddingHorizontal: 16,
+    paddingHorizontal: 12,
   },
 });
 

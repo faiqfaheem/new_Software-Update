@@ -14,6 +14,7 @@ import {
   ActivityIndicator,
   Image,
   Platform,
+  BackHandler,
 } from 'react-native';
 
 const WhitePlaceholder = ({ size = 22, borderRadius = 4, color = '#FFFFFF', opacity = 1 }) => (
@@ -139,12 +140,24 @@ const getAppPermissionGroups = (requestedPerms = []) => {
 };
 
 const classifyAppRiskFromGroups = (matchedGroups = []) => {
-  if (!matchedGroups || matchedGroups.length === 0) {
-    return 'None';
+  const count = matchedGroups ? matchedGroups.length : 0;
+
+  // 1. High Risk: Strictly 5 or more permission groups
+  if (count >= 5) {
+    return 'High';
   }
-  if (matchedGroups.some((g) => g.risk === 'High')) return 'High';
-  if (matchedGroups.some((g) => g.risk === 'Medium')) return 'Medium';
-  if (matchedGroups.some((g) => g.risk === 'Low')) return 'Low';
+
+  // 2. Medium Risk: Strictly 3 to 4 permission groups (3 or 4)
+  if (count >= 3) {
+    return 'Medium';
+  }
+
+  // 3. Low Risk: Strictly 1 to 2 permission groups (1 or 2)
+  if (count >= 1) {
+    return 'Low';
+  }
+
+  // 4. No Risk (None): Strictly 0 permission groups
   return 'None';
 };
 
@@ -169,6 +182,19 @@ const PermissionManagerScreen = ({ navigation }) => {
   useEffect(() => {
     fetchDeviceAppsAndPermissions();
   }, []);
+
+  useEffect(() => {
+    const onBackPress = () => {
+      if (selectedRiskDetail !== null) {
+        setSelectedRiskDetail(null);
+        return true; // Prevent exiting screen
+      }
+      return false; // Default back behavior
+    };
+
+    const subscription = BackHandler.addEventListener('hardwareBackPress', onBackPress);
+    return () => subscription.remove();
+  }, [selectedRiskDetail]);
 
   const fetchDeviceAppsAndPermissions = async () => {
     setLoading(true);
@@ -335,7 +361,9 @@ const PermissionManagerScreen = ({ navigation }) => {
           <TouchableOpacity style={styles.backButton} onPress={handleBackPress}>
             <BackArrow size={22} color="#FFFFFF" />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>App Permission</Text>
+          <Text style={styles.headerTitle}>
+            {selectedRiskDetail !== null ? `${selectedRiskDetail} Risk Apps` : 'App Permission'}
+          </Text>
         </View>
 
         <TouchableOpacity style={styles.settingsButton} onPress={handleSettingsPress}>
