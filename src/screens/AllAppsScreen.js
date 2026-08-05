@@ -101,8 +101,31 @@ const AllAppsScreen = ({ navigation }) => {
     Linking.openSettings();
   };
 
+  const handleAppPress = async (packageName) => {
+    if (!packageName) {
+      Linking.openSettings();
+      return;
+    }
+    try {
+      if (
+        NativeModules.AppPermissionModule &&
+        NativeModules.AppPermissionModule.openAppSettings
+      ) {
+        await NativeModules.AppPermissionModule.openAppSettings(packageName);
+      } else {
+        Linking.openSettings();
+      }
+    } catch (e) {
+      Linking.openSettings();
+    }
+  };
+
   const renderAppItem = ({ item }) => (
-    <View style={styles.appCard}>
+    <TouchableOpacity
+      style={styles.appCard}
+      activeOpacity={0.7}
+      onPress={() => handleAppPress(item.packageName)}
+    >
       {/* Icon Container with Real System App Icon */}
       <View style={styles.appIconContainer}>
         {item.appIcon ? (
@@ -129,7 +152,7 @@ const AllAppsScreen = ({ navigation }) => {
           <Text style={styles.appLastUsedText}>{item.lastUsed}</Text>
         </View>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 
   return (

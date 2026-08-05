@@ -1,5 +1,6 @@
 package com.softwareupdateutilityapp
 
+import android.content.Intent
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
@@ -7,7 +8,9 @@ import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
+import android.net.Uri
 import android.os.Build
+import android.provider.Settings
 import android.util.Base64
 import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
@@ -47,6 +50,20 @@ class AppPermissionModule(private val reactContext: ReactApplicationContext) : R
             "data:image/png;base64," + Base64.encodeToString(byteArray, Base64.NO_WRAP)
         } catch (_: Exception) {
             null
+        }
+    }
+
+    @ReactMethod
+    fun openAppSettings(packageName: String, promise: Promise) {
+        try {
+            val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                data = Uri.fromParts("package", packageName, null)
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK
+            }
+            reactApplicationContext.startActivity(intent)
+            promise.resolve(true)
+        } catch (e: Exception) {
+            promise.reject("INTENT_ERROR", e.message, e)
         }
     }
 

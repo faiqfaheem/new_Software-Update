@@ -13,6 +13,7 @@ import {
   NativeModules,
   ActivityIndicator,
   Image,
+  Platform,
 } from 'react-native';
 
 const WhitePlaceholder = ({ size = 22, borderRadius = 4, color = '#FFFFFF', opacity = 1 }) => (
@@ -184,6 +185,25 @@ const PermissionManagerScreen = ({ navigation }) => {
     Linking.openSettings();
   };
 
+  const handleAppPress = async (packageName) => {
+    if (!packageName) {
+      Linking.openSettings();
+      return;
+    }
+    try {
+      if (
+        NativeModules.AppPermissionModule &&
+        NativeModules.AppPermissionModule.openAppSettings
+      ) {
+        await NativeModules.AppPermissionModule.openAppSettings(packageName);
+      } else {
+        Linking.openSettings();
+      }
+    } catch (e) {
+      Linking.openSettings();
+    }
+  };
+
   const handleBackPress = () => {
     if (selectedRiskDetail !== null) {
       setSelectedRiskDetail(null);
@@ -208,7 +228,7 @@ const PermissionManagerScreen = ({ navigation }) => {
       <TouchableOpacity
         style={styles.detailAppCard}
         activeOpacity={0.7}
-        onPress={handleSettingsPress}
+        onPress={() => handleAppPress(item.packageName)}
       >
         {/* Left Real System App Icon Container */}
         <View style={styles.detailIconContainer}>
