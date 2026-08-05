@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -7,7 +7,8 @@ import {
   SafeAreaView,
   StatusBar,
   Linking,
-  Alert,
+  NativeModules,
+  DeviceEventEmitter,
 } from 'react-native';
 
 const WhitePlaceholder = ({ size = 22, borderRadius = 4, color = '#FFFFFF' }) => (
@@ -26,14 +27,50 @@ const BackArrow = ({ color = '#FFFFFF', size = 22 }) => (
 );
 
 const HeadphonesTestScreen = ({ navigation }) => {
-  const [isConnected, setIsConnected] = useState(true);
+  const [isConnected, setIsConnected] = useState(false);
+  const [activeTestingChannel, setActiveTestingChannel] = useState(null); // 'LEFT' | 'RIGHT' | null
+
+  // Subscribe to physical device Hardware Headphone Plug/Unplug events
+  useEffect(() => {
+    let subscription;
+
+    if (NativeModules.HeadphoneModule) {
+      // Check initial connection status on load
+      if (NativeModules.HeadphoneModule.isHeadphoneConnected) {
+        NativeModules.HeadphoneModule.isHeadphoneConnected()
+          .then((status) => setIsConnected(!!status))
+          .catch(() => {});
+      }
+
+      // Start listening to real-time hardware broadcast events
+      if (NativeModules.HeadphoneModule.startListening) {
+        NativeModules.HeadphoneModule.startListening().catch(() => {});
+        subscription = DeviceEventEmitter.addListener('HeadphoneStatusEvent', (event) => {
+          setIsConnected(!!event.connected);
+        });
+      }
+    }
+
+    return () => {
+      if (subscription) subscription.remove();
+      if (NativeModules.HeadphoneModule && NativeModules.HeadphoneModule.stopListening) {
+        NativeModules.HeadphoneModule.stopListening().catch(() => {});
+      }
+    };
+  }, []);
 
   const handleTestLeftStereo = () => {
-    Alert.alert('Left Stereo Test', 'Playing audio on Left Earphone...\n\n[Audio Test Triggered]');
+    setActiveTestingChannel('LEFT');
+    setTimeout(() => {
+      setActiveTestingChannel(null);
+    }, 2000);
   };
 
   const handleTestRightStereo = () => {
-    Alert.alert('Right Stereo Test', 'Playing audio on Right Earphone...\n\n[Audio Test Triggered]');
+    setActiveTestingChannel('RIGHT');
+    setTimeout(() => {
+      setActiveTestingChannel(null);
+    }, 2000);
   };
 
   const handleSettingsPress = () => {
@@ -74,39 +111,66 @@ const HeadphonesTestScreen = ({ navigation }) => {
             Connect headphones and test audio output.
           </Text>
 
-          {/* Status Row */}
+          {/* Real-time Hardware Connection Status Indicator */}
           <View style={styles.statusRow}>
-            <Text style={styles.statusConnected}>✓ Earphones Connected</Text>
-            <Text style={styles.statusNotConnected}>✓ Earphones Notconnected</Text>
+            {isConnected ? (
+              <View style={styles.statusBadgeConnected}>
+                <View style={styles.greenDot} />
+                <Text style={styles.statusTextConnected}>Earphones Connected</Text>
+              </View>
+            ) : (
+              <View style={styles.statusBadgeDisconnected}>
+                <View style={styles.redDot} />
+                <Text style={styles.statusTextDisconnected}>Earphones Not Connected</Text>
+              </View>
+            )}
           </View>
 
-          {/* Stereo Cards */}
-          {/* Card 1: Left Stereo */}
-          <View style={styles.stereoCard}>
-            <View style={styles.stereoIconWrapper}>
-              <WhitePlaceholder size={24} borderRadius={6} color="#FFFFFF" />
+          {/* Left & Right Channel Stereo Cards */}
+          <View style={styles.channelsContainer}>
+            {/* Left Earphone Card */}
+            <View style={styles.channelCard}>
+              <View style={styles.channelHeader}>
+                <WhitePlaceholder size={24} borderRadius={6} color="#FFFFFF" />
+                <Text style={styles.channelTitle}>Left Earphone</Text>
+              </View>
+              <TouchableOpacity
+                style={[
+                  styles.testPillButton,
+                  activeTestingChannel === 'LEFT' && styles.testPillActive,
+                ]}
+                onPress={handleTestLeftStereo}
+              >
+                <Text style={styles.testPillText}>
+                  {activeTestingChannel === 'LEFT' ? 'Testing Left 🔊' : 'Test'}
+                </Text>
+              </TouchableOpacity>
             </View>
-            <Text style={styles.stereoTitle}>Left Stereo</Text>
-            <TouchableOpacity style={styles.testPillButton} onPress={handleTestLeftStereo}>
-              <Text style={styles.testPillText}>Test</Text>
-            </TouchableOpacity>
-          </View>
 
-          {/* Card 2: Right Stereo */}
-          <View style={styles.stereoCard}>
-            <View style={styles.stereoIconWrapper}>
-              <WhitePlaceholder size={24} borderRadius={6} color="#FFFFFF" />
+            {/* Right Earphone Card */}
+            <View style={styles.channelCard}>
+              <View style={styles.channelHeader}>
+                <WhitePlaceholder size={24} borderRadius={6} color="#FFFFFF" />
+                <Text style={styles.channelTitle}>Right Earphone</Text>
+              </View>
+              <TouchableOpacity
+                style={[
+                  styles.testPillButton,
+                  activeTestingChannel === 'RIGHT' && styles.testPillActive,
+                ]}
+                onPress={handleTestRightStereo}
+              >
+                <Text style={styles.testPillText}>
+                  {activeTestingChannel === 'RIGHT' ? 'Testing Right 🔊' : 'Test'}
+                </Text>
+              </TouchableOpacity>
             </View>
-            <Text style={styles.stereoTitle}>Right Stereo</Text>
-            <TouchableOpacity style={styles.testPillButton} onPress={handleTestRightStereo}>
-              <Text style={styles.testPillText}>Test</Text>
-            </TouchableOpacity>
           </View>
         </View>
 
-        {/* Bottom Question & Feedback Buttons (Consistent Template) */}
+        {/* Bottom Question & Feedback Buttons (Same exact position & white placeholder circles) */}
         <View style={styles.bottomFeedbackSection}>
-          <Text style={styles.questionText}>Is the headphones working?</Text>
+          <Text style={styles.questionText}>Is the earphone working?</Text>
 
           <View style={styles.feedbackButtonsRow}>
             {/* Pass White Circle Placeholder Button */}
@@ -175,7 +239,7 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   placeholderContainer: {
-    marginBottom: 20,
+    marginBottom: 16,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -184,28 +248,64 @@ const styles = StyleSheet.create({
     color: '#94A3B8',
     textAlign: 'center',
     lineHeight: 20,
-    marginBottom: 12,
+    marginBottom: 16,
     paddingHorizontal: 10,
   },
   statusRow: {
-    alignItems: 'center',
     marginBottom: 20,
+    alignItems: 'center',
   },
-  statusConnected: {
-    color: '#34D399',
-    fontSize: 13,
-    fontWeight: '600',
-    marginBottom: 4,
-  },
-  statusNotConnected: {
-    color: '#F87171',
-    fontSize: 13,
-    fontWeight: '600',
-  },
-  stereoCard: {
-    width: '100%',
+  statusBadgeConnected: {
     flexDirection: 'row',
     alignItems: 'center',
+    backgroundColor: 'rgba(16, 185, 129, 0.15)',
+    borderWidth: 1,
+    borderColor: '#10B981',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+  },
+  greenDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#10B981',
+    marginRight: 8,
+  },
+  statusTextConnected: {
+    color: '#34D399',
+    fontSize: 14,
+    fontWeight: 'bold',
+  },
+  statusBadgeDisconnected: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(239, 68, 68, 0.15)',
+    borderWidth: 1,
+    borderColor: '#EF4444',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+  },
+  redDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#EF4444',
+    marginRight: 8,
+  },
+  statusTextDisconnected: {
+    color: '#F87171',
+    fontSize: 14,
+    fontWeight: 'bold',
+  },
+  channelsContainer: {
+    width: '100%',
+  },
+  channelCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     backgroundColor: '#131C31',
     borderRadius: 16,
     paddingHorizontal: 16,
@@ -214,35 +314,33 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#1E293B',
   },
-  stereoIconWrapper: {
-    width: 44,
-    height: 44,
-    borderRadius: 12,
-    backgroundColor: '#1E293B',
+  channelHeader: {
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 14,
   },
-  stereoTitle: {
-    flex: 1,
-    fontSize: 15,
-    fontWeight: 'bold',
+  channelTitle: {
     color: '#FFFFFF',
+    fontSize: 15,
+    fontWeight: '600',
+    marginLeft: 12,
   },
   testPillButton: {
-    backgroundColor: '#84CC16',
-    paddingHorizontal: 18,
-    paddingVertical: 7,
-    borderRadius: 16,
+    backgroundColor: '#10B981',
+    paddingHorizontal: 20,
+    paddingVertical: 8,
+    borderRadius: 18,
+  },
+  testPillActive: {
+    backgroundColor: '#3B82F6',
   },
   testPillText: {
-    color: '#1E293B',
+    color: '#FFFFFF',
     fontSize: 13,
     fontWeight: 'bold',
   },
   bottomFeedbackSection: {
     alignItems: 'center',
-    marginTop: 28,
+    marginTop: 24,
   },
   questionText: {
     fontSize: 18,

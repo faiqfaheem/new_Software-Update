@@ -9,7 +9,9 @@ class UsageStatsPackage : ReactPackage {
     override fun createNativeModules(reactContext: ReactApplicationContext): List<NativeModule> {
         return listOf(
             UsageStatsModule(reactContext),
-            FlashlightModule(reactContext)
+            FlashlightModule(reactContext),
+            AccelerometerModule(reactContext),
+            HeadphoneModule(reactContext)
         )
     }
 
