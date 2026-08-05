@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -10,6 +10,9 @@ import {
   StatusBar,
   FlatList,
   Alert,
+  NativeModules,
+  ActivityIndicator,
+  Image,
 } from 'react-native';
 
 const WhitePlaceholder = ({ size = 22, borderRadius = 4, color = '#FFFFFF', opacity = 1 }) => (
@@ -54,18 +57,59 @@ const RadioCircle = ({ selected = false }) => (
   </View>
 );
 
-const MOCK_UNINSTALL_APPS = [
-  { id: '1', name: 'Adobe Acrobat', version: '26.6.0.45936', size: '81.55 MB', color: '#DC2626', packageName: 'com.adobe.reader' },
-  { id: '2', name: 'AL Habib Mobile', version: '1.0.90', size: '95.46 MB', color: '#16A34A', packageName: 'com.alhabib.mobile' },
-  { id: '3', name: 'AliExpress', version: '8.166.7', size: '64.41 MB', color: '#EA580C', packageName: 'com.alibaba.aliexpress' },
-  { id: '4', name: 'Aloha VPN', version: '2.8.0', size: '41.40 MB', color: '#2563EB', packageName: 'com.aloha.browser' },
-  { id: '5', name: 'Android System Key Verifier', version: '1.367.9291', size: '9.91 MB', color: '#7C3AED', packageName: 'com.android.keyverifier' },
-  { id: '6', name: 'Android System SafetyCore', version: '1.0.92557', size: '5.42 MB', color: '#1E40AF', packageName: 'com.android.safetycore' },
-  { id: '7', name: 'PUBG Mobile', version: '2.7.0', size: '1.85 GB', color: '#D97706', packageName: 'com.tencent.ig' },
-];
+const formatSize = (bytes) => {
+  if (!bytes || bytes === 0) return '24 MB';
+  const mb = bytes / (1024 * 1024);
+  if (mb >= 1024) {
+    return `${(mb / 1024).toFixed(2)} GB`;
+  }
+  return `${mb.toFixed(1)} MB`;
+};
+
+const getRandomBgColor = (index) => {
+  const colors = ['#DC2626', '#16A34A', '#EA580C', '#2563EB', '#7C3AED', '#D97706', '#06B6D4'];
+  return colors[index % colors.length];
+};
 
 const BulkUninstallerScreen = ({ navigation }) => {
-  const [selectedIds, setSelectedIds] = useState(['2', '4']); // Pre-select item 2 & 4 as in screenshot
+  const [apps, setApps] = useState([]);
+  const [selectedIds, setSelectedIds] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadUserApps();
+  }, []);
+
+  const loadUserApps = async () => {
+    setLoading(true);
+    try {
+      if (
+        NativeModules.AppPermissionModule &&
+        NativeModules.AppPermissionModule.getInstalledAppsPermissions
+      ) {
+        const rawApps = await NativeModules.AppPermissionModule.getInstalledAppsPermissions();
+        // User downloadable apps (excluding core system apps)
+        const userApps = rawApps
+          .filter((a) => !a.isSystemApp)
+          .map((a, idx) => ({
+            id: a.packageName,
+            name: a.appName || a.packageName,
+            version: a.versionName || '1.0.0',
+            size: formatSize(a.apkSize),
+            color: getRandomBgColor(idx),
+            packageName: a.packageName,
+            appIcon: a.appIcon,
+          }));
+        setApps(userApps);
+      } else {
+        setApps([]);
+      }
+    } catch (e) {
+      setApps([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const toggleSelectApp = (id) => {
     if (selectedIds.includes(id)) {
@@ -76,10 +120,10 @@ const BulkUninstallerScreen = ({ navigation }) => {
   };
 
   const handleSelectAll = () => {
-    if (selectedIds.length === MOCK_UNINSTALL_APPS.length) {
+    if (selectedIds.length === apps.length) {
       setSelectedIds([]);
     } else {
-      setSelectedIds(MOCK_UNINSTALL_APPS.map((a) => a.id));
+      setSelectedIds(apps.map((a) => a.id));
     }
   };
 
@@ -89,7 +133,7 @@ const BulkUninstallerScreen = ({ navigation }) => {
       return;
     }
 
-    const selectedApps = MOCK_UNINSTALL_APPS.filter((a) => selectedIds.includes(a.id));
+    const selectedApps = apps.filter((a) => selectedIds.includes(a.id));
     const appNames = selectedApps.map((a) => a.name).join('\n• ');
 
     Alert.alert(
@@ -102,15 +146,16 @@ const BulkUninstallerScreen = ({ navigation }) => {
           style: 'destructive',
           onPress: async () => {
             if (Platform.OS === 'android') {
-              try {
-                const targetApp = selectedApps[0];
-                await Linking.sendIntent('android.intent.action.DELETE', [
-                  { key: 'package', value: targetApp.packageName || 'com.example.app' },
-                ]).catch(() => {
+              for (const targetApp of selectedApps) {
+                try {
+                  await Linking.sendIntent('android.intent.action.DELETE', [
+                    { key: 'package', value: targetApp.packageName },
+                  ]).catch(() => {
+                    Linking.openSettings();
+                  });
+                } catch (e) {
                   Linking.openSettings();
-                });
-              } catch (e) {
-                Linking.openSettings();
+                }
               }
             } else {
               Linking.openSettings();
@@ -125,7 +170,7 @@ const BulkUninstallerScreen = ({ navigation }) => {
     Linking.openSettings();
   };
 
-  const isAllSelected = selectedIds.length === MOCK_UNINSTALL_APPS.length;
+  const isAllSelected = apps.length > 0 && selectedIds.length === apps.length;
 
   const renderAppItem = ({ item }) => {
     const isSelected = selectedIds.includes(item.id);
@@ -135,14 +180,18 @@ const BulkUninstallerScreen = ({ navigation }) => {
         activeOpacity={0.8}
         onPress={() => toggleSelectApp(item.id)}
       >
-        {/* Left Color Box with White Placeholder */}
-        <View style={[styles.appIconContainer, { backgroundColor: item.color }]}>
-          <WhitePlaceholder size={24} borderRadius={4} color="#FFFFFF" />
+        {/* Left Icon Container with Real System App Icon */}
+        <View style={[styles.appIconContainer, { backgroundColor: 'transparent' }]}>
+          {item.appIcon ? (
+            <Image source={{ uri: item.appIcon }} style={{ width: 44, height: 44, borderRadius: 10 }} resizeMode="contain" />
+          ) : (
+            <WhitePlaceholder size={24} borderRadius={4} color="#FFFFFF" />
+          )}
         </View>
 
         {/* Middle Info */}
         <View style={styles.appInfoContainer}>
-          <Text style={styles.appNameText}>{item.name}</Text>
+          <Text style={styles.appNameText} numberOfLines={1}>{item.name}</Text>
           <Text style={styles.appVersionText}>Version : {item.version}</Text>
           <Text style={styles.appSizeText}>{item.size}</Text>
         </View>
@@ -174,21 +223,33 @@ const BulkUninstallerScreen = ({ navigation }) => {
       <View style={styles.container}>
         {/* Select All Link */}
         <View style={styles.topActionRow}>
-          <TouchableOpacity onPress={handleSelectAll}>
+          <TouchableOpacity onPress={handleSelectAll} disabled={apps.length === 0}>
             <Text style={styles.selectAllText}>
               {isAllSelected ? 'Deselect All' : 'Select All'}
             </Text>
           </TouchableOpacity>
         </View>
 
-        {/* Selectable App List */}
-        <FlatList
-          data={MOCK_UNINSTALL_APPS}
-          keyExtractor={(item) => item.id}
-          renderItem={renderAppItem}
-          contentContainerStyle={styles.listContent}
-          showsVerticalScrollIndicator={false}
-        />
+        {/* Selectable App List / Loading */}
+        {loading ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color="#3B82F6" />
+            <Text style={styles.loadingText}>Fetching Installed Apps...</Text>
+          </View>
+        ) : (
+          <FlatList
+            data={apps}
+            keyExtractor={(item) => item.id}
+            renderItem={renderAppItem}
+            contentContainerStyle={styles.listContent}
+            showsVerticalScrollIndicator={false}
+            ListEmptyComponent={
+              <View style={styles.emptyContainer}>
+                <Text style={styles.emptyText}>No uninstallable user apps found.</Text>
+              </View>
+            }
+          />
+        )}
 
         {/* Bottom Uninstall Button */}
         <View style={styles.bottomButtonContainer}>
@@ -239,7 +300,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#0B1120',
     paddingHorizontal: 16,
-    paddingTop: 10,
+    paddingTop: 12,
   },
   topActionRow: {
     flexDirection: 'row',
@@ -247,30 +308,49 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   selectAllText: {
-    fontSize: 14,
-    fontWeight: 'bold',
     color: '#3B82F6',
+    fontSize: 15,
+    fontWeight: '700',
   },
   listContent: {
-    paddingBottom: 20,
+    paddingBottom: 90,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    color: '#94A3B8',
+    fontSize: 14,
+    marginTop: 12,
+  },
+  emptyContainer: {
+    padding: 40,
+    alignItems: 'center',
+  },
+  emptyText: {
+    color: '#64748B',
+    fontSize: 15,
   },
   appCard: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#131C31',
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 12,
+    borderRadius: 14,
+    padding: 14,
+    marginBottom: 10,
     borderWidth: 1,
     borderColor: '#1E293B',
   },
   appIconContainer: {
-    width: 50,
-    height: 50,
-    borderRadius: 14,
+    width: 44,
+    height: 44,
+    borderRadius: 10,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 14,
+    overflow: 'hidden',
   },
   appInfoContainer: {
     flex: 1,
@@ -279,28 +359,30 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
     color: '#FFFFFF',
-    marginBottom: 4,
+    marginBottom: 2,
   },
   appVersionText: {
-    fontSize: 12,
     color: '#94A3B8',
+    fontSize: 12,
     marginBottom: 2,
   },
   appSizeText: {
-    fontSize: 12,
     color: '#64748B',
+    fontSize: 12,
   },
   bottomButtonContainer: {
-    paddingVertical: 14,
-    backgroundColor: '#0B1120',
+    position: 'absolute',
+    bottom: 20,
+    left: 16,
+    right: 16,
   },
   uninstallButton: {
-    backgroundColor: '#3B82F6',
+    backgroundColor: '#EF4444',
     borderRadius: 14,
     paddingVertical: 16,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#3B82F6',
+    shadowColor: '#EF4444',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,

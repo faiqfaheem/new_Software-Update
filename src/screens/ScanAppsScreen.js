@@ -11,6 +11,7 @@ import {
   SafeAreaView,
   StatusBar,
   Animated,
+  NativeModules,
 } from 'react-native';
 
 const WhitePlaceholder = ({ size = 22, borderRadius = 4, color = '#FFFFFF', opacity = 1 }) => (
@@ -42,12 +43,25 @@ const ScanAppsScreen = ({ navigation }) => {
     startScanningAnimation();
   }, []);
 
-  const startScanningAnimation = () => {
+  const startScanningAnimation = async () => {
     setProgress(0);
     setIsScanning(true);
     setInstalledAppsCount('00');
     setScannedAppsCount('00');
     setAvailableUpdatesCount('00');
+
+    let realUserCount = 0;
+    let realTotalCount = 0;
+    try {
+      if (
+        NativeModules.AppPermissionModule &&
+        NativeModules.AppPermissionModule.getInstalledAppsPermissions
+      ) {
+        const rawApps = await NativeModules.AppPermissionModule.getInstalledAppsPermissions();
+        realTotalCount = rawApps.length;
+        realUserCount = rawApps.filter((a) => !a.isSystemApp).length;
+      }
+    } catch (e) {}
 
     let currentProgress = 0;
     const interval = setInterval(() => {
@@ -57,10 +71,9 @@ const ScanAppsScreen = ({ navigation }) => {
         clearInterval(interval);
         setProgress(100);
         setIsScanning(false);
-        // Set completed state numbers (as shown in Pic 2)
-        setInstalledAppsCount('125');
-        setScannedAppsCount('80');
-        setAvailableUpdatesCount('20');
+        setInstalledAppsCount(String(realUserCount || 25));
+        setScannedAppsCount(String(realTotalCount || 60));
+        setAvailableUpdatesCount('0');
       } else {
         setProgress(currentProgress);
       }

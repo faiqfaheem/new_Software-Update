@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -9,7 +9,11 @@ import {
   Platform,
   SafeAreaView,
   StatusBar,
+  PermissionsAndroid,
+  ActivityIndicator,
 } from 'react-native';
+import DeviceInfo from 'react-native-device-info';
+import RNFS from 'react-native-fs';
 
 const WhitePlaceholder = ({ size = 22, borderRadius = 4, color = '#FFFFFF', opacity = 1 }) => (
   <View
@@ -27,7 +31,190 @@ const BackArrow = ({ color = '#FFFFFF', size = 22 }) => (
   <Text style={{ color, fontSize: size, fontWeight: 'bold' }}>←</Text>
 );
 
+const IMAGE_EXTS = ['.jpg', '.jpeg', '.png', '.heic', '.webp', '.gif', '.bmp'];
+const VIDEO_EXTS = ['.mp4', '.mkv', '.mov', '.avi', '.3gp', '.webm', '.flv'];
+const AUDIO_EXTS = ['.mp3', '.wav', '.aac', '.m4a', '.ogg', '.flac', '.opus', '.amr'];
+
+const formatBytes = (bytes) => {
+  if (!bytes || bytes <= 0) return '0.00 MB';
+  const gb = bytes / (1024 * 1024 * 1024);
+  if (gb >= 1) {
+    return `${gb.toFixed(2)} GB`;
+  }
+  const mb = bytes / (1024 * 1024);
+  return `${mb.toFixed(2)} MB`;
+};
+
 const StorageInfoScreen = ({ navigation }) => {
+  const [loading, setLoading] = useState(true);
+  const [permissionGranted, setPermissionGranted] = useState(false);
+  const [storageData, setStorageData] = useState({
+    totalSpaceFormatted: '0.00 GB',
+    usedSpaceFormatted: '0.00 GB',
+    usedPercentage: 0,
+    imagesSizeFormatted: '0.00 MB',
+    videosSizeFormatted: '0.00 MB',
+    audiosSizeFormatted: '0.00 MB',
+    allAppsSizeFormatted: '0.00 GB',
+  });
+
+  useEffect(() => {
+    initStorageScan();
+  }, []);
+
+  const checkPermissions = async () => {
+    if (Platform.OS !== 'android') return true;
+    try {
+      if (Platform.Version >= 33) {
+        const imgGranted = await PermissionsAndroid.check(PermissionsAndroid.PERMISSIONS.READ_MEDIA_IMAGES);
+        const vidGranted = await PermissionsAndroid.check(PermissionsAndroid.PERMISSIONS.READ_MEDIA_VIDEO);
+        const audGranted = await PermissionsAndroid.check(PermissionsAndroid.PERMISSIONS.READ_MEDIA_AUDIO);
+        return imgGranted && vidGranted && audGranted;
+      } else {
+        return await PermissionsAndroid.check(PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE);
+      }
+    } catch (e) {
+      return false;
+    }
+  };
+
+  const requestPermissions = async () => {
+    if (Platform.OS !== 'android') return true;
+    try {
+      if (Platform.Version >= 33) {
+        const grantedMap = await PermissionsAndroid.requestMultiple([
+          PermissionsAndroid.PERMISSIONS.READ_MEDIA_IMAGES,
+          PermissionsAndroid.PERMISSIONS.READ_MEDIA_VIDEO,
+          PermissionsAndroid.PERMISSIONS.READ_MEDIA_AUDIO,
+        ]);
+        const allGranted = Object.values(grantedMap).every(
+          (status) => status === PermissionsAndroid.RESULTS.GRANTED
+        );
+        return allGranted;
+      } else {
+        const granted = await PermissionsAndroid.request(
+          PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE
+        );
+        return granted === PermissionsAndroid.RESULTS.GRANTED;
+      }
+    } catch (e) {
+      return false;
+    }
+  };
+
+  const initStorageScan = async () => {
+    setLoading(true);
+    const hasPerm = await checkPermissions();
+    if (hasPerm) {
+      setPermissionGranted(true);
+      await scanStorageMetrics();
+    } else {
+      const requestedPerm = await requestPermissions();
+      setPermissionGranted(requestedPerm);
+      if (requestedPerm) {
+        await scanStorageMetrics();
+      } else {
+        // Fallback: Calculate overall disk capacity even if media permission is denied
+        await calculateDiskCapacityOnly();
+      }
+    }
+    setLoading(false);
+  };
+
+  const calculateDiskCapacityOnly = async () => {
+    try {
+      const totalBytes = await DeviceInfo.getTotalDiskCapacity();
+      const freeBytes = await DeviceInfo.getFreeDiskStorage();
+      const usedBytes = Math.max(0, totalBytes - freeBytes);
+      const usedPercentage = totalBytes > 0 ? Math.min(100, Math.round((usedBytes / totalBytes) * 100)) : 0;
+
+      setStorageData((prev) => ({
+        ...prev,
+        totalSpaceFormatted: formatBytes(totalBytes),
+        usedSpaceFormatted: formatBytes(usedBytes),
+        usedPercentage,
+      }));
+    } catch (e) {}
+  };
+
+  const scanFolderRecursive = async (dirPath, depth = 0, maxDepth = 3) => {
+    let images = 0;
+    let videos = 0;
+    let audios = 0;
+
+    if (depth > maxDepth) return { images, videos, audios };
+
+    try {
+      const exists = await RNFS.exists(dirPath);
+      if (!exists) return { images, videos, audios };
+
+      const items = await RNFS.readDir(dirPath);
+      for (const item of items) {
+        if (item.isFile()) {
+          const size = parseInt(item.size || 0, 10);
+          const name = item.name.toLowerCase();
+
+          if (IMAGE_EXTS.some((ext) => name.endsWith(ext))) {
+            images += size;
+          } else if (VIDEO_EXTS.some((ext) => name.endsWith(ext))) {
+            videos += size;
+          } else if (AUDIO_EXTS.some((ext) => name.endsWith(ext))) {
+            audios += size;
+          }
+        } else if (item.isDirectory() && !item.name.startsWith('.')) {
+          const subResult = await scanFolderRecursive(item.path, depth + 1, maxDepth);
+          images += subResult.images;
+          videos += subResult.videos;
+          audios += subResult.audios;
+        }
+      }
+    } catch (e) {}
+
+    return { images, videos, audios };
+  };
+
+  const scanStorageMetrics = async () => {
+    try {
+      // 1. Get Device Disk Space via react-native-device-info
+      const totalBytes = await DeviceInfo.getTotalDiskCapacity();
+      const freeBytes = await DeviceInfo.getFreeDiskStorage();
+      const usedBytes = Math.max(0, totalBytes - freeBytes);
+      const usedPercentage = totalBytes > 0 ? Math.min(100, Math.round((usedBytes / totalBytes) * 100)) : 0;
+
+      // 2. Real Storage Directory Scanning via react-native-fs
+      const rootPath = RNFS.ExternalStorageDirectoryPath || '/storage/emulated/0';
+      const targetFolders = ['DCIM', 'Pictures', 'Download', 'Movies', 'Music', 'Audio', 'WhatsApp', 'Telegram', 'Documents'];
+
+      let totalImages = 0;
+      let totalVideos = 0;
+      let totalAudios = 0;
+
+      for (const folder of targetFolders) {
+        const fullPath = `${rootPath}/${folder}`;
+        const folderResult = await scanFolderRecursive(fullPath, 0, 3);
+        totalImages += folderResult.images;
+        totalVideos += folderResult.videos;
+        totalAudios += folderResult.audios;
+      }
+
+      // Calculate All Apps & System size = Used Space - (Images + Videos + Audios)
+      const mediaTotal = totalImages + totalVideos + totalAudios;
+      const allAppsBytes = Math.max(0, usedBytes - mediaTotal);
+
+      setStorageData({
+        totalSpaceFormatted: formatBytes(totalBytes),
+        usedSpaceFormatted: formatBytes(usedBytes),
+        usedPercentage,
+        imagesSizeFormatted: formatBytes(totalImages),
+        videosSizeFormatted: formatBytes(totalVideos),
+        audiosSizeFormatted: formatBytes(totalAudios),
+        allAppsSizeFormatted: formatBytes(allAppsBytes),
+      });
+    } catch (e) {
+      await calculateDiskCapacityOnly();
+    }
+  };
+
   const handleSettingsPress = () => {
     Linking.openSettings();
   };
@@ -50,74 +237,90 @@ const StorageInfoScreen = ({ navigation }) => {
         </TouchableOpacity>
       </View>
 
-      {/* Main Mobile Storage Screen Content */}
-      <ScrollView
-        style={styles.container}
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
-        {/* Top Circular Progress Card */}
-        <View style={styles.storageCircleCard}>
-          <View style={styles.circleOuterRing}>
-            <View style={styles.circleInnerContainer}>
-              <Text style={styles.percentageText}>85%</Text>
-              <Text style={styles.usedSubText}>Used</Text>
+      {/* Main Content Body */}
+      {loading ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#3B82F6" />
+          <Text style={styles.loadingText}>Scanning Storage Metrics...</Text>
+        </View>
+      ) : (
+        <ScrollView
+          style={styles.container}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Top Circular Progress Card */}
+          <View style={styles.storageCircleCard}>
+            <View style={styles.circleOuterRing}>
+              <View style={styles.circleInnerContainer}>
+                <Text style={styles.percentageText}>{storageData.usedPercentage}%</Text>
+                <Text style={styles.usedSubText}>Used</Text>
+              </View>
             </View>
           </View>
-        </View>
 
-        {/* 2-Column Space Cards (Total Space & Used Space) */}
-        <View style={styles.spaceCardsRow}>
-          {/* Total Space Card */}
-          <View style={[styles.spaceCard, styles.totalSpaceCard]}>
-            <Text style={styles.spaceCardTitle}>Total Space</Text>
-            <Text style={styles.spaceCardVal}>225.00 GB</Text>
+          {/* Permission Prompt Banner if Storage Permission Not Granted */}
+          {!permissionGranted && (
+            <TouchableOpacity style={styles.permissionBanner} onPress={initStorageScan}>
+              <Text style={styles.permissionBannerText}>
+                Tap to grant storage permissions for full media breakdown scan
+              </Text>
+            </TouchableOpacity>
+          )}
+
+          {/* 2-Column Space Cards (Total Space & Used Space) */}
+          <View style={styles.spaceCardsRow}>
+            {/* Total Space Card */}
+            <View style={[styles.spaceCard, styles.totalSpaceCard]}>
+              <Text style={styles.spaceCardTitle}>Total Space</Text>
+              <Text style={styles.spaceCardVal}>{storageData.totalSpaceFormatted}</Text>
+            </View>
+
+            {/* Used Space Card */}
+            <View style={[styles.spaceCard, styles.usedSpaceCard]}>
+              <Text style={styles.spaceCardTitle}>Used Space</Text>
+              <Text style={styles.spaceCardVal}>{storageData.usedSpaceFormatted}</Text>
+            </View>
           </View>
 
-          {/* Used Space Card */}
-          <View style={[styles.spaceCard, styles.usedSpaceCard]}>
-            <Text style={styles.spaceCardTitle}>Used Space</Text>
-            <Text style={styles.spaceCardVal}>225.00 GB</Text>
+          {/* Storage Breakdown Item Cards */}
+          {/* Item 1: Audios */}
+          <View style={styles.breakdownCard}>
+            <View style={[styles.iconSquare, { backgroundColor: '#8B5CF6' }]}>
+              <WhitePlaceholder size={22} borderRadius={4} color="#FFFFFF" />
+            </View>
+            <Text style={styles.breakdownTitle}>Audios</Text>
+            <Text style={styles.breakdownSize}>{storageData.audiosSizeFormatted}</Text>
           </View>
-        </View>
 
-        {/* Storage Breakdown Item Cards */}
-        {/* Item 1: Audios */}
-        <View style={styles.breakdownCard}>
-          <View style={[styles.iconSquare, { backgroundColor: '#7C3AED' }]}>
-            <WhitePlaceholder size={22} borderRadius={4} color="#FFFFFF" />
+          {/* Item 2: Videos */}
+          <View style={styles.breakdownCard}>
+            <View style={[styles.iconSquare, { backgroundColor: '#EF4444' }]}>
+              <WhitePlaceholder size={22} borderRadius={4} color="#FFFFFF" />
+            </View>
+            <Text style={styles.breakdownTitle}>Videos</Text>
+            <Text style={styles.breakdownSize}>{storageData.videosSizeFormatted}</Text>
           </View>
-          <Text style={styles.breakdownTitle}>Audios</Text>
-          <Text style={styles.breakdownSize}>1.20 GB</Text>
-        </View>
 
-        {/* Item 2: Videos */}
-        <View style={styles.breakdownCard}>
-          <View style={[styles.iconSquare, { backgroundColor: '#DC2626' }]}>
-            <WhitePlaceholder size={22} borderRadius={4} color="#FFFFFF" />
+          {/* Item 3: Images */}
+          <View style={styles.breakdownCard}>
+            <View style={[styles.iconSquare, { backgroundColor: '#3B82F6' }]}>
+              <WhitePlaceholder size={22} borderRadius={4} color="#FFFFFF" />
+            </View>
+            <Text style={styles.breakdownTitle}>Images</Text>
+            <Text style={styles.breakdownSize}>{storageData.imagesSizeFormatted}</Text>
           </View>
-          <Text style={styles.breakdownTitle}>Videos</Text>
-          <Text style={styles.breakdownSize}>1.20 GB</Text>
-        </View>
 
-        {/* Item 3: Images */}
-        <View style={styles.breakdownCard}>
-          <View style={[styles.iconSquare, { backgroundColor: '#4F46E5' }]}>
-            <WhitePlaceholder size={22} borderRadius={4} color="#FFFFFF" />
+          {/* Item 4: All Apps */}
+          <View style={styles.breakdownCard}>
+            <View style={[styles.iconSquare, { backgroundColor: '#22C55E' }]}>
+              <WhitePlaceholder size={22} borderRadius={4} color="#FFFFFF" />
+            </View>
+            <Text style={styles.breakdownTitle}>All Apps</Text>
+            <Text style={styles.breakdownSize}>{storageData.allAppsSizeFormatted}</Text>
           </View>
-          <Text style={styles.breakdownTitle}>Images</Text>
-          <Text style={styles.breakdownSize}>1.20 GB</Text>
-        </View>
-
-        {/* Item 4: All Apps */}
-        <View style={styles.breakdownCard}>
-          <View style={[styles.iconSquare, { backgroundColor: '#16A34A' }]}>
-            <WhitePlaceholder size={22} borderRadius={4} color="#FFFFFF" />
-          </View>
-          <Text style={styles.breakdownTitle}>All Apps</Text>
-          <Text style={styles.breakdownSize}>1.20 GB</Text>
-        </View>
-      </ScrollView>
+        </ScrollView>
+      )}
     </SafeAreaView>
   );
 };
@@ -127,7 +330,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#0B1120',
   },
-  // Header Bar
   headerBar: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -155,6 +357,18 @@ const styles = StyleSheet.create({
   settingsButton: {
     padding: 6,
   },
+  loadingContainer: {
+    flex: 1,
+    backgroundColor: '#0B1120',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    color: '#94A3B8',
+    fontSize: 14,
+    marginTop: 12,
+    fontWeight: '600',
+  },
   container: {
     flex: 1,
     backgroundColor: '#0B1120',
@@ -164,7 +378,6 @@ const styles = StyleSheet.create({
     paddingTop: 16,
     paddingBottom: 30,
   },
-  // Storage Circle Card
   storageCircleCard: {
     backgroundColor: '#131C31',
     borderRadius: 20,
@@ -199,7 +412,21 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     marginTop: 2,
   },
-  // 2-Column Space Cards
+  permissionBanner: {
+    backgroundColor: '#1E293B',
+    borderColor: '#3B82F6',
+    borderWidth: 1,
+    padding: 12,
+    borderRadius: 14,
+    marginBottom: 16,
+    alignItems: 'center',
+  },
+  permissionBannerText: {
+    color: '#60A5FA',
+    fontSize: 13,
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
   spaceCardsRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -232,7 +459,6 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#94A3B8',
   },
-  // Breakdown Item Cards
   breakdownCard: {
     flexDirection: 'row',
     alignItems: 'center',

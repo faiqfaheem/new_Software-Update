@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -10,6 +10,9 @@ import {
   SafeAreaView,
   StatusBar,
   FlatList,
+  NativeModules,
+  ActivityIndicator,
+  Image,
 } from 'react-native';
 
 const WhitePlaceholder = ({ size = 22, borderRadius = 4, color = '#FFFFFF', opacity = 1 }) => (
@@ -32,22 +35,55 @@ const SearchIcon = ({ color = '#64748B', size = 16 }) => (
   <Text style={{ color, fontSize: size, marginRight: 10 }}>🔍</Text>
 );
 
-const MOCK_APPS = [
-  { id: '1', name: 'Spotify', category: 'MEDIA', size: '342 MB', lastUsed: 'Used 2h ago', type: 'Installed' },
-  { id: '2', name: 'Instagram', category: 'SOCIAL', size: '512 MB', lastUsed: 'Used Yesterday', type: 'Installed' },
-  { id: '3', name: 'System UI', category: 'SYSTEM', size: '42 MB', lastUsed: 'Background Process', type: 'System' },
-  { id: '4', name: 'Adobe Lightroom', category: 'CREATIVE', size: '1.2 GB', lastUsed: 'Used 5d ago', type: 'Installed' },
-  { id: '5', name: 'VS Code Mobile', category: 'TOOLS', size: '890 MB', lastUsed: 'Used 12h ago', type: 'Installed' },
-  { id: '6', name: 'Android System', category: 'SYSTEM', size: '156 MB', lastUsed: 'Background Process', type: 'System' },
-  { id: '7', name: 'WhatsApp', category: 'SOCIAL', size: '230 MB', lastUsed: 'Used 30m ago', type: 'Installed' },
-  { id: '8', name: 'Package Installer', category: 'SYSTEM', size: '18 MB', lastUsed: 'System Service', type: 'System' },
-];
+const formatSize = (bytes) => {
+  if (!bytes || bytes === 0) return '12 MB';
+  const mb = bytes / (1024 * 1024);
+  if (mb >= 1024) {
+    return `${(mb / 1024).toFixed(2)} GB`;
+  }
+  return `${mb.toFixed(1)} MB`;
+};
 
 const AllAppsScreen = ({ navigation }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedFilter, setSelectedFilter] = useState('All'); // 'All', 'Installed', 'System'
+  const [apps, setApps] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const filteredApps = MOCK_APPS.filter((app) => {
+  useEffect(() => {
+    loadRealApps();
+  }, []);
+
+  const loadRealApps = async () => {
+    setLoading(true);
+    try {
+      if (
+        NativeModules.AppPermissionModule &&
+        NativeModules.AppPermissionModule.getInstalledAppsPermissions
+      ) {
+        const rawApps = await NativeModules.AppPermissionModule.getInstalledAppsPermissions();
+        const formatted = rawApps.map((a, idx) => ({
+          id: a.packageName || String(idx),
+          name: a.appName || a.packageName,
+          packageName: a.packageName,
+          category: a.isSystemApp ? 'SYSTEM' : 'INSTALLED',
+          size: formatSize(a.apkSize),
+          lastUsed: a.versionName ? `v${a.versionName}` : 'Installed',
+          type: a.isSystemApp ? 'System' : 'Installed',
+          appIcon: a.appIcon,
+        }));
+        setApps(formatted);
+      } else {
+        setApps([]);
+      }
+    } catch (e) {
+      setApps([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const filteredApps = apps.filter((app) => {
     const matchesFilter =
       selectedFilter === 'All' ||
       (selectedFilter === 'Installed' && app.type === 'Installed') ||
@@ -55,6 +91,7 @@ const AllAppsScreen = ({ navigation }) => {
 
     const matchesSearch =
       app.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      app.packageName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       app.category.toLowerCase().includes(searchQuery.toLowerCase());
 
     return matchesFilter && matchesSearch;
@@ -66,15 +103,19 @@ const AllAppsScreen = ({ navigation }) => {
 
   const renderAppItem = ({ item }) => (
     <View style={styles.appCard}>
-      {/* Icon Container with White Placeholder */}
+      {/* Icon Container with Real System App Icon */}
       <View style={styles.appIconContainer}>
-        <WhitePlaceholder size={28} borderRadius={6} color="#FFFFFF" />
+        {item.appIcon ? (
+          <Image source={{ uri: item.appIcon }} style={styles.appIconStyle} resizeMode="contain" />
+        ) : (
+          <WhitePlaceholder size={28} borderRadius={6} color="#FFFFFF" />
+        )}
       </View>
 
       {/* App Info */}
       <View style={styles.appInfoContainer}>
         <View style={styles.appHeaderRow}>
-          <Text style={styles.appNameText}>{item.name}</Text>
+          <Text style={styles.appNameText} numberOfLines={1}>{item.name}</Text>
           <View style={[styles.categoryBadge, item.category === 'SYSTEM' && styles.systemBadge]}>
             <Text style={[styles.categoryBadgeText, item.category === 'SYSTEM' && styles.systemBadgeText]}>
               {item.category}
@@ -101,7 +142,7 @@ const AllAppsScreen = ({ navigation }) => {
           <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
             <BackArrow size={22} color="#FFFFFF" />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>All Apps</Text>
+          <Text style={styles.headerTitle}>All Apps ({apps.length})</Text>
         </View>
 
         <TouchableOpacity style={styles.settingsButton} onPress={handleSettingsPress}>
@@ -140,14 +181,26 @@ const AllAppsScreen = ({ navigation }) => {
           })}
         </View>
 
-        {/* Apps FlatList */}
-        <FlatList
-          data={filteredApps}
-          keyExtractor={(item) => item.id}
-          renderItem={renderAppItem}
-          contentContainerStyle={styles.listContent}
-          showsVerticalScrollIndicator={false}
-        />
+        {/* Apps List / Loading */}
+        {loading ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color="#3B82F6" />
+            <Text style={styles.loadingText}>Fetching Authentic Installed Apps...</Text>
+          </View>
+        ) : (
+          <FlatList
+            data={filteredApps}
+            keyExtractor={(item) => item.id}
+            renderItem={renderAppItem}
+            contentContainerStyle={styles.listContent}
+            showsVerticalScrollIndicator={false}
+            ListEmptyComponent={
+              <View style={styles.emptyContainer}>
+                <Text style={styles.emptyText}>No applications found.</Text>
+              </View>
+            }
+          />
+        )}
       </View>
     </SafeAreaView>
   );
@@ -191,7 +244,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: 14,
   },
-  // Search Bar
   searchBarContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -201,62 +253,78 @@ const styles = StyleSheet.create({
     borderColor: '#1E293B',
     paddingHorizontal: 14,
     height: 48,
-    marginBottom: 16,
+    marginBottom: 14,
   },
   searchInput: {
     flex: 1,
     color: '#FFFFFF',
     fontSize: 15,
   },
-  // Filter Pills
   filterRow: {
     flexDirection: 'row',
     marginBottom: 16,
   },
   filterPill: {
-    paddingHorizontal: 22,
+    paddingHorizontal: 18,
     paddingVertical: 8,
     borderRadius: 20,
-    backgroundColor: '#131C31',
-    borderWidth: 1,
-    borderColor: '#1E293B',
+    backgroundColor: '#1E293B',
     marginRight: 10,
   },
   filterPillActive: {
-    backgroundColor: '#1E293B',
-    borderColor: '#3B82F6',
+    backgroundColor: '#3B82F6',
   },
   filterPillText: {
-    fontSize: 13,
-    fontWeight: '600',
     color: '#94A3B8',
+    fontSize: 14,
+    fontWeight: '600',
   },
   filterPillTextActive: {
     color: '#FFFFFF',
   },
-  // List Content
   listContent: {
-    paddingBottom: 30,
+    paddingBottom: 24,
   },
-  // App Card Item
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    color: '#94A3B8',
+    fontSize: 14,
+    marginTop: 12,
+  },
+  emptyContainer: {
+    padding: 40,
+    alignItems: 'center',
+  },
+  emptyText: {
+    color: '#64748B',
+    fontSize: 15,
+  },
   appCard: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#131C31',
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 12,
+    borderRadius: 14,
+    padding: 14,
+    marginBottom: 10,
     borderWidth: 1,
     borderColor: '#1E293B',
   },
   appIconContainer: {
-    width: 52,
-    height: 52,
-    borderRadius: 14,
-    backgroundColor: '#1E293B',
+    width: 44,
+    height: 44,
+    backgroundColor: 'transparent',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 14,
+  },
+  appIconStyle: {
+    width: 44,
+    height: 44,
+    borderRadius: 10,
   },
   appInfoContainer: {
     flex: 1,
@@ -265,48 +333,47 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 6,
+    marginBottom: 4,
   },
   appNameText: {
     fontSize: 16,
     fontWeight: 'bold',
     color: '#FFFFFF',
+    flex: 1,
+    marginRight: 8,
   },
   categoryBadge: {
-    backgroundColor: '#1E293B',
+    backgroundColor: 'rgba(59, 130, 246, 0.15)',
     paddingHorizontal: 8,
-    paddingVertical: 3,
+    paddingVertical: 2,
     borderRadius: 6,
   },
   systemBadge: {
     backgroundColor: 'rgba(234, 179, 8, 0.15)',
   },
   categoryBadgeText: {
-    fontSize: 10,
+    color: '#3B82F6',
+    fontSize: 11,
     fontWeight: '700',
-    color: '#94A3B8',
-    letterSpacing: 0.5,
   },
   systemBadgeText: {
-    color: '#FACC15',
+    color: '#EAB308',
   },
   appSubRow: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   appSizeText: {
-    fontSize: 13,
-    fontWeight: '600',
     color: '#94A3B8',
+    fontSize: 13,
   },
   dotSeparator: {
     color: '#64748B',
     marginHorizontal: 6,
-    fontSize: 12,
   },
   appLastUsedText: {
+    color: '#94A3B8',
     fontSize: 13,
-    color: '#64748B',
   },
 });
 

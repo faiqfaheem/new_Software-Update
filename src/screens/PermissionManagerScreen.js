@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -6,11 +6,13 @@ import {
   StyleSheet,
   ScrollView,
   Linking,
-  Platform,
   SafeAreaView,
   StatusBar,
   Modal,
   FlatList,
+  NativeModules,
+  ActivityIndicator,
+  Image,
 } from 'react-native';
 
 const WhitePlaceholder = ({ size = 22, borderRadius = 4, color = '#FFFFFF', opacity = 1 }) => (
@@ -33,50 +35,80 @@ const ChevronRight = ({ color = '#94A3B8', size = 16 }) => (
   <Text style={{ color, fontSize: size, fontWeight: '600' }}>›</Text>
 );
 
-const WarningTriangle = ({ color = '#DC2626', size = 22 }) => (
-  <Text style={{ color, fontSize: size, fontWeight: 'bold' }}>⚠️</Text>
-);
-
-// Circular Ring Chart Component for Overview
-const RingChart = ({ percentage = '85%', ringColor = '#EF4444' }) => (
+// Circular Ring Chart Component matching exact screenshot layout
+const RingChart = ({ percentage = '0%', ringColor = '#EF4444' }) => (
   <View style={[styles.ringContainer, { borderColor: ringColor }]}>
     <Text style={styles.ringPercentageText}>{percentage}</Text>
   </View>
 );
 
-const MOCK_RISK_APPS = {
-  High: [
-    { id: '1', name: 'TikTok', permissionsCount: '35 Permissions' },
-    { id: '2', name: 'Twitter', permissionsCount: '35 Permissions' },
-    { id: '3', name: 'Instagram', permissionsCount: '35 Permissions' },
-    { id: '4', name: 'Reddit', permissionsCount: '35 Permissions' },
-    { id: '5', name: 'Snapchat', permissionsCount: '32 Permissions' },
-  ],
-  Medium: [
-    { id: '1', name: 'TikTok', permissionsCount: '24 Permissions' },
-    { id: '2', name: 'Twitter', permissionsCount: '24 Permissions' },
-    { id: '3', name: 'Instagram', permissionsCount: '24 Permissions' },
-    { id: '4', name: 'Reddit', permissionsCount: '24 Permissions' },
-    { id: '5', name: 'Telegram', permissionsCount: '18 Permissions' },
-  ],
-  Low: [
-    { id: '1', name: 'TikTok', permissionsCount: '12 Permissions' },
-    { id: '2', name: 'Twitter', permissionsCount: '12 Permissions' },
-    { id: '3', name: 'Instagram', permissionsCount: '12 Permissions' },
-    { id: '4', name: 'Reddit', permissionsCount: '12 Permissions' },
-    { id: '5', name: 'Calculator', permissionsCount: '4 Permissions' },
-  ],
-  None: [
-    { id: '1', name: 'TikTok', permissionsCount: '0 Permissions' },
-    { id: '2', name: 'Twitter', permissionsCount: '0 Permissions' },
-    { id: '3', name: 'Instagram', permissionsCount: '0 Permissions' },
-    { id: '4', name: 'Reddit', permissionsCount: '0 Permissions' },
-    { id: '5', name: 'Clock', permissionsCount: '0 Permissions' },
-  ],
+// Permission Risk Engines & Constants
+const HIGH_RISK_PERMS = [
+  'CAMERA',
+  'RECORD_AUDIO',
+  'ACCESS_FINE_LOCATION',
+  'ACCESS_COARSE_LOCATION',
+  'READ_SMS',
+  'SEND_SMS',
+  'RECEIVE_SMS',
+  'READ_CONTACTS',
+  'WRITE_CONTACTS',
+  'READ_CALL_LOG',
+  'WRITE_CALL_LOG',
+  'MANAGE_EXTERNAL_STORAGE',
+];
+
+const MEDIUM_RISK_PERMS = [
+  'READ_PHONE_STATE',
+  'PACKAGE_USAGE_STATS',
+  'BLUETOOTH_CONNECT',
+  'BLUETOOTH_SCAN',
+  'READ_EXTERNAL_STORAGE',
+  'WRITE_EXTERNAL_STORAGE',
+  'SYSTEM_ALERT_WINDOW',
+];
+
+const LOW_RISK_PERMS = [
+  'INTERNET',
+  'ACCESS_NETWORK_STATE',
+  'ACCESS_WIFI_STATE',
+  'VIBRATE',
+  'POST_NOTIFICATIONS',
+  'WAKE_LOCK',
+  'RECEIVE_BOOT_COMPLETED',
+  'FOREGROUND_SERVICE',
+];
+
+const classifyAppRisk = (requestedPerms = []) => {
+  if (!requestedPerms || requestedPerms.length === 0) {
+    return 'None';
+  }
+
+  const upperPerms = requestedPerms.map((p) => p.toUpperCase());
+
+  // Check High Risk
+  const hasHighRisk = upperPerms.some((perm) =>
+    HIGH_RISK_PERMS.some((target) => perm.includes(target))
+  );
+  if (hasHighRisk) return 'High';
+
+  // Check Medium Risk
+  const hasMediumRisk = upperPerms.some((perm) =>
+    MEDIUM_RISK_PERMS.some((target) => perm.includes(target))
+  );
+  if (hasMediumRisk) return 'Medium';
+
+  // Check Low Risk
+  const hasLowRisk = upperPerms.some((perm) =>
+    LOW_RISK_PERMS.some((target) => perm.includes(target))
+  );
+  if (hasLowRisk) return 'Low';
+
+  return 'None';
 };
 
 const RISK_COLORS = {
-  High: '#DC2626',
+  High: '#EF4444',
   Medium: '#06B6D4',
   Low: '#EAB308',
   None: '#10B981',
@@ -84,8 +116,65 @@ const RISK_COLORS = {
 
 const PermissionManagerScreen = ({ navigation }) => {
   const [hasAgreed, setHasAgreed] = useState(false);
-  const [overviewTab, setOverviewTab] = useState('Installed Apps'); // 'Installed Apps', 'System Apps'
+  const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('Installed Apps'); // 'Installed Apps', 'System Apps'
   const [selectedRiskDetail, setSelectedRiskDetail] = useState(null); // null, 'High', 'Medium', 'Low', 'None'
+
+  const [appsData, setAppsData] = useState({
+    installed: { High: [], Medium: [], Low: [], None: [], total: 0 },
+    system: { High: [], Medium: [], Low: [], None: [], total: 0 },
+  });
+
+  useEffect(() => {
+    fetchDeviceAppsAndPermissions();
+  }, []);
+
+  const fetchDeviceAppsAndPermissions = async () => {
+    setLoading(true);
+    try {
+      if (
+        NativeModules.AppPermissionModule &&
+        NativeModules.AppPermissionModule.getInstalledAppsPermissions
+      ) {
+        const rawApps = await NativeModules.AppPermissionModule.getInstalledAppsPermissions();
+        processAndCategorizeApps(rawApps);
+      } else {
+        processAndCategorizeApps([]);
+      }
+    } catch (e) {
+      processAndCategorizeApps([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const processAndCategorizeApps = (rawApps = []) => {
+    const installed = { High: [], Medium: [], Low: [], None: [], total: 0 };
+    const system = { High: [], Medium: [], Low: [], None: [], total: 0 };
+
+    rawApps.forEach((app) => {
+      const riskLevel = classifyAppRisk(app.requestedPermissions || []);
+      const formattedApp = {
+        id: app.packageName,
+        name: app.appName || app.packageName,
+        packageName: app.packageName,
+        permissionsCount: `${app.permissionsCount || 0} Permissions`,
+        rawCount: app.permissionsCount || 0,
+        riskLevel,
+        appIcon: app.appIcon,
+      };
+
+      if (app.isSystemApp) {
+        system[riskLevel].push(formattedApp);
+        system.total += 1;
+      } else {
+        installed[riskLevel].push(formattedApp);
+        installed.total += 1;
+      }
+    });
+
+    setAppsData({ installed, system });
+  };
 
   const handleAgreeAndContinue = () => {
     setHasAgreed(true);
@@ -103,13 +192,31 @@ const PermissionManagerScreen = ({ navigation }) => {
     }
   };
 
+  // Get active data set based on activeTab ('Installed Apps' vs 'System Apps')
+  const currentTabCategory = activeTab === 'Installed Apps' ? 'installed' : 'system';
+  const currentCategoryData = appsData[currentTabCategory] || { High: [], Medium: [], Low: [], None: [], total: 0 };
+  const totalAppsInTab = currentCategoryData.total || 1; // Prevent div by 0
+
+  const computePercentage = (count) => {
+    if (!currentCategoryData.total || currentCategoryData.total === 0) return '0%';
+    const pct = Math.round((count / currentCategoryData.total) * 100);
+    return `${pct}%`;
+  };
+
   const renderDetailAppItem = ({ item }) => {
-    const triangleColor = RISK_COLORS[selectedRiskDetail] || '#DC2626';
     return (
-      <View style={styles.detailAppCard}>
-        {/* Left White Placeholder Icon Container */}
+      <TouchableOpacity
+        style={styles.detailAppCard}
+        activeOpacity={0.7}
+        onPress={handleSettingsPress}
+      >
+        {/* Left Real System App Icon Container */}
         <View style={styles.detailIconContainer}>
-          <WhitePlaceholder size={28} borderRadius={6} color="#FFFFFF" />
+          {item.appIcon ? (
+            <Image source={{ uri: item.appIcon }} style={styles.detailAppIcon} resizeMode="contain" />
+          ) : (
+            <WhitePlaceholder size={28} borderRadius={6} color="#FFFFFF" />
+          )}
         </View>
 
         {/* Middle Info */}
@@ -118,9 +225,9 @@ const PermissionManagerScreen = ({ navigation }) => {
           <Text style={styles.detailSubText}>{item.permissionsCount}</Text>
         </View>
 
-        {/* Right White Placeholder Box */}
-        <WhitePlaceholder size={20} borderRadius={4} color="#FFFFFF" />
-      </View>
+        {/* Right Arrow */}
+        <ChevronRight color="#94A3B8" size={20} />
+      </TouchableOpacity>
     );
   };
 
@@ -168,137 +275,161 @@ const PermissionManagerScreen = ({ navigation }) => {
         </View>
 
         <TouchableOpacity style={styles.settingsButton} onPress={handleSettingsPress}>
-          <WhitePlaceholder size={18} borderRadius={4} color="#FFFFFF" />
+          <Text style={{ color: '#FFFFFF', fontSize: 18 }}>⚙</Text>
         </TouchableOpacity>
       </View>
 
       {/* MAIN CONTENT AREA */}
-      <View style={styles.container}>
-        {selectedRiskDetail === null ? (
-          /* OVERVIEW SCREEN (Pic 2 from previous step) */
-          <>
-            {/* Filter Pills Row */}
-            <View style={styles.filterRow}>
-              {['Installed Apps', 'System Apps'].map((tab) => {
-                const isActive = overviewTab === tab;
-                return (
-                  <TouchableOpacity
-                    key={tab}
-                    style={[styles.filterPill, isActive && styles.filterPillActive]}
-                    onPress={() => setOverviewTab(tab)}
-                  >
-                    <Text style={[styles.filterPillText, isActive && styles.filterPillTextActive]}>
-                      {tab}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
+      {loading ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#3B82F6" />
+          <Text style={styles.loadingText}>Scanning App Permissions...</Text>
+        </View>
+      ) : (
+        <View style={styles.container}>
+          {selectedRiskDetail === null ? (
+            /* OVERVIEW SCREEN (Pic layout matching exact user screenshot) */
+            <>
+              {/* Filter Pills Row */}
+              <View style={styles.filterRow}>
+                {['Installed Apps', 'System Apps'].map((tab) => {
+                  const isActive = activeTab === tab;
+                  return (
+                    <TouchableOpacity
+                      key={tab}
+                      style={[styles.filterPill, isActive && styles.filterPillActive]}
+                      onPress={() => setActiveTab(tab)}
+                    >
+                      <Text style={[styles.filterPillText, isActive && styles.filterPillTextActive]}>
+                        {tab}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
 
-            {/* Risk Overview Cards */}
-            <ScrollView
-              style={styles.scrollContainer}
-              contentContainerStyle={styles.scrollContent}
-              showsVerticalScrollIndicator={false}
-            >
-              {/* Card 1: High Risk */}
-              <TouchableOpacity
-                style={styles.riskCard}
-                onPress={() => setSelectedRiskDetail('High')}
+              {/* Risk Overview Cards */}
+              <ScrollView
+                style={styles.scrollContainer}
+                contentContainerStyle={styles.scrollContent}
+                showsVerticalScrollIndicator={false}
               >
-                <RingChart percentage="85%" ringColor="#DC2626" />
-                <Text style={styles.riskTitle}>High Risk</Text>
-                <View style={styles.badgeChevronContainer}>
-                  <View style={styles.greenCountBadge}>
-                    <Text style={styles.countText}>35</Text>
+                {/* Card 1: High Risk */}
+                <TouchableOpacity
+                  style={styles.riskCard}
+                  onPress={() => setSelectedRiskDetail('High')}
+                >
+                  <RingChart
+                    percentage={computePercentage(currentCategoryData.High.length)}
+                    ringColor="#EF4444"
+                  />
+                  <Text style={styles.riskTitle}>High Risk</Text>
+                  <View style={styles.badgeChevronContainer}>
+                    <View style={styles.greenCountBadge}>
+                      <Text style={styles.countText}>{currentCategoryData.High.length}</Text>
+                    </View>
+                    <ChevronRight />
                   </View>
-                  <ChevronRight />
-                </View>
-              </TouchableOpacity>
+                </TouchableOpacity>
 
-              {/* Card 2: Medium Risk */}
-              <TouchableOpacity
-                style={styles.riskCard}
-                onPress={() => setSelectedRiskDetail('Medium')}
-              >
-                <RingChart percentage="85%" ringColor="#06B6D4" />
-                <Text style={styles.riskTitle}>Medium Risk</Text>
-                <View style={styles.badgeChevronContainer}>
-                  <View style={styles.greenCountBadge}>
-                    <Text style={styles.countText}>35</Text>
+                {/* Card 2: Medium Risk */}
+                <TouchableOpacity
+                  style={styles.riskCard}
+                  onPress={() => setSelectedRiskDetail('Medium')}
+                >
+                  <RingChart
+                    percentage={computePercentage(currentCategoryData.Medium.length)}
+                    ringColor="#06B6D4"
+                  />
+                  <Text style={styles.riskTitle}>Medium Risk</Text>
+                  <View style={styles.badgeChevronContainer}>
+                    <View style={styles.greenCountBadge}>
+                      <Text style={styles.countText}>{currentCategoryData.Medium.length}</Text>
+                    </View>
+                    <ChevronRight />
                   </View>
-                  <ChevronRight />
-                </View>
-              </TouchableOpacity>
+                </TouchableOpacity>
 
-              {/* Card 3: Low Risk */}
-              <TouchableOpacity
-                style={styles.riskCard}
-                onPress={() => setSelectedRiskDetail('Low')}
-              >
-                <RingChart percentage="85%" ringColor="#EAB308" />
-                <Text style={styles.riskTitle}>Low Risk</Text>
-                <View style={styles.badgeChevronContainer}>
-                  <View style={styles.greenCountBadge}>
-                    <Text style={styles.countText}>35</Text>
+                {/* Card 3: Low Risk */}
+                <TouchableOpacity
+                  style={styles.riskCard}
+                  onPress={() => setSelectedRiskDetail('Low')}
+                >
+                  <RingChart
+                    percentage={computePercentage(currentCategoryData.Low.length)}
+                    ringColor="#EAB308"
+                  />
+                  <Text style={styles.riskTitle}>Low Risk</Text>
+                  <View style={styles.badgeChevronContainer}>
+                    <View style={styles.greenCountBadge}>
+                      <Text style={styles.countText}>{currentCategoryData.Low.length}</Text>
+                    </View>
+                    <ChevronRight />
                   </View>
-                  <ChevronRight />
-                </View>
-              </TouchableOpacity>
+                </TouchableOpacity>
 
-              {/* Card 4: No Risk */}
-              <TouchableOpacity
-                style={styles.riskCard}
-                onPress={() => setSelectedRiskDetail('None')}
-              >
-                <RingChart percentage="85%" ringColor="#10B981" />
-                <Text style={styles.riskTitle}>No Risk</Text>
-                <View style={styles.badgeChevronContainer}>
-                  <View style={styles.greenCountBadge}>
-                    <Text style={styles.countText}>35</Text>
+                {/* Card 4: No Risk */}
+                <TouchableOpacity
+                  style={styles.riskCard}
+                  onPress={() => setSelectedRiskDetail('None')}
+                >
+                  <RingChart
+                    percentage={computePercentage(currentCategoryData.None.length)}
+                    ringColor="#10B981"
+                  />
+                  <Text style={styles.riskTitle}>No Risk</Text>
+                  <View style={styles.badgeChevronContainer}>
+                    <View style={styles.greenCountBadge}>
+                      <Text style={styles.countText}>{currentCategoryData.None.length}</Text>
+                    </View>
+                    <ChevronRight />
                   </View>
-                  <ChevronRight />
-                </View>
-              </TouchableOpacity>
-            </ScrollView>
-          </>
-        ) : (
-          /* RISK DETAIL VIEW (Pics 1 - 4: High, Medium, Low, None) */
-          <>
-            {/* 4-Pills Row: High, Medium, Low, None */}
-            <View style={styles.detailPillsRow}>
-              {[
-                { key: 'High', label: 'High' },
-                { key: 'Medium', label: 'Medium' },
-                { key: 'Low', label: 'Low' },
-                { key: 'None', label: 'None' },
-              ].map((pill) => {
-                const isActive = selectedRiskDetail === pill.key;
-                return (
-                  <TouchableOpacity
-                    key={pill.key}
-                    style={[styles.detailPill, isActive && styles.detailPillActive]}
-                    onPress={() => setSelectedRiskDetail(pill.key)}
-                  >
-                    <Text style={[styles.detailPillText, isActive && styles.detailPillTextActive]}>
-                      {pill.label}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
+                </TouchableOpacity>
+              </ScrollView>
+            </>
+          ) : (
+            /* RISK DETAIL VIEW (Dynamic App Listing per selected Risk Level) */
+            <>
+              {/* 4-Pills Row: High, Medium, Low, None */}
+              <View style={styles.detailPillsRow}>
+                {[
+                  { key: 'High', label: 'High' },
+                  { key: 'Medium', label: 'Medium' },
+                  { key: 'Low', label: 'Low' },
+                  { key: 'None', label: 'None' },
+                ].map((pill) => {
+                  const isActive = selectedRiskDetail === pill.key;
+                  return (
+                    <TouchableOpacity
+                      key={pill.key}
+                      style={[styles.detailPill, isActive && styles.detailPillActive]}
+                      onPress={() => setSelectedRiskDetail(pill.key)}
+                    >
+                      <Text style={[styles.detailPillText, isActive && styles.detailPillTextActive]}>
+                        {pill.label}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
 
-            {/* Apps List per Selected Risk Level */}
-            <FlatList
-              data={MOCK_RISK_APPS[selectedRiskDetail] || []}
-              keyExtractor={(item) => item.id}
-              renderItem={renderDetailAppItem}
-              contentContainerStyle={styles.listContent}
-              showsVerticalScrollIndicator={false}
-            />
-          </>
-        )}
-      </View>
+              {/* Apps List per Selected Risk Level */}
+              <FlatList
+                data={currentCategoryData[selectedRiskDetail] || []}
+                keyExtractor={(item) => item.id}
+                renderItem={renderDetailAppItem}
+                contentContainerStyle={styles.listContent}
+                showsVerticalScrollIndicator={false}
+                ListEmptyComponent={
+                  <View style={styles.emptyContainer}>
+                    <Text style={styles.emptyText}>No apps found in this risk category.</Text>
+                  </View>
+                }
+              />
+            </>
+          )}
+        </View>
+      )}
     </SafeAreaView>
   );
 };
@@ -308,7 +439,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#0B1120',
   },
-  // Header Bar
   headerBar: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -336,13 +466,24 @@ const styles = StyleSheet.create({
   settingsButton: {
     padding: 6,
   },
+  loadingContainer: {
+    flex: 1,
+    backgroundColor: '#0B1120',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    color: '#94A3B8',
+    fontSize: 14,
+    marginTop: 12,
+    fontWeight: '600',
+  },
   container: {
     flex: 1,
     backgroundColor: '#0B1120',
     paddingHorizontal: 16,
     paddingTop: 14,
   },
-  // Modal Consent Bottom Sheet
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(5, 8, 18, 0.75)',
@@ -398,7 +539,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
   },
-  // Filter Row (Overview)
   filterRow: {
     flexDirection: 'row',
     marginBottom: 16,
@@ -414,7 +554,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   filterPillActive: {
-    backgroundColor: '#1E293B',
+    backgroundColor: '#131C31',
     borderColor: '#3B82F6',
   },
   filterPillText: {
@@ -424,8 +564,8 @@ const styles = StyleSheet.create({
   },
   filterPillTextActive: {
     color: '#FFFFFF',
+    fontWeight: 'bold',
   },
-  // Risk Cards List
   scrollContainer: {
     flex: 1,
   },
@@ -478,7 +618,6 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#1E293B',
   },
-  // --- Risk Detail View Styles ---
   detailPillsRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -520,13 +659,17 @@ const styles = StyleSheet.create({
     borderColor: '#1E293B',
   },
   detailIconContainer: {
-    width: 52,
-    height: 52,
-    borderRadius: 14,
-    backgroundColor: '#1E293B',
+    width: 44,
+    height: 44,
+    backgroundColor: 'transparent',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 14,
+  },
+  detailAppIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 10,
   },
   detailInfoContainer: {
     flex: 1,
@@ -540,6 +683,14 @@ const styles = StyleSheet.create({
   detailSubText: {
     fontSize: 12,
     color: '#94A3B8',
+  },
+  emptyContainer: {
+    alignItems: 'center',
+    paddingTop: 40,
+  },
+  emptyText: {
+    color: '#94A3B8',
+    fontSize: 14,
   },
 });
 
