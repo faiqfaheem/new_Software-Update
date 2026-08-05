@@ -65,7 +65,7 @@ class HeadphoneModule(private val reactContext: ReactApplicationContext) : React
                 val sample = DoubleArray(numSamples)
                 val generatedSnd = ByteArray(2 * numSamples)
 
-                val freqOfTone = 523.25 // Pleasant C5 Musical Tone
+                val freqOfTone = 261.63 // Deep, Soft Middle C (Normal Pitch)
 
                 for (i in 0 until numSamples) {
                     val t = i.toDouble() / sampleRate
