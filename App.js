@@ -22,6 +22,10 @@ import TapTestScreen from './src/screens/TapTestScreen';
 import ScreenAreaTestScreen from './src/screens/ScreenAreaTestScreen';
 import AccelerometerTestScreen from './src/screens/AccelerometerTestScreen';
 import HeadphonesTestScreen from './src/screens/HeadphonesTestScreen';
+import WifiTestScreen from './src/screens/WifiTestScreen';
+import VibrationTestScreen from './src/screens/VibrationTestScreen';
+import BrightnessTestScreen from './src/screens/BrightnessTestScreen';
+import SpeakerTestScreen from './src/screens/SpeakerTestScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -55,6 +59,10 @@ const App = () => {
           <Stack.Screen name="ScreenAreaTestScreen" component={ScreenAreaTestScreen} />
           <Stack.Screen name="AccelerometerTestScreen" component={AccelerometerTestScreen} />
           <Stack.Screen name="HeadphonesTestScreen" component={HeadphonesTestScreen} />
+          <Stack.Screen name="WifiTestScreen" component={WifiTestScreen} />
+          <Stack.Screen name="VibrationTestScreen" component={VibrationTestScreen} />
+          <Stack.Screen name="BrightnessTestScreen" component={BrightnessTestScreen} />
+          <Stack.Screen name="SpeakerTestScreen" component={SpeakerTestScreen} />
         </Stack.Navigator>
       </NavigationContainer>
     </LanguageProvider>

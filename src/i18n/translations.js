@@ -44,7 +44,7 @@ export const TRANSLATIONS = {
     slide3Desc: 'Monitor storage usage, app screen time, and detailed battery performance analytics.',
 
     // Home Screen
-    appHeaderTitle: 'Software Update & Utility Tool',
+    appHeaderTitle: 'Software Update',
     appHeaderSub: 'System Hub & Diagnostics',
     feature1Title: 'Scan App Updates',
     feature1Desc: 'Check pending store & system app updates',

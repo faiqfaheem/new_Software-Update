@@ -43,8 +43,6 @@ const SENSOR_TESTS = [
   { id: '8', title: 'Vibration', subtitle: 'Haptics & Vibration Test', passed: false },
   { id: '9', title: 'Brightness', subtitle: 'Screen Brightness', passed: false },
   { id: '10', title: 'Speaker Test', subtitle: 'Speaker Audio Test', passed: false },
-  { id: '11', title: 'Proximity Sensor', subtitle: 'Distance Sensor Test', passed: false },
-  { id: '12', title: 'Gyroscope', subtitle: 'Orientation Sensor Test', passed: false },
 ];
 
 const PhoneSensorScreen = ({ navigation }) => {
@@ -65,6 +63,14 @@ const PhoneSensorScreen = ({ navigation }) => {
       navigation.navigate('AccelerometerTestScreen');
     } else if (test.title === 'Headphones' || test.id === '6') {
       navigation.navigate('HeadphonesTestScreen');
+    } else if (test.title === 'Wifi Test' || test.id === '7') {
+      navigation.navigate('WifiTestScreen');
+    } else if (test.title === 'Vibration' || test.id === '8') {
+      navigation.navigate('VibrationTestScreen');
+    } else if (test.title === 'Brightness' || test.id === '9') {
+      navigation.navigate('BrightnessTestScreen');
+    } else if (test.title === 'Loud Speaker' || test.title === 'Speaker Test' || test.id === '10') {
+      navigation.navigate('SpeakerTestScreen');
     } else {
       Alert.alert(test.title, `${test.subtitle}\n\n[Sensor Test Launched]`);
     }

@@ -220,14 +220,6 @@ const HomeScreen = ({ navigation }) => {
               </View>
               <Text style={styles.toolCardTitle}>Phone Sensor</Text>
             </TouchableOpacity>
-
-            {/* Tool 4: Permission Manager */}
-            <TouchableOpacity style={styles.toolCard} onPress={handlePermissionManager}>
-              <View style={styles.toolIconWrapper}>
-                <WhitePlaceholder size={44} borderRadius={10} color="#FFFFFF" />
-              </View>
-              <Text style={styles.toolCardTitle}>Permission Manager</Text>
-            </TouchableOpacity>
           </View>
         </ScrollView>
       )}
