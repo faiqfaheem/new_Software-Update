@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -7,6 +7,7 @@ import {
   SafeAreaView,
   StatusBar,
   Linking,
+  NativeModules,
 } from 'react-native';
 
 const WhitePlaceholder = ({ size = 22, borderRadius = 4, color = '#FFFFFF' }) => (
@@ -27,15 +28,39 @@ const BackArrow = ({ color = '#FFFFFF', size = 22 }) => (
 const FlashlightTestScreen = ({ navigation }) => {
   const [isFlashlightOn, setIsFlashlightOn] = useState(false);
 
+  useEffect(() => {
+    // Cleanup flashlight state on unmount
+    return () => {
+      if (NativeModules.FlashlightModule && NativeModules.FlashlightModule.setTorchMode) {
+        NativeModules.FlashlightModule.setTorchMode(false).catch(() => {});
+      }
+    };
+  }, []);
+
   const handleToggleFlashlight = (status) => {
     setIsFlashlightOn(status);
+    if (NativeModules.FlashlightModule && NativeModules.FlashlightModule.setTorchMode) {
+      NativeModules.FlashlightModule.setTorchMode(status).catch((err) => {
+        console.warn('Flashlight hardware control error:', err);
+      });
+    }
   };
 
   const handleSettingsPress = () => {
     Linking.openSettings();
   };
 
+  const handleBack = () => {
+    if (NativeModules.FlashlightModule && NativeModules.FlashlightModule.setTorchMode) {
+      NativeModules.FlashlightModule.setTorchMode(false).catch(() => {});
+    }
+    navigation.goBack();
+  };
+
   const handleResultPress = (passed) => {
+    if (NativeModules.FlashlightModule && NativeModules.FlashlightModule.setTorchMode) {
+      NativeModules.FlashlightModule.setTorchMode(false).catch(() => {});
+    }
     navigation.goBack();
   };
 
@@ -46,7 +71,7 @@ const FlashlightTestScreen = ({ navigation }) => {
       {/* Header Bar */}
       <View style={styles.headerBar}>
         <View style={styles.headerLeftGroup}>
-          <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+          <TouchableOpacity style={styles.backButton} onPress={handleBack}>
             <BackArrow size={22} color="#FFFFFF" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Flash Light Test</Text>

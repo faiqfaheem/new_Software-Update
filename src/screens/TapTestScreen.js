@@ -7,6 +7,7 @@ import {
   SafeAreaView,
   StatusBar,
   Linking,
+  Modal,
 } from 'react-native';
 
 const WhitePlaceholder = ({ size = 22, borderRadius = 4, color = '#FFFFFF' }) => (
@@ -25,10 +26,29 @@ const BackArrow = ({ color = '#FFFFFF', size = 22 }) => (
 );
 
 const TapTestScreen = ({ navigation }) => {
+  const [isFullscreenTapActive, setIsFullscreenTapActive] = useState(false);
   const [tapCount, setTapCount] = useState(0);
+  const [ripples, setRipples] = useState([]);
 
-  const handleScreenTap = () => {
+  const handleStartTapTest = () => {
+    setIsFullscreenTapActive(true);
+  };
+
+  const handleCanvasTap = (event) => {
+    const { locationX, locationY } = event.nativeEvent;
     setTapCount((prev) => prev + 1);
+
+    // Add ripple effect point on white canvas
+    const newRipple = {
+      id: Date.now() + Math.random(),
+      x: locationX,
+      y: locationY,
+    };
+    setRipples((prev) => [...prev.slice(-6), newRipple]);
+  };
+
+  const handleCloseCanvas = () => {
+    setIsFullscreenTapActive(false);
   };
 
   const handleSettingsPress = () => {
@@ -42,6 +62,51 @@ const TapTestScreen = ({ navigation }) => {
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar barStyle="light-content" backgroundColor="#0B1120" />
+
+      {/* Full-Screen White Blank Canvas Tap Test Modal */}
+      <Modal
+        visible={isFullscreenTapActive}
+        transparent={false}
+        animationType="fade"
+        onRequestClose={handleCloseCanvas}
+      >
+        <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+        <TouchableOpacity
+          style={styles.whiteCanvasOverlay}
+          activeOpacity={1}
+          onPress={handleCanvasTap}
+        >
+          {/* Top Floating Controls */}
+          <View style={styles.canvasHeaderFloating}>
+            <TouchableOpacity style={styles.closeCanvasButton} onPress={handleCloseCanvas}>
+              <Text style={styles.closeCanvasText}>✕ Exit Test</Text>
+            </TouchableOpacity>
+
+            <View style={styles.canvasTapCountBadge}>
+              <Text style={styles.canvasTapCountText}>Taps: {tapCount}</Text>
+            </View>
+          </View>
+
+          {/* Touch Ripples on White Screen */}
+          {ripples.map((ripple) => (
+            <View
+              key={ripple.id}
+              style={[
+                styles.whiteCanvasRipple,
+                { left: ripple.x - 25, top: ripple.y - 25 },
+              ]}
+            />
+          ))}
+
+          {tapCount === 0 && (
+            <View style={styles.canvasInstructionBadge} pointerEvents="none">
+              <Text style={styles.canvasInstructionText}>
+                Tap anywhere on the screen to test touch
+              </Text>
+            </View>
+          )}
+        </TouchableOpacity>
+      </Modal>
 
       {/* Header Bar */}
       <View style={styles.headerBar}>
@@ -60,11 +125,7 @@ const TapTestScreen = ({ navigation }) => {
       {/* Main Content Body */}
       <View style={styles.container}>
         {/* Top Hero Section */}
-        <TouchableOpacity
-          style={styles.heroSection}
-          activeOpacity={0.8}
-          onPress={handleScreenTap}
-        >
+        <View style={styles.heroSection}>
           <View style={styles.placeholderContainer}>
             <WhitePlaceholder size={70} borderRadius={16} color="#FFFFFF" />
           </View>
@@ -73,12 +134,16 @@ const TapTestScreen = ({ navigation }) => {
             Tap to check the screen touch.
           </Text>
 
+          <TouchableOpacity style={styles.startTestButton} onPress={handleStartTapTest}>
+            <Text style={styles.startTestButtonText}>Start Tap Test</Text>
+          </TouchableOpacity>
+
           {tapCount > 0 && (
-            <View style={styles.tapCounterBadge}>
-              <Text style={styles.tapCounterText}>Taps Detected: {tapCount}</Text>
+            <View style={styles.tapsRecordedBadge}>
+              <Text style={styles.tapsRecordedText}>Recorded Taps: {tapCount}</Text>
             </View>
           )}
-        </TouchableOpacity>
+        </View>
 
         {/* Bottom Question & Feedback Buttons (Same exact position & white placeholder circles) */}
         <View style={styles.bottomFeedbackSection}>
@@ -149,7 +214,6 @@ const styles = StyleSheet.create({
   heroSection: {
     alignItems: 'center',
     width: '100%',
-    paddingVertical: 20,
   },
   placeholderContainer: {
     marginBottom: 24,
@@ -161,18 +225,37 @@ const styles = StyleSheet.create({
     color: '#94A3B8',
     textAlign: 'center',
     lineHeight: 22,
-    marginBottom: 16,
+    marginBottom: 24,
+    paddingHorizontal: 10,
   },
-  tapCounterBadge: {
+  startTestButton: {
+    width: '100%',
+    backgroundColor: '#3B82F6',
+    borderRadius: 14,
+    paddingVertical: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#3B82F6',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  startTestButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  tapsRecordedBadge: {
+    marginTop: 16,
     backgroundColor: '#1E293B',
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20,
     borderWidth: 1,
     borderColor: '#3B82F6',
-    marginTop: 8,
   },
-  tapCounterText: {
+  tapsRecordedText: {
     color: '#60A5FA',
     fontSize: 14,
     fontWeight: 'bold',
@@ -194,6 +277,69 @@ const styles = StyleSheet.create({
   },
   circlePlaceholderButton: {
     marginHorizontal: 16,
+  },
+  // Full-Screen White Canvas Styles
+  whiteCanvasOverlay: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+    position: 'relative',
+  },
+  canvasHeaderFloating: {
+    position: 'absolute',
+    top: 50,
+    left: 20,
+    right: 20,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    zIndex: 100,
+  },
+  closeCanvasButton: {
+    backgroundColor: '#1E293B',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 20,
+    elevation: 5,
+  },
+  closeCanvasText: {
+    color: '#FFFFFF',
+    fontSize: 13,
+    fontWeight: 'bold',
+  },
+  canvasTapCountBadge: {
+    backgroundColor: '#3B82F6',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 20,
+    elevation: 5,
+  },
+  canvasTapCountText: {
+    color: '#FFFFFF',
+    fontSize: 13,
+    fontWeight: 'bold',
+  },
+  canvasInstructionBadge: {
+    position: 'absolute',
+    bottom: 80,
+    alignSelf: 'center',
+    backgroundColor: 'rgba(30, 41, 59, 0.85)',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 25,
+  },
+  canvasInstructionText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  whiteCanvasRipple: {
+    position: 'absolute',
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: 'rgba(59, 130, 246, 0.25)',
+    borderWidth: 2,
+    borderColor: '#3B82F6',
   },
 });
 
