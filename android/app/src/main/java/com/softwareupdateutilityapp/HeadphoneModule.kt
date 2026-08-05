@@ -65,10 +65,21 @@ class HeadphoneModule(private val reactContext: ReactApplicationContext) : React
                 val sample = DoubleArray(numSamples)
                 val generatedSnd = ByteArray(2 * numSamples)
 
-                val freqOfTone = 440.0 // 440Hz Audio Test Tone
+                val freqOfTone = 523.25 // Pleasant C5 Musical Tone
 
                 for (i in 0 until numSamples) {
-                    sample[i] = Math.sin(2.0 * Math.PI * i.toDouble() / (sampleRate / freqOfTone))
+                    val t = i.toDouble() / sampleRate
+                    var envelope = 1.0
+                    val attackTime = 0.1
+                    val decayTime = 0.4
+                    if (t < attackTime) {
+                        envelope = t / attackTime
+                    } else if (t > durationSeconds - decayTime) {
+                        envelope = (durationSeconds - t) / decayTime
+                    }
+
+                    // Warm soft musical tone wave calculation
+                    sample[i] = Math.sin(2.0 * Math.PI * freqOfTone * t) * envelope * 0.5
                 }
 
                 var idx = 0
