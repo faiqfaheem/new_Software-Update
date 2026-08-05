@@ -10,6 +10,8 @@ import {
 import { setFirstLaunchCompleted } from '../utils/storage';
 import { useLanguage } from '../i18n/LanguageContext';
 
+import { checkAllPermissions } from '../utils/permissions';
+
 const { width } = Dimensions.get('window');
 
 const OnboardingScreen = ({ navigation }) => {
@@ -38,21 +40,38 @@ const OnboardingScreen = ({ navigation }) => {
     },
   ];
 
+  const handleFinishOnboarding = async () => {
+    await setFirstLaunchCompleted(true);
+    try {
+      const { isAllGranted } = await checkAllPermissions();
+      if (isAllGranted) {
+        navigation.reset({
+          index: 0,
+          routes: [{ name: 'HomeScreen' }],
+        });
+      } else {
+        navigation.reset({
+          index: 0,
+          routes: [{ name: 'PermissionScreen' }],
+        });
+      }
+    } catch (e) {
+      navigation.navigate('PermissionScreen');
+    }
+  };
+
   const handleNext = async () => {
     if (currentIndex < SLIDES.length - 1) {
       const nextIndex = currentIndex + 1;
       setCurrentIndex(nextIndex);
       flatListRef.current?.scrollToIndex({ index: nextIndex, animated: true });
     } else {
-      // Final slide completed: Write isFirstLaunchCompleted = 'true'
-      await setFirstLaunchCompleted(true);
-      navigation.navigate('PermissionScreen');
+      await handleFinishOnboarding();
     }
   };
 
   const handleSkip = async () => {
-    await setFirstLaunchCompleted(true);
-    navigation.navigate('PermissionScreen');
+    await handleFinishOnboarding();
   };
 
   const renderSlide = ({ item }) => {

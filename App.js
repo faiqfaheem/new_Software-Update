@@ -10,6 +10,7 @@ import PermissionScreen from './src/screens/PermissionScreen';
 import OnboardingScreen from './src/screens/OnboardingScreen';
 import HomeScreen from './src/screens/HomeScreen';
 import ScanAppsScreen from './src/screens/ScanAppsScreen';
+import AvailableUpdatesScreen from './src/screens/AvailableUpdatesScreen';
 import OSUpdateScreen from './src/screens/OSUpdateScreen';
 import AllAppsScreen from './src/screens/AllAppsScreen';
 import BulkUninstallerScreen from './src/screens/BulkUninstallerScreen';
@@ -48,6 +49,7 @@ const App = () => {
           <Stack.Screen name="OnboardingScreen" component={OnboardingScreen} />
           <Stack.Screen name="HomeScreen" component={HomeScreen} />
           <Stack.Screen name="ScanAppsScreen" component={ScanAppsScreen} />
+          <Stack.Screen name="AvailableUpdatesScreen" component={AvailableUpdatesScreen} />
           <Stack.Screen name="OSUpdateScreen" component={OSUpdateScreen} />
           <Stack.Screen name="AllAppsScreen" component={AllAppsScreen} />
           <Stack.Screen name="BulkUninstallerScreen" component={BulkUninstallerScreen} />

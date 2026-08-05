@@ -13,12 +13,34 @@ import {
   Alert,
 } from 'react-native';
 
+import CustomModal from '../components/CustomModal';
+
 const BackArrow = ({ color = '#FFFFFF', size = 22 }) => (
   <Text style={{ color, fontSize: size, fontWeight: 'bold' }}>←</Text>
 );
 
 const SettingsScreen = ({ navigation }) => {
   const [privacyModalVisible, setPrivacyModalVisible] = useState(false);
+
+  // Custom Theme Modal State
+  const [modalConfig, setModalConfig] = useState({
+    visible: false,
+    title: '',
+    message: '',
+    primaryButton: null,
+    secondaryButton: null,
+  });
+
+  const showModal = (config) => {
+    setModalConfig({
+      visible: true,
+      ...config,
+    });
+  };
+
+  const hideModal = () => {
+    setModalConfig((prev) => ({ ...prev, visible: false }));
+  };
 
   const handlePrivacyPolicy = () => {
     setPrivacyModalVisible(true);
@@ -36,7 +58,11 @@ const SettingsScreen = ({ navigation }) => {
           'Check out Software Update Utility App to manage app permissions, scan updates, and test phone sensors: https://play.google.com/store/apps/details?id=com.softwareupdateutilityapp',
       });
     } catch (error) {
-      Alert.alert('Share App', 'Unable to open share sheet.');
+      showModal({
+        title: 'Share App',
+        message: 'Unable to open system share sheet.',
+        primaryButton: { label: 'Got It', onPress: () => {} },
+      });
     }
   };
 
@@ -51,7 +77,11 @@ const SettingsScreen = ({ navigation }) => {
         await Linking.openURL(webUrl);
       }
     } catch (e) {
-      Alert.alert('Rate Us', 'Thank you for your rating and feedback!');
+      showModal({
+        title: 'Thank You!',
+        message: 'Thank you for your rating and valuable feedback!',
+        primaryButton: { label: 'Close', onPress: () => {} },
+      });
     }
   };
 
@@ -152,6 +182,9 @@ const SettingsScreen = ({ navigation }) => {
           </View>
         </View>
       </Modal>
+
+      {/* Theme Dialog Popup */}
+      <CustomModal {...modalConfig} onClose={hideModal} />
     </SafeAreaView>
   );
 };

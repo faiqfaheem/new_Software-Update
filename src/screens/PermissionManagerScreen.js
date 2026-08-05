@@ -215,11 +215,137 @@ const PermissionManagerScreen = ({ navigation }) => {
     }
   };
 
+  const isUserFacingSystemApp = (app) => {
+    if (!app || !app.isSystemApp) return true;
+
+    const name = (app.appName || app.name || '').trim();
+    const pkg = (app.packageName || '').trim().toLowerCase();
+
+    if (!name || name.toLowerCase() === pkg) return false;
+
+    const lowerName = name.toLowerCase();
+
+    if (
+      lowerName.startsWith('com.') ||
+      lowerName.startsWith('org.') ||
+      lowerName.startsWith('net.') ||
+      lowerName.startsWith('android.') ||
+      lowerName.startsWith('sys.') ||
+      lowerName.startsWith('io.') ||
+      lowerName.includes('.')
+    ) {
+      return false;
+    }
+
+    const OS_BACKGROUND_KEYWORDS = [
+      'provider',
+      'service',
+      'services',
+      'system',
+      'framework',
+      'installer',
+      'spooler',
+      'carrier',
+      'companion',
+      'dictionary',
+      'overlay',
+      'stub',
+      'proxy',
+      'captive',
+      'fused',
+      'storage',
+      'telephony',
+      'keychain',
+      'feedback',
+      'agent',
+      'daemon',
+      'engine',
+      'component',
+      'shell',
+      'interface',
+      'extension',
+      'plugin',
+      'helper',
+      'wallpaper',
+      'carousel',
+      'analytics',
+      'msa',
+      'security core',
+      'guard',
+      'intent',
+      'permission',
+      'print',
+      'bluetooth',
+      'sim',
+      'manager',
+      'module',
+      'handler',
+    ];
+
+    const PRIMARY_SYSTEM_NAMES = [
+      'settings',
+      'camera',
+      'gallery',
+      'photos',
+      'phone',
+      'dialer',
+      'messages',
+      'messaging',
+      'contacts',
+      'clock',
+      'alarm',
+      'calculator',
+      'calendar',
+      'files',
+      'file manager',
+      'my files',
+      'chrome',
+      'google',
+      'youtube',
+      'maps',
+      'gmail',
+      'drive',
+      'play store',
+      'notes',
+      'keep',
+      'voice recorder',
+      'recorder',
+      'compass',
+      'weather',
+      'radio',
+      'fm radio',
+      'music',
+      'video',
+      'browser',
+      'screen recorder',
+      'gboard',
+      'duo',
+      'meet',
+    ];
+
+    const isPrimaryName = PRIMARY_SYSTEM_NAMES.some((pName) => lowerName.includes(pName));
+    if (isPrimaryName) return true;
+
+    const isBackgroundKeyword = OS_BACKGROUND_KEYWORDS.some((kw) => lowerName.includes(kw));
+    if (isBackgroundKeyword) return false;
+
+    if (name.length > 30) return false;
+    return true;
+  };
+
   const processAndCategorizeApps = (rawApps = []) => {
     const installed = { High: [], Medium: [], Low: [], None: [], total: 0 };
     const system = { High: [], Medium: [], Low: [], None: [], total: 0 };
 
     rawApps.forEach((app) => {
+      if ((app.apkSize || 0) <= 100 * 1024) {
+        return; // Filter out < 100KB / 0 MB invalid stub apps
+      }
+
+      if (app.isSystemApp && !isUserFacingSystemApp(app)) {
+        return; // Filter out background non-launcher packages
+      }
+
       const matchedGroups = getAppPermissionGroups(app.requestedPermissions || []);
       const riskLevel = classifyAppRiskFromGroups(matchedGroups);
       const count = matchedGroups.length;

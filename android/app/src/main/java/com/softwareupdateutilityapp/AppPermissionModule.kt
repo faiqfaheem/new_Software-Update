@@ -68,6 +68,61 @@ class AppPermissionModule(private val reactContext: ReactApplicationContext) : R
     }
 
     @ReactMethod
+    fun uninstallApp(packageName: String, promise: Promise) {
+        try {
+            val intent = Intent(Intent.ACTION_UNINSTALL_PACKAGE).apply {
+                data = Uri.parse("package:$packageName")
+                putExtra(Intent.EXTRA_RETURN_RESULT, true)
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK
+            }
+            reactApplicationContext.startActivity(intent)
+            promise.resolve(true)
+        } catch (e: Exception) {
+            try {
+                val fallbackIntent = Intent(Intent.ACTION_DELETE).apply {
+                    data = Uri.parse("package:$packageName")
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                }
+                reactApplicationContext.startActivity(fallbackIntent)
+                promise.resolve(true)
+            } catch (e2: Exception) {
+                promise.reject("UNINSTALL_ERROR", e2.message, e2)
+            }
+        }
+    }
+
+    @ReactMethod
+    fun openPlayStoreUpdates(promise: Promise) {
+        try {
+            // Direct Play Store My Apps & Updates intent
+            val intent = Intent("com.google.android.finsky.VIEW_MY_DOWNLOADS").apply {
+                setPackage("com.android.vending")
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK
+            }
+            reactApplicationContext.startActivity(intent)
+            promise.resolve(true)
+        } catch (_: Exception) {
+            try {
+                val launchIntent = reactContext.packageManager.getLaunchIntentForPackage("com.android.vending")
+                if (launchIntent != null) {
+                    launchIntent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                    launchIntent.putExtra("initial_tab", 1)
+                    reactApplicationContext.startActivity(launchIntent)
+                    promise.resolve(true)
+                } else {
+                    val webIntent = Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps")).apply {
+                        flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                    }
+                    reactApplicationContext.startActivity(webIntent)
+                    promise.resolve(true)
+                }
+            } catch (e: Exception) {
+                promise.reject("PLAY_STORE_ERROR", e.message, e)
+            }
+        }
+    }
+
+    @ReactMethod
     fun getInstalledAppsPermissions(promise: Promise) {
         Thread {
             try {
@@ -89,6 +144,18 @@ class AppPermissionModule(private val reactContext: ReactApplicationContext) : R
                     val flags = appInfo?.flags ?: 0
 
                     val isSystemApp = ((flags and ApplicationInfo.FLAG_SYSTEM) != 0) || ((flags and ApplicationInfo.FLAG_UPDATED_SYSTEM_APP) != 0)
+                    val hasLaunchIntent = pm.getLaunchIntentForPackage(packageName) != null
+
+                    val installer = try {
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                            pm.getInstallSourceInfo(packageName).installingPackageName
+                        } else {
+                            @Suppress("DEPRECATION")
+                            pm.getInstallerPackageName(packageName)
+                        }
+                    } catch (_: Exception) {
+                        null
+                    }
 
                     val permissionsArray = WritableNativeArray()
                     pkg.requestedPermissions?.forEach { perm ->
@@ -118,6 +185,8 @@ class AppPermissionModule(private val reactContext: ReactApplicationContext) : R
                     appMap.putString("packageName", packageName)
                     appMap.putString("appName", appName)
                     appMap.putBoolean("isSystemApp", isSystemApp)
+                    appMap.putBoolean("hasLaunchIntent", hasLaunchIntent)
+                    appMap.putString("installer", installer ?: "")
                     appMap.putArray("requestedPermissions", permissionsArray)
                     appMap.putInt("permissionsCount", pkg.requestedPermissions?.size ?: 0)
                     appMap.putString("versionName", versionName)

@@ -14,6 +14,7 @@ import {
 import { useLanguage } from '../i18n/LanguageContext';
 import { setStoredUsagePermission } from '../utils/storage';
 import { checkAllPermissions } from '../utils/permissions';
+import CustomModal from '../components/CustomModal';
 
 const PermissionScreen = ({ navigation }) => {
   const { t } = useLanguage();
@@ -27,8 +28,8 @@ const PermissionScreen = ({ navigation }) => {
   });
 
   useEffect(() => {
-    // Initial sequential permission check on mount (auto-navigate if already complete)
-    evaluatePermissions(true);
+    // Initial permission check on mount (without auto-navigating)
+    evaluatePermissions();
 
     // Native AppState foreground listener (Settings Recovery Logic)
     const subscription = AppState.addEventListener('change', (nextAppState) => {
@@ -36,31 +37,24 @@ const PermissionScreen = ({ navigation }) => {
         appStateRef.current.match(/inactive|background/) &&
         nextAppState === 'active'
       ) {
-        // App returned to foreground (e.g., from Settings) -> Re-verify live permissions
-        evaluatePermissions(true);
+        // App returned to foreground -> Re-verify live permissions & update checkmarks on screen
+        evaluatePermissions();
       }
       appStateRef.current = nextAppState;
     });
 
     return () => {
-      // Clean up AppState listener on unmount to prevent memory leaks
       subscription.remove();
     };
   }, []);
 
   /**
-   * Strictly evaluates all required Android system permissions
-   * @param {boolean} autoNavigateIfComplete - If true and all permissions GRANTED, reset stack to HomeScreen
+   * Evaluates all required Android system permissions and updates UI state
    */
-  const evaluatePermissions = async (autoNavigateIfComplete = false) => {
+  const evaluatePermissions = async () => {
     try {
-      const { isAllGranted, permissions: updated } = await checkAllPermissions();
+      const { permissions: updated } = await checkAllPermissions();
       setPermissions(updated);
-
-      // Strict Navigation Barrier: Auto-navigate ONLY if ALL permissions strictly evaluate to GRANTED
-      if (isAllGranted && autoNavigateIfComplete) {
-        setTimeout(() => navigateToHome(), 100);
-      }
     } catch (err) {
       console.warn('Error during permission evaluation:', err);
     }
@@ -135,21 +129,42 @@ const PermissionScreen = ({ navigation }) => {
     }
   };
 
+  // Custom Theme Modal State
+  const [modalConfig, setModalConfig] = useState({
+    visible: false,
+    title: '',
+    message: '',
+    primaryButton: null,
+    secondaryButton: null,
+  });
+
+  const showModal = (config) => {
+    setModalConfig({
+      visible: true,
+      ...config,
+    });
+  };
+
+  const hideModal = () => {
+    setModalConfig((prev) => ({ ...prev, visible: false }));
+  };
+
   /**
    * Alert prompt offering direct redirection to Android App Settings
    */
   const showOpenSettingsAlert = (permissionName) => {
-    Alert.alert(
-      'Permission Blocked',
-      `${permissionName} is permanently denied or blocked. Please enable it manually in Android System Settings.`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Open Settings',
-          onPress: () => Linking.openSettings(),
-        },
-      ]
-    );
+    showModal({
+      title: 'Permission Required',
+      message: `${permissionName} is required. Please enable it manually in Android System Settings.`,
+      primaryButton: {
+        label: 'Open Settings',
+        onPress: () => Linking.openSettings(),
+      },
+      secondaryButton: {
+        label: 'Cancel',
+        onPress: () => {},
+      },
+    });
   };
 
   /**
@@ -175,17 +190,18 @@ const PermissionScreen = ({ navigation }) => {
       if (!permissions.microphone) missing.push(t('micTitle'));
       if (!permissions.usage) missing.push(t('usageTitle'));
 
-      Alert.alert(
-        t('appPermissions'),
-        `${t('allPermissionsRequiredSub')}:\n\n• ${missing.join('\n• ')}`,
-        [
-          { text: 'Cancel', style: 'cancel' },
-          {
-            text: 'Open Settings',
-            onPress: () => Linking.openSettings(),
-          },
-        ]
-      );
+      showModal({
+        title: t('appPermissions'),
+        message: `${t('allPermissionsRequiredSub')}:\n\n• ${missing.join('\n• ')}`,
+        primaryButton: {
+          label: 'Open Settings',
+          onPress: () => Linking.openSettings(),
+        },
+        secondaryButton: {
+          label: 'Cancel',
+          onPress: () => {},
+        },
+      });
       return;
     }
 
@@ -235,6 +251,9 @@ const PermissionScreen = ({ navigation }) => {
           {isAllGranted ? t('continue') : t('grantAll')}
         </Text>
       </TouchableOpacity>
+
+      {/* Theme Dialog Popup */}
+      <CustomModal {...modalConfig} onClose={hideModal} />
     </View>
   );
 };

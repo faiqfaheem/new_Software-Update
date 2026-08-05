@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -14,6 +14,8 @@ import {
   ActivityIndicator,
   Image,
 } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
+import CustomModal from '../components/CustomModal';
 
 const WhitePlaceholder = ({ size = 22, borderRadius = 4, color = '#FFFFFF', opacity = 1 }) => (
   <View
@@ -58,10 +60,14 @@ const RadioCircle = ({ selected = false }) => (
 );
 
 const formatSize = (bytes) => {
-  if (!bytes || bytes === 0) return '24 MB';
+  if (!bytes || bytes <= 0) return '24.5 MB';
   const mb = bytes / (1024 * 1024);
   if (mb >= 1024) {
     return `${(mb / 1024).toFixed(2)} GB`;
+  }
+  if (mb < 0.1) {
+    const kb = bytes / 1024;
+    return kb > 0 ? `${kb.toFixed(0)} KB` : '2.4 MB';
   }
   return `${mb.toFixed(1)} MB`;
 };
@@ -76,9 +82,39 @@ const BulkUninstallerScreen = ({ navigation }) => {
   const [selectedIds, setSelectedIds] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  // Theme Dialog Modal State
+  const [modalConfig, setModalConfig] = useState({
+    visible: false,
+    title: '',
+    message: '',
+    icon: 'ℹ️',
+    type: 'info',
+    primaryButton: null,
+    secondaryButton: null,
+  });
+
+  const showModal = (config) => {
+    setModalConfig({
+      visible: true,
+      icon: 'ℹ️',
+      type: 'info',
+      ...config,
+    });
+  };
+
+  const hideModal = () => {
+    setModalConfig((prev) => ({ ...prev, visible: false }));
+  };
+
   useEffect(() => {
     loadUserApps();
   }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      loadUserApps();
+    }, [])
+  );
 
   const loadUserApps = async () => {
     setLoading(true);
@@ -90,7 +126,7 @@ const BulkUninstallerScreen = ({ navigation }) => {
         const rawApps = await NativeModules.AppPermissionModule.getInstalledAppsPermissions();
         // User downloadable apps (excluding core system apps)
         const userApps = rawApps
-          .filter((a) => !a.isSystemApp)
+          .filter((a) => !a.isSystemApp && (a.apkSize || 0) > 100 * 1024)
           .map((a, idx) => ({
             id: a.packageName,
             name: a.appName || a.packageName,
@@ -129,41 +165,54 @@ const BulkUninstallerScreen = ({ navigation }) => {
 
   const handleUninstallAction = () => {
     if (selectedIds.length === 0) {
-      Alert.alert('No Selection', 'Please select at least one application to uninstall.');
+      showModal({
+        title: 'No App Selected',
+        message: 'Please select at least one application from the list to uninstall.',
+        primaryButton: { label: 'Got It', onPress: () => hideModal() },
+      });
       return;
     }
 
     const selectedApps = apps.filter((a) => selectedIds.includes(a.id));
     const appNames = selectedApps.map((a) => a.name).join('\n• ');
 
-    Alert.alert(
-      'Confirm Uninstall',
-      `Are you sure you want to uninstall ${selectedIds.length} app(s)?\n\n• ${appNames}`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Uninstall Now',
-          style: 'destructive',
-          onPress: async () => {
-            if (Platform.OS === 'android') {
-              for (const targetApp of selectedApps) {
-                try {
-                  await Linking.sendIntent('android.intent.action.DELETE', [
-                    { key: 'package', value: targetApp.packageName },
-                  ]).catch(() => {
-                    Linking.openSettings();
-                  });
-                } catch (e) {
-                  Linking.openSettings();
-                }
+    showModal({
+      title: 'Confirm Bulk Uninstall',
+      message: `Are you sure you want to uninstall ${selectedIds.length} app(s)?\n\n• ${appNames}`,
+      primaryButton: {
+        label: 'Uninstall Now',
+        onPress: async () => {
+          hideModal();
+          const targetedPkgs = selectedApps.map((a) => a.packageName);
+          for (const targetApp of selectedApps) {
+            try {
+              if (
+                NativeModules.AppPermissionModule &&
+                NativeModules.AppPermissionModule.uninstallApp
+              ) {
+                await NativeModules.AppPermissionModule.uninstallApp(targetApp.packageName);
+              } else {
+                await Linking.sendIntent('android.intent.action.DELETE', [
+                  { key: 'package', value: targetApp.packageName },
+                ]);
               }
-            } else {
-              Linking.openSettings();
+            } catch (e) {
+              // Ignore if cancelled
             }
-          },
+          }
+
+          // Immediately clear selection and refresh list to remove uninstalled apps
+          setSelectedIds((prev) => prev.filter((id) => !targetedPkgs.includes(id)));
+          setTimeout(() => {
+            loadUserApps();
+          }, 800);
         },
-      ]
-    );
+      },
+      secondaryButton: {
+        label: 'Cancel',
+        onPress: () => hideModal(),
+      },
+    });
   };
 
   const handleSettingsPress = () => {
@@ -260,6 +309,9 @@ const BulkUninstallerScreen = ({ navigation }) => {
           </TouchableOpacity>
         </View>
       </View>
+
+      {/* Theme Dialog Popup */}
+      <CustomModal {...modalConfig} onClose={hideModal} />
     </SafeAreaView>
   );
 };
