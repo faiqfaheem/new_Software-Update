@@ -7,7 +7,9 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.media.AudioDeviceInfo
+import android.media.AudioFormat
 import android.media.AudioManager
+import android.media.AudioTrack
 import android.os.Build
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.ReactContextBaseJavaModule
@@ -50,6 +52,67 @@ class HeadphoneModule(private val reactContext: ReactApplicationContext) : React
             promise.resolve(connected)
         } catch (e: Exception) {
             promise.reject("HEADPHONE_ERROR", e.message, e)
+        }
+    }
+
+    @ReactMethod
+    fun playAudioChannel(channel: String, promise: Promise) {
+        try {
+            Thread {
+                val sampleRate = 44100
+                val durationSeconds = 2.0
+                val numSamples = (durationSeconds * sampleRate).toInt()
+                val sample = DoubleArray(numSamples)
+                val generatedSnd = ByteArray(2 * numSamples)
+
+                val freqOfTone = 440.0 // 440Hz Audio Test Tone
+
+                for (i in 0 until numSamples) {
+                    sample[i] = Math.sin(2.0 * Math.PI * i.toDouble() / (sampleRate / freqOfTone))
+                }
+
+                var idx = 0
+                for (dVal in sample) {
+                    val valShort = (dVal * 32767).toInt().toShort()
+                    generatedSnd[idx++] = (valShort.toInt() and 0x00ff).toByte()
+                    generatedSnd[idx++] = (valShort.toInt() and 0xff00 shr 8).toByte()
+                }
+
+                val minBufferSize = AudioTrack.getMinBufferSize(
+                    sampleRate,
+                    AudioFormat.CHANNEL_OUT_STEREO,
+                    AudioFormat.ENCODING_PCM_16BIT
+                )
+
+                @Suppress("DEPRECATION")
+                val track = AudioTrack(
+                    AudioManager.STREAM_MUSIC,
+                    sampleRate,
+                    AudioFormat.CHANNEL_OUT_STEREO,
+                    AudioFormat.ENCODING_PCM_16BIT,
+                    minBufferSize.coerceAtLeast(generatedSnd.size),
+                    AudioTrack.MODE_STATIC
+                )
+
+                track.write(generatedSnd, 0, generatedSnd.size)
+
+                if (channel.equals("LEFT", ignoreCase = true)) {
+                    @Suppress("DEPRECATION")
+                    track.setStereoVolume(1.0f, 0.0f) // 100% Left Channel Only
+                } else if (channel.equals("RIGHT", ignoreCase = true)) {
+                    @Suppress("DEPRECATION")
+                    track.setStereoVolume(0.0f, 1.0f) // 100% Right Channel Only
+                } else {
+                    @Suppress("DEPRECATION")
+                    track.setStereoVolume(1.0f, 1.0f)
+                }
+
+                track.play()
+            }.start()
+
+            promise.resolve(true)
+        } catch (e: Exception) {
+            promise.reject("AUDIO_ERROR", e.message, e)
         }
     }
 

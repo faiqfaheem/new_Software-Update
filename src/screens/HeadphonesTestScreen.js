@@ -61,6 +61,9 @@ const HeadphonesTestScreen = ({ navigation }) => {
 
   const handleTestLeftStereo = () => {
     setActiveTestingChannel('LEFT');
+    if (NativeModules.HeadphoneModule && NativeModules.HeadphoneModule.playAudioChannel) {
+      NativeModules.HeadphoneModule.playAudioChannel('LEFT').catch(() => {});
+    }
     setTimeout(() => {
       setActiveTestingChannel(null);
     }, 2000);
@@ -68,6 +71,9 @@ const HeadphonesTestScreen = ({ navigation }) => {
 
   const handleTestRightStereo = () => {
     setActiveTestingChannel('RIGHT');
+    if (NativeModules.HeadphoneModule && NativeModules.HeadphoneModule.playAudioChannel) {
+      NativeModules.HeadphoneModule.playAudioChannel('RIGHT').catch(() => {});
+    }
     setTimeout(() => {
       setActiveTestingChannel(null);
     }, 2000);
