@@ -30,3 +30,8 @@ yarn-error.log*
 # OS generated files
 .DS_Store
 Thumbs.db
+
+# Environment variables & API keys — DO NOT COMMIT
+.env
+.env.local
+src/config/env.js

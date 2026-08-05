@@ -1,158 +1,227 @@
-import React, { useState, useRef, useEffect } from 'react';
+/**
+ * AIAssistantScreen.js
+ * ─────────────────────────────────────────────────────────────────
+ * Fully-functional In-App AI Assistant using the Groq API.
+ * Design: matches attached mockup — hero logo, SYSTEMS ONLINE,
+ *         chat bubbles, bottom input bar with white placeholders.
+ * ─────────────────────────────────────────────────────────────────
+ */
+
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import {
   View,
   Text,
+  TextInput,
   TouchableOpacity,
+  FlatList,
   StyleSheet,
   SafeAreaView,
   StatusBar,
-  ScrollView,
-  TextInput,
+  ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
   Animated,
 } from 'react-native';
+import { GROQ_API_KEY } from '../config/env';
 
-/* ─────────────── PLACEHOLDER COMPONENTS ─────────────── */
+/* ─────────────────────────────────────────────────────────────────
+   GROQ CONSTANTS
+───────────────────────────────────────────────────────────────── */
+const GROQ_ENDPOINT = 'https://api.groq.com/openai/v1/chat/completions';
+const MODEL         = 'llama-3.3-70b-versatile';
 
-// AI Bot hero image placeholder — 96×96 white block, exact position from design
-const AiBotPlaceholder = () => (
-  <View style={styles.botImgPlaceholder} />
-);
+const SYSTEM_PROMPT = {
+  role   : 'system',
+  content:
+    "You are the dedicated In-App Virtual Guide for the 'Software Update & Phone Utility App'.\n" +
+    'YOUR STRICT BOUNDARIES:\n' +
+    "1. Answer ONLY questions related to this app's features: Checking App Updates, System OS Update shortcuts, App Permission Manager (Risk Categories), Device Storage Cleaner, and Hardware/Phone Sensor Tests.\n" +
+    '2. If the user asks ANY question outside of this app (e.g., general knowledge, recipes, coding, weather, news, sports, or personal advice), DO NOT answer the question.\n' +
+    "3. Respond politely with a standard refusal: 'I am your in-app utility assistant. I can only help you with checking app updates, managing storage, testing sensors, and checking app permissions within this app.'\n" +
+    '4. Keep all responses concise, helpful, and under 80 words.',
+};
 
-/* ─────────────── QUICK-ACTION CHIP ─────────────── */
-const QuickChip = ({ label, onPress }) => (
-  <TouchableOpacity style={styles.chip} onPress={onPress} activeOpacity={0.7}>
-    <Text style={styles.chipText}>{label}</Text>
-  </TouchableOpacity>
-);
+const NETWORK_ERROR_MSG =
+  'Unable to reach AI Assistant right now. Please check your network connection.';
 
-/* ─────────────── CHAT BUBBLE ─────────────── */
-const ChatBubble = ({ message, isBot }) => (
-  <View style={[styles.bubbleWrap, isBot ? styles.bubbleBot : styles.bubbleUser]}>
-    <Text style={[styles.bubbleText, !isBot && styles.bubbleTextUser]}>{message}</Text>
-  </View>
-);
-
-/* ─────────────── PULSE DOT ─────────────── */
+/* ─────────────────────────────────────────────────────────────────
+   PULSING GREEN DOT (SYSTEMS ONLINE)
+───────────────────────────────────────────────────────────────── */
 const PulseDot = () => {
   const scale = useRef(new Animated.Value(1)).current;
   useEffect(() => {
     Animated.loop(
       Animated.sequence([
-        Animated.timing(scale, { toValue: 1.5, duration: 700, useNativeDriver: true }),
-        Animated.timing(scale, { toValue: 1, duration: 700, useNativeDriver: true }),
-      ])
+        Animated.timing(scale, { toValue: 1.6, duration: 700, useNativeDriver: true }),
+        Animated.timing(scale, { toValue: 1,   duration: 700, useNativeDriver: true }),
+      ]),
     ).start();
   }, [scale]);
   return (
-    <View style={{ alignItems: 'center', justifyContent: 'center', marginRight: 6 }}>
-      <Animated.View style={[styles.pulseDot, { transform: [{ scale }] }]} />
+    <Animated.View style={[styles.pulseDot, { transform: [{ scale }] }]} />
+  );
+};
+
+/* ─────────────────────────────────────────────────────────────────
+   TYPING BUBBLE
+───────────────────────────────────────────────────────────────── */
+const TypingBubble = () => (
+  <View style={styles.messageRowBot}>
+    <View style={styles.typingBubble}>
+      <ActivityIndicator size="small" color="#60A5FA" />
+      <Text style={styles.typingText}>AI is typing…</Text>
+    </View>
+  </View>
+);
+
+/* ─────────────────────────────────────────────────────────────────
+   SINGLE MESSAGE BUBBLE
+───────────────────────────────────────────────────────────────── */
+const MessageBubble = ({ item }) => {
+  const isUser = item.sender === 'user';
+  return (
+    <View style={[styles.messageRow, isUser ? styles.messageRowUser : styles.messageRowBot]}>
+      <View style={[styles.bubble, isUser ? styles.bubbleUser : styles.bubbleBot]}>
+        <Text style={[styles.bubbleText, isUser ? styles.bubbleTextUser : styles.bubbleTextBot]}>
+          {item.text}
+        </Text>
+      </View>
     </View>
   );
 };
 
-/* ─────────────── SCREEN ─────────────── */
-const INITIAL_BOT_MESSAGE =
-  "Hi, I'm your Software Update assistant. I can help you with app features, device optimization, and software-related questions.";
+/* ─────────────────────────────────────────────────────────────────
+   HERO SECTION (shown above the chat list as ListHeaderComponent)
+───────────────────────────────────────────────────────────────── */
+const HeroHeader = () => (
+  <View style={styles.heroSection}>
+    {/* ── 96×96 white logo placeholder ── */}
+    <View style={styles.logoBotPlaceholder} />
 
-const QUICK_CHIPS = [
-  'Update History',
-  'App Usage',
-  'Scan',
-  'Test Phone',
-  'Data Manager',
-  'Permissions',
-];
+    {/* ── SYSTEMS ONLINE ── */}
+    <View style={styles.statusRow}>
+      <PulseDot />
+      <Text style={styles.statusText}>SYSTEMS ONLINE</Text>
+    </View>
+  </View>
+);
 
-const BOT_RESPONSES = {
-  'update history': "Your device has received 3 system updates in the last 30 days. The latest update was on August 1st, 2026. All updates were successfully installed.",
-  'app usage': "I can help analyze your app usage patterns. Go to Scan Apps → Installed Apps to see detailed usage statistics for each app on your device.",
-  'scan': "To scan your apps, tap the 'Scan Apps' card on the Home screen. The scanner checks for available updates, system app health, and app permissions.",
-  'test phone': "Phone hardware testing is available under the Tools tab. You can test: Speaker, Microphone, Vibration, Flashlight, Display, WiFi, and more.",
-  'data manager': "Data Manager is available under Tools. It shows Storage Info, helping you identify large files and apps consuming the most space.",
-  'permissions': "Permission Manager is available under Tools. It shows which apps have access to your Camera, Microphone, Location, Storage, and more.",
-};
-
-const getResponse = (input) => {
-  const lower = input.toLowerCase().trim();
-  for (const [key, val] of Object.entries(BOT_RESPONSES)) {
-    if (lower.includes(key)) return val;
-  }
-  if (lower.includes('hello') || lower.includes('hi')) return "Hello! How can I assist you today? You can ask me about app updates, device testing, storage, or permissions.";
-  if (lower.includes('update')) return "I can help with updates! Tap 'Scan Apps' on the Home screen to check for available app updates. For OS updates, check the OS Update section.";
-  if (lower.includes('storage') || lower.includes('space')) return "To check your storage, go to Tools → Storage Info. I can also help you identify apps taking up the most space.";
-  if (lower.includes('battery')) return "For battery optimization, try uninstalling unused apps via Bulk Uninstaller, and restrict background app permissions using Permission Manager.";
-  return "I'm here to help! You can ask me about app scanning, device testing, storage management, permissions, or software updates. What would you like to know?";
+/* ─────────────────────────────────────────────────────────────────
+   MAIN SCREEN
+───────────────────────────────────────────────────────────────── */
+const INITIAL_MESSAGE = {
+  id    : 'init-1',
+  text  : "Hi, I'm your Software Update assistant. I can help you with app features, device optimization, and software-related questions.",
+  sender: 'assistant',
 };
 
 const AIAssistantScreen = ({ navigation }) => {
-  const [messages, setMessages] = useState([
-    { id: '1', text: INITIAL_BOT_MESSAGE, isBot: true },
-  ]);
+  const [messages, setMessages]   = useState([INITIAL_MESSAGE]);
   const [inputText, setInputText] = useState('');
-  const scrollRef = useRef(null);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const sendMessage = (text) => {
-    const userText = text || inputText.trim();
-    if (!userText) return;
+  const flatListRef = useRef(null);
 
-    const userMsg = { id: Date.now().toString(), text: userText, isBot: false };
-    const botMsg = {
-      id: (Date.now() + 1).toString(),
-      text: getResponse(userText),
-      isBot: true,
-    };
+  const buildHistory = useCallback(
+    (msgs) =>
+      msgs
+        .filter((m) => m.sender !== 'error')
+        .map((m) => ({
+          role   : m.sender === 'user' ? 'user' : 'assistant',
+          content: m.text,
+        })),
+    [],
+  );
 
-    setMessages((prev) => [...prev, userMsg, botMsg]);
+  const scrollToBottom = () =>
+    setTimeout(() => flatListRef.current?.scrollToEnd({ animated: true }), 80);
+
+  const handleSend = async () => {
+    const trimmed = inputText.trim();
+    if (!trimmed || isLoading) return;
+
+    const userMsg = { id: `u-${Date.now()}`, text: trimmed, sender: 'user' };
+    setMessages((prev) => [...prev, userMsg]);
     setInputText('');
-    setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 100);
+    setIsLoading(true);
+    scrollToBottom();
+
+    try {
+      if (!GROQ_API_KEY || GROQ_API_KEY.includes('REPLACE')) {
+        throw new Error('API key not configured');
+      }
+
+      const res = await fetch(GROQ_ENDPOINT, {
+        method : 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization : `Bearer ${GROQ_API_KEY}`,
+        },
+        body: JSON.stringify({
+          model      : MODEL,
+          messages   : [SYSTEM_PROMPT, ...buildHistory([...messages, userMsg])],
+          max_tokens : 200,
+          temperature: 0.6,
+          stream     : false,
+        }),
+      });
+
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+      const data    = await res.json();
+      const content = data?.choices?.[0]?.message?.content?.trim();
+      if (!content) throw new Error('Empty response');
+
+      setMessages((prev) => [
+        ...prev,
+        { id: `b-${Date.now()}`, text: content, sender: 'assistant' },
+      ]);
+    } catch (err) {
+      console.warn('[AIAssistant]', err.message);
+      setMessages((prev) => [
+        ...prev,
+        { id: `e-${Date.now()}`, text: NETWORK_ERROR_MSG, sender: 'assistant' },
+      ]);
+    } finally {
+      setIsLoading(false);
+      scrollToBottom();
+    }
   };
+
+  const renderItem    = ({ item }) => <MessageBubble item={item} />;
+  const keyExtractor  = (item)     => item.id;
 
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar barStyle="light-content" backgroundColor="#0B1120" />
 
-      {/* Header */}
+      {/* ── Header ── */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
+        <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
           <Text style={styles.backArrow}>←</Text>
         </TouchableOpacity>
         <Text style={styles.headerTitle}>AI Assistant</Text>
-        {/* 48×48 placeholder for potential settings/info icon */}
-        <View style={styles.headerIconPlaceholder} />
       </View>
 
       <KeyboardAvoidingView
         style={{ flex: 1 }}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        keyboardVerticalOffset={0}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={10}
       >
-        <ScrollView
-          ref={scrollRef}
-          style={styles.scroll}
-          contentContainerStyle={styles.scrollContent}
+        {/* ── Chat list ── */}
+        <FlatList
+          ref={flatListRef}
+          data={messages}
+          renderItem={renderItem}
+          keyExtractor={keyExtractor}
+          contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
-        >
-          {/* ── Bot icon + Status ── */}
-          <View style={styles.heroSection}>
-            {/* 96×96 AI hero image placeholder — replace with <Image> when asset is ready */}
-            <AiBotPlaceholder />
+          onContentSizeChange={scrollToBottom}
+          ListHeaderComponent={<HeroHeader />}
+          ListFooterComponent={isLoading ? <TypingBubble /> : null}
+        />
 
-            <View style={styles.statusRow}>
-              <PulseDot />
-              <Text style={styles.statusText}>SYSTEMS ONLINE</Text>
-            </View>
-          </View>
-
-          {/* ── Messages ── */}
-          {messages.map((msg) => (
-            <ChatBubble key={msg.id} message={msg.text} isBot={msg.isBot} />
-          ))}
-
-        </ScrollView>
-
-        {/* ── Input Bar ── */}
+        {/* ── Input bar ── */}
         <View style={styles.inputBar}>
           <TextInput
             style={styles.textInput}
@@ -160,13 +229,22 @@ const AIAssistantScreen = ({ navigation }) => {
             placeholderTextColor="#64748B"
             value={inputText}
             onChangeText={setInputText}
-            onSubmitEditing={() => sendMessage()}
+            onSubmitEditing={handleSend}
             returnKeyType="send"
             multiline={false}
+            editable={!isLoading}
           />
-          {/* Send button — 44×44 icon placeholder, exact position from design */}
-          <TouchableOpacity style={styles.sendBtn} onPress={() => sendMessage()} activeOpacity={0.85}>
-            {/* Replace inner View with <Image> when send-icon asset is ready */}
+
+          {/* 46×46 blue send button — white 24×24 placeholder inside */}
+          <TouchableOpacity
+            style={[
+              styles.sendBtn,
+              (!inputText.trim() || isLoading) && styles.sendBtnDisabled,
+            ]}
+            onPress={handleSend}
+            activeOpacity={0.8}
+            disabled={!inputText.trim() || isLoading}
+          >
             <View style={styles.sendIconPlaceholder} />
           </TouchableOpacity>
         </View>
@@ -175,216 +253,152 @@ const AIAssistantScreen = ({ navigation }) => {
   );
 };
 
-/* ─────────────── STYLES ─────────────── */
+/* ─────────────────────────────────────────────────────────────────
+   STYLES
+───────────────────────────────────────────────────────────────── */
 const styles = StyleSheet.create({
   safeArea: {
-    flex: 1,
+    flex           : 1,
     backgroundColor: '#0B1120',
   },
 
   /* Header */
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection    : 'row',
+    alignItems       : 'center',
     paddingHorizontal: 16,
-    paddingVertical: 14,
+    paddingVertical  : 14,
     borderBottomWidth: 1,
     borderBottomColor: '#1E293B',
-    backgroundColor: '#0B1120',
+    backgroundColor  : '#0B1120',
   },
-  backBtn: {
-    padding: 6,
-    marginRight: 10,
-  },
-  backArrow: {
-    color: '#FFFFFF',
-    fontSize: 22,
-    fontWeight: 'bold',
-  },
-  headerTitle: {
-    flex: 1,
-    color: '#FFFFFF',
-    fontSize: 20,
-    fontWeight: 'bold',
-  },
-  headerIconPlaceholder: {
-    // 28×28 top-right settings/info icon placeholder
-    width: 28,
-    height: 28,
-    borderRadius: 8,
-    backgroundColor: '#1E293B',
-    borderWidth: 1,
-    borderColor: '#2563EB',
-  },
-
-  /* Scroll */
-  scroll: { flex: 1 },
-  scrollContent: {
-    paddingHorizontal: 16,
-    paddingBottom: 24,
-  },
+  backBtn: { padding: 6, marginRight: 10 },
+  backArrow: { color: '#FFFFFF', fontSize: 22, fontWeight: 'bold' },
+  headerTitle: { color: '#FFFFFF', fontSize: 20, fontWeight: 'bold' },
 
   /* Hero section */
   heroSection: {
-    alignItems: 'center',
-    paddingVertical: 28,
-  },
-  botIconContainer: {
-    marginBottom: 16,
+    alignItems    : 'center',
+    paddingTop    : 28,
+    paddingBottom : 20,
   },
 
-  /* ── Bot icon placeholder ── */
-  botIconWrapper: {
-    alignItems: 'center',
-  },
-  botHead: {
-    width: 72,
-    height: 56,
-    alignItems: 'center',
-    justifyContent: 'center',
-    position: 'relative',
-  },
-  /* AI Bot hero image placeholder — 96×96 white block, exact position from design */
-  botImgPlaceholder: {
-    width: 96,
-    height: 96,
-    borderRadius: 20,
+  /* 96×96 white logo placeholder — replace View with <Image> when asset ready */
+  logoBotPlaceholder: {
+    width          : 96,
+    height         : 96,
+    borderRadius   : 20,
     backgroundColor: '#FFFFFF',
-    marginBottom: 16,
+    marginBottom   : 16,
   },
 
-  /* Status row */
+  /* SYSTEMS ONLINE */
   statusRow: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems   : 'center',
+    gap          : 6,
   },
   pulseDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
+    width          : 8,
+    height         : 8,
+    borderRadius   : 4,
     backgroundColor: '#22C55E',
-    marginRight: 6,
   },
   statusText: {
-    color: '#22C55E',
-    fontSize: 13,
-    fontWeight: 'bold',
+    color      : '#22C55E',
+    fontSize   : 13,
+    fontWeight : 'bold',
     letterSpacing: 1.5,
   },
 
-  /* Chat bubbles */
-  bubbleWrap: {
-    maxWidth: '90%',
-    borderRadius: 14,
+  /* List */
+  listContent: {
     paddingHorizontal: 16,
-    paddingVertical: 12,
-    marginBottom: 10,
-  },
-  bubbleBot: {
-    alignSelf: 'flex-start',
-    backgroundColor: '#131C31',
-    borderWidth: 1,
-    borderColor: '#1E293B',
-  },
-  bubbleUser: {
-    alignSelf: 'flex-end',
-    backgroundColor: '#2563EB',
-  },
-  bubbleText: {
-    color: '#CBD5E1',
-    fontSize: 14,
-    lineHeight: 20,
-  },
-  bubbleTextUser: {
-    color: '#FFFFFF',
+    paddingBottom    : 12,
   },
 
-  /* Quick actions card */
-  quickCard: {
-    backgroundColor: '#131C31',
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: '#1E293B',
-    padding: 16,
-    marginVertical: 8,
-  },
-  quickCardHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  sparkleIconPlaceholder: {
-    // 20×20 sparkle icon placeholder
-    width: 20,
-    height: 20,
-    borderRadius: 4,
-    backgroundColor: '#1E3A8A',
-    borderWidth: 1,
-    borderColor: '#3B82F6',
-    marginRight: 8,
-  },
-  quickCardTitle: {
-    color: '#E2E8F0',
-    fontSize: 14,
-    fontWeight: '600',
-    flex: 1,
-  },
-  chipGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-  chip: {
+  /* Message rows */
+  messageRow    : { marginBottom: 10 },
+  messageRowUser: { alignItems: 'flex-end' },
+  messageRowBot : { alignItems: 'flex-start', marginBottom: 10 },
+
+  bubble: {
+    maxWidth         : '88%',
+    borderRadius     : 16,
     paddingHorizontal: 14,
-    paddingVertical: 7,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: '#2563EB',
-    backgroundColor: '#0F1E3D',
-    marginBottom: 4,
+    paddingVertical  : 10,
   },
-  chipText: {
-    color: '#93C5FD',
-    fontSize: 13,
-    fontWeight: '500',
+  bubbleUser: {
+    backgroundColor     : '#2563EB',
+    borderBottomRightRadius: 4,
   },
+  bubbleBot: {
+    backgroundColor    : '#131C31',
+    borderWidth        : 1,
+    borderColor        : '#1E293B',
+    borderBottomLeftRadius: 4,
+  },
+  bubbleText    : { fontSize: 14, lineHeight: 21 },
+  bubbleTextUser: { color: '#FFFFFF' },
+  bubbleTextBot : { color: '#CBD5E1' },
+
+  /* Typing bubble */
+  typingBubble: {
+    flexDirection         : 'row',
+    alignItems            : 'center',
+    backgroundColor       : '#131C31',
+    borderWidth           : 1,
+    borderColor           : '#1E293B',
+    borderRadius          : 16,
+    borderBottomLeftRadius: 4,
+    paddingHorizontal     : 14,
+    paddingVertical       : 10,
+    gap                   : 8,
+  },
+  typingText: { color: '#64748B', fontSize: 13 },
 
   /* Input bar */
   inputBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection    : 'row',
+    alignItems       : 'center',
     paddingHorizontal: 16,
-    paddingVertical: 12,
-    backgroundColor: '#0B1120',
-    borderTopWidth: 1,
-    borderTopColor: '#1E293B',
+    paddingVertical  : 12,
+    backgroundColor  : '#0B1120',
+    borderTopWidth   : 1,
+    borderTopColor   : '#1E293B',
   },
   textInput: {
-    flex: 1,
-    height: 46,
-    backgroundColor: '#131C31',
-    borderRadius: 24,
+    flex             : 1,
+    height           : 46,
+    backgroundColor  : '#131C31',
+    borderRadius     : 24,
     paddingHorizontal: 18,
-    color: '#FFFFFF',
-    fontSize: 14,
-    borderWidth: 1,
-    borderColor: '#1E293B',
-    marginRight: 10,
+    color            : '#FFFFFF',
+    fontSize         : 14,
+    borderWidth      : 1,
+    borderColor      : '#1E293B',
+    marginRight      : 10,
   },
+
+  /* 46×46 blue circle send button */
   sendBtn: {
-    // 44×44 send button placeholder exact position
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width          : 46,
+    height         : 46,
+    borderRadius   : 23,
     backgroundColor: '#2563EB',
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems     : 'center',
+    justifyContent : 'center',
   },
-  /* Send button icon placeholder — 24×24 white block inside 44×44 circle, exact position */
+  sendBtnDisabled: {
+    backgroundColor: '#1E3A8A',
+    opacity        : 0.55,
+  },
+
+  /* 24×24 white send-icon placeholder — replace with <Image> when asset ready */
   sendIconPlaceholder: {
-    width: 24,
-    height: 24,
-    borderRadius: 4,
+    width          : 24,
+    height         : 24,
+    borderRadius   : 4,
     backgroundColor: '#FFFFFF',
   },
 });
