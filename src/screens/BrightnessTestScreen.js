@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -7,6 +7,7 @@ import {
   SafeAreaView,
   StatusBar,
   Linking,
+  NativeModules,
 } from 'react-native';
 
 const WhitePlaceholder = ({ size = 22, borderRadius = 4, color = '#FFFFFF' }) => (
@@ -26,6 +27,26 @@ const BackArrow = ({ color = '#FFFFFF', size = 22 }) => (
 
 const BrightnessTestScreen = ({ navigation }) => {
   const [brightnessLevel, setBrightnessLevel] = useState('max'); // 'min' | 'max'
+
+  useEffect(() => {
+    // Start at max brightness by default
+    applyBrightness('max');
+
+    return () => {
+      // Restore system default brightness on screen exit
+      if (NativeModules.BrightnessModule && NativeModules.BrightnessModule.restoreSystemBrightness) {
+        NativeModules.BrightnessModule.restoreSystemBrightness().catch(() => {});
+      }
+    };
+  }, []);
+
+  const applyBrightness = (level) => {
+    setBrightnessLevel(level);
+    if (NativeModules.BrightnessModule && NativeModules.BrightnessModule.setScreenBrightness) {
+      const val = level === 'min' ? 0.05 : 1.0;
+      NativeModules.BrightnessModule.setScreenBrightness(val).catch(() => {});
+    }
+  };
 
   const handleSettingsPress = () => {
     Linking.openSettings();
@@ -62,32 +83,46 @@ const BrightnessTestScreen = ({ navigation }) => {
           </View>
 
           <Text style={styles.instructionText}>
-            Test brightness control of your screen.
+            Test physical brightness control of your screen.
           </Text>
 
           <Text style={styles.sectionTitle}>
-            Brightness
+            Screen Brightness Mode
           </Text>
 
-          {/* Status Row */}
-          <View style={styles.statusRow}>
+          {/* Real-time Hardware Brightness Controls */}
+          <View style={styles.controlsRow}>
             <TouchableOpacity
-              style={styles.statusItem}
-              onPress={() => setBrightnessLevel('min')}
+              style={[
+                styles.modeButton,
+                brightnessLevel === 'min' ? styles.modeButtonActive : styles.modeButtonInactive,
+              ]}
+              onPress={() => applyBrightness('min')}
             >
-              <View style={[styles.statusDot, { backgroundColor: '#38BDF8' }]} />
-              <Text style={[styles.statusText, brightnessLevel === 'min' && styles.statusTextActive]}>
-                Minimum
+              <Text
+                style={[
+                  styles.modeButtonText,
+                  brightnessLevel === 'min' ? styles.modeTextActive : styles.modeTextInactive,
+                ]}
+              >
+                Minimum (Dim)
               </Text>
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={styles.statusItem}
-              onPress={() => setBrightnessLevel('max')}
+              style={[
+                styles.modeButton,
+                brightnessLevel === 'max' ? styles.modeButtonActive : styles.modeButtonInactive,
+              ]}
+              onPress={() => applyBrightness('max')}
             >
-              <View style={[styles.statusDot, { backgroundColor: '#FACC15' }]} />
-              <Text style={[styles.statusText, brightnessLevel === 'max' && styles.statusTextActive]}>
-                Maximum
+              <Text
+                style={[
+                  styles.modeButtonText,
+                  brightnessLevel === 'max' ? styles.modeTextActive : styles.modeTextInactive,
+                ]}
+              >
+                Maximum (Bright)
               </Text>
             </TouchableOpacity>
           </View>
@@ -183,30 +218,36 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     textAlign: 'center',
   },
-  statusRow: {
-    alignItems: 'center',
-  },
-  statusItem: {
+  controlsRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 10,
-    paddingHorizontal: 12,
-    paddingVertical: 4,
+    justifyContent: 'center',
+    width: '100%',
   },
-  statusDot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    marginRight: 10,
+  modeButton: {
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 22,
+    marginHorizontal: 8,
+    borderWidth: 1,
   },
-  statusText: {
-    color: '#94A3B8',
+  modeButtonActive: {
+    backgroundColor: '#3B82F6',
+    borderColor: '#60A5FA',
+  },
+  modeButtonInactive: {
+    backgroundColor: '#131C31',
+    borderColor: '#1E293B',
+  },
+  modeButtonText: {
     fontSize: 14,
-    fontWeight: '600',
-  },
-  statusTextActive: {
-    color: '#FFFFFF',
     fontWeight: 'bold',
+  },
+  modeTextActive: {
+    color: '#FFFFFF',
+  },
+  modeTextInactive: {
+    color: '#94A3B8',
   },
   bottomFeedbackSection: {
     alignItems: 'center',

@@ -12,7 +12,8 @@ class UsageStatsPackage : ReactPackage {
             FlashlightModule(reactContext),
             AccelerometerModule(reactContext),
             HeadphoneModule(reactContext),
-            WifiModule(reactContext)
+            WifiModule(reactContext),
+            BrightnessModule(reactContext)
         )
     }
 
