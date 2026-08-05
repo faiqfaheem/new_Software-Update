@@ -28,6 +28,7 @@ import VibrationTestScreen from './src/screens/VibrationTestScreen';
 import BrightnessTestScreen from './src/screens/BrightnessTestScreen';
 import SpeakerTestScreen from './src/screens/SpeakerTestScreen';
 import SettingsScreen from './src/screens/SettingsScreen';
+import AIAssistantScreen from './src/screens/AIAssistantScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -56,6 +57,7 @@ const App = () => {
           <Stack.Screen name="StorageInfoScreen" component={StorageInfoScreen} />
           <Stack.Screen name="PermissionManagerScreen" component={PermissionManagerScreen} />
           <Stack.Screen name="SettingsScreen" component={SettingsScreen} />
+          <Stack.Screen name="AIAssistantScreen" component={AIAssistantScreen} />
           <Stack.Screen name="PhoneSensorScreen" component={PhoneSensorScreen} />
           <Stack.Screen name="DisplayTestScreen" component={DisplayTestScreen} />
           <Stack.Screen name="FlashlightTestScreen" component={FlashlightTestScreen} />

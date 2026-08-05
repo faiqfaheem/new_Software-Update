@@ -226,7 +226,7 @@ const HomeScreen = ({ navigation }) => {
   };
 
   const handleAIAssistantGuide = () => {
-    Alert.alert(t('feature6Title'), `${t('feature6Desc')}...\n\n[Action Executed]`);
+    navigation.navigate('AIAssistantScreen');
   };
 
   const handleBulkUninstaller = () => {
