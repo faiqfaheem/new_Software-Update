@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -7,6 +7,8 @@ import {
   SafeAreaView,
   StatusBar,
   Linking,
+  NativeModules,
+  DeviceEventEmitter,
 } from 'react-native';
 
 const WhitePlaceholder = ({ size = 22, borderRadius = 4, color = '#FFFFFF' }) => (
@@ -25,7 +27,33 @@ const BackArrow = ({ color = '#FFFFFF', size = 22 }) => (
 );
 
 const WifiTestScreen = ({ navigation }) => {
-  const [isConnected, setIsConnected] = useState(true);
+  const [isConnected, setIsConnected] = useState(false);
+
+  // Subscribe to real-time Android Wifi Hardware connectivity events
+  useEffect(() => {
+    let subscription;
+    if (NativeModules.WifiModule) {
+      if (NativeModules.WifiModule.isWifiConnected) {
+        NativeModules.WifiModule.isWifiConnected()
+          .then((status) => setIsConnected(!!status))
+          .catch(() => {});
+      }
+
+      if (NativeModules.WifiModule.startListening) {
+        NativeModules.WifiModule.startListening().catch(() => {});
+        subscription = DeviceEventEmitter.addListener('WifiStatusEvent', (event) => {
+          setIsConnected(!!event.connected);
+        });
+      }
+    }
+
+    return () => {
+      if (subscription) subscription.remove();
+      if (NativeModules.WifiModule && NativeModules.WifiModule.stopListening) {
+        NativeModules.WifiModule.stopListening().catch(() => {});
+      }
+    };
+  }, []);
 
   const handleSettingsPress = () => {
     Linking.openSettings();
@@ -69,17 +97,19 @@ const WifiTestScreen = ({ navigation }) => {
             Wifi Test
           </Text>
 
-          {/* Status Row */}
+          {/* Real-time Hardware WiFi Status Indicator */}
           <View style={styles.statusRow}>
-            <View style={styles.statusItem}>
-              <View style={[styles.statusDot, { backgroundColor: '#34D399' }]} />
-              <Text style={styles.statusConnected}>Connected</Text>
-            </View>
-
-            <View style={styles.statusItem}>
-              <View style={[styles.statusDot, { backgroundColor: '#F87171' }]} />
-              <Text style={styles.statusNotConnected}>Notconnected</Text>
-            </View>
+            {isConnected ? (
+              <View style={styles.statusBadgeConnected}>
+                <View style={styles.whiteDot} />
+                <Text style={styles.statusTextConnected}>Connected</Text>
+              </View>
+            ) : (
+              <View style={styles.statusBadgeDisconnected}>
+                <View style={styles.redDot} />
+                <Text style={styles.statusTextDisconnected}>Not Connected</Text>
+              </View>
+            )}
           </View>
         </View>
 
@@ -176,26 +206,47 @@ const styles = StyleSheet.create({
   statusRow: {
     alignItems: 'center',
   },
-  statusItem: {
+  statusBadgeConnected: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 8,
+    backgroundColor: '#3B82F6',
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 20,
   },
-  statusDot: {
+  whiteDot: {
     width: 8,
     height: 8,
     borderRadius: 4,
+    backgroundColor: '#FFFFFF',
     marginRight: 8,
   },
-  statusConnected: {
-    color: '#34D399',
+  statusTextConnected: {
+    color: '#FFFFFF',
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: 'bold',
   },
-  statusNotConnected: {
+  statusBadgeDisconnected: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(239, 68, 68, 0.15)',
+    borderWidth: 1,
+    borderColor: '#EF4444',
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 20,
+  },
+  redDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#EF4444',
+    marginRight: 8,
+  },
+  statusTextDisconnected: {
     color: '#F87171',
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: 'bold',
   },
   bottomFeedbackSection: {
     alignItems: 'center',

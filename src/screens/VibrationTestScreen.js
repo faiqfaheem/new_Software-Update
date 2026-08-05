@@ -65,11 +65,7 @@ const VibrationTestScreen = ({ navigation }) => {
       {/* Main Content Body */}
       <View style={styles.container}>
         {/* Top Hero Section */}
-        <TouchableOpacity
-          style={styles.heroSection}
-          activeOpacity={0.8}
-          onPress={handleTestVibration}
-        >
+        <View style={styles.heroSection}>
           <View style={styles.placeholderContainer}>
             <WhitePlaceholder size={70} borderRadius={16} color="#FFFFFF" />
           </View>
@@ -78,12 +74,16 @@ const VibrationTestScreen = ({ navigation }) => {
             Test your vibration motor of your device.
           </Text>
 
-          {isVibrating && (
-            <View style={styles.vibratingBadge}>
-              <Text style={styles.vibratingText}>📳 Vibrating...</Text>
-            </View>
-          )}
-        </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.testButton, isVibrating && styles.testButtonActive]}
+            activeOpacity={0.8}
+            onPress={handleTestVibration}
+          >
+            <Text style={styles.testButtonText}>
+              {isVibrating ? 'Vibrating...' : 'Test Vibration'}
+            </Text>
+          </TouchableOpacity>
+        </View>
 
         {/* Bottom Question & Feedback Buttons (Consistent Template) */}
         <View style={styles.bottomFeedbackSection}>
@@ -165,20 +165,21 @@ const styles = StyleSheet.create({
     color: '#94A3B8',
     textAlign: 'center',
     lineHeight: 22,
-    marginBottom: 20,
+    marginBottom: 24,
     paddingHorizontal: 10,
   },
-  vibratingBadge: {
-    backgroundColor: 'rgba(239, 68, 68, 0.15)',
-    borderColor: '#EF4444',
-    borderWidth: 1,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
+  testButton: {
+    backgroundColor: '#3B82F6',
+    paddingHorizontal: 28,
+    paddingVertical: 12,
+    borderRadius: 24,
   },
-  vibratingText: {
-    color: '#F87171',
-    fontSize: 14,
+  testButtonActive: {
+    backgroundColor: '#60A5FA',
+  },
+  testButtonText: {
+    color: '#FFFFFF',
+    fontSize: 15,
     fontWeight: 'bold',
   },
   bottomFeedbackSection: {

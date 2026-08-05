@@ -39,12 +39,12 @@ const HeadphonesTestScreen = ({ navigation }) => {
       if (NativeModules.HeadphoneModule.isHeadphoneConnected) {
         NativeModules.HeadphoneModule.isHeadphoneConnected()
           .then((status) => setIsConnected(!!status))
-          .catch(() => {});
+          .catch(() => { });
       }
 
       // Start listening to real-time hardware broadcast events
       if (NativeModules.HeadphoneModule.startListening) {
-        NativeModules.HeadphoneModule.startListening().catch(() => {});
+        NativeModules.HeadphoneModule.startListening().catch(() => { });
         subscription = DeviceEventEmitter.addListener('HeadphoneStatusEvent', (event) => {
           setIsConnected(!!event.connected);
         });
@@ -54,7 +54,7 @@ const HeadphonesTestScreen = ({ navigation }) => {
     return () => {
       if (subscription) subscription.remove();
       if (NativeModules.HeadphoneModule && NativeModules.HeadphoneModule.stopListening) {
-        NativeModules.HeadphoneModule.stopListening().catch(() => {});
+        NativeModules.HeadphoneModule.stopListening().catch(() => { });
       }
     };
   }, []);
@@ -62,7 +62,7 @@ const HeadphonesTestScreen = ({ navigation }) => {
   const handleTestLeftStereo = () => {
     setActiveTestingChannel('LEFT');
     if (NativeModules.HeadphoneModule && NativeModules.HeadphoneModule.playAudioChannel) {
-      NativeModules.HeadphoneModule.playAudioChannel('LEFT').catch(() => {});
+      NativeModules.HeadphoneModule.playAudioChannel('LEFT').catch(() => { });
     }
     setTimeout(() => {
       setActiveTestingChannel(null);
@@ -72,7 +72,7 @@ const HeadphonesTestScreen = ({ navigation }) => {
   const handleTestRightStereo = () => {
     setActiveTestingChannel('RIGHT');
     if (NativeModules.HeadphoneModule && NativeModules.HeadphoneModule.playAudioChannel) {
-      NativeModules.HeadphoneModule.playAudioChannel('RIGHT').catch(() => {});
+      NativeModules.HeadphoneModule.playAudioChannel('RIGHT').catch(() => { });
     }
     setTimeout(() => {
       setActiveTestingChannel(null);
@@ -148,7 +148,7 @@ const HeadphonesTestScreen = ({ navigation }) => {
                 onPress={handleTestLeftStereo}
               >
                 <Text style={styles.testPillText}>
-                  {activeTestingChannel === 'LEFT' ? 'Testing Left 🔊' : 'Test'}
+                  {activeTestingChannel === 'LEFT' ? 'Testing Left ' : 'Test'}
                 </Text>
               </TouchableOpacity>
             </View>
@@ -167,7 +167,7 @@ const HeadphonesTestScreen = ({ navigation }) => {
                 onPress={handleTestRightStereo}
               >
                 <Text style={styles.testPillText}>
-                  {activeTestingChannel === 'RIGHT' ? 'Testing Right 🔊' : 'Test'}
+                  {activeTestingChannel === 'RIGHT' ? 'Testing Right ' : 'Test'}
                 </Text>
               </TouchableOpacity>
             </View>
@@ -264,22 +264,20 @@ const styles = StyleSheet.create({
   statusBadgeConnected: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(16, 185, 129, 0.15)',
-    borderWidth: 1,
-    borderColor: '#10B981',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
+    backgroundColor: '#3B82F6',
+    paddingHorizontal: 18,
+    paddingVertical: 10,
     borderRadius: 20,
   },
   greenDot: {
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: '#10B981',
+    backgroundColor: '#FFFFFF',
     marginRight: 8,
   },
   statusTextConnected: {
-    color: '#34D399',
+    color: '#FFFFFF',
     fontSize: 14,
     fontWeight: 'bold',
   },
@@ -331,13 +329,13 @@ const styles = StyleSheet.create({
     marginLeft: 12,
   },
   testPillButton: {
-    backgroundColor: '#10B981',
+    backgroundColor: '#3B82F6',
     paddingHorizontal: 20,
     paddingVertical: 8,
     borderRadius: 18,
   },
   testPillActive: {
-    backgroundColor: '#3B82F6',
+    backgroundColor: '#60A5FA',
   },
   testPillText: {
     color: '#FFFFFF',

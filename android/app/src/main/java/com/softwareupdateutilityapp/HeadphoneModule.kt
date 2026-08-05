@@ -27,21 +27,25 @@ class HeadphoneModule(private val reactContext: ReactApplicationContext) : React
     }
 
     private fun checkIsHeadsetConnected(): Boolean {
-        val audioManager = reactContext.getSystemService(Context.AUDIO_SERVICE) as AudioManager
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            val devices = audioManager.getDevices(AudioManager.GET_DEVICES_OUTPUTS)
-            devices.any { device ->
-                device.type == AudioDeviceInfo.TYPE_WIRED_HEADSET ||
-                device.type == AudioDeviceInfo.TYPE_WIRED_HEADPHONES ||
-                device.type == AudioDeviceInfo.TYPE_USB_HEADSET ||
-                device.type == AudioDeviceInfo.TYPE_USB_DEVICE ||
-                device.type == AudioDeviceInfo.TYPE_USB_ACCESSORY ||
-                device.type == AudioDeviceInfo.TYPE_BLUETOOTH_A2DP ||
-                device.type == AudioDeviceInfo.TYPE_BLUETOOTH_SCO
+        return try {
+            val audioManager = reactContext.getSystemService(Context.AUDIO_SERVICE) as AudioManager
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                val devices = audioManager.getDevices(AudioManager.GET_DEVICES_OUTPUTS)
+                devices.any { device ->
+                    device.type == AudioDeviceInfo.TYPE_WIRED_HEADSET ||
+                    device.type == AudioDeviceInfo.TYPE_WIRED_HEADPHONES ||
+                    device.type == AudioDeviceInfo.TYPE_USB_HEADSET ||
+                    device.type == AudioDeviceInfo.TYPE_USB_DEVICE ||
+                    device.type == AudioDeviceInfo.TYPE_USB_ACCESSORY ||
+                    device.type == AudioDeviceInfo.TYPE_BLUETOOTH_A2DP ||
+                    device.type == AudioDeviceInfo.TYPE_BLUETOOTH_SCO
+                }
+            } else {
+                @Suppress("DEPRECATION")
+                audioManager.isWiredHeadsetOn || audioManager.isBluetoothA2dpOn
             }
-        } else {
-            @Suppress("DEPRECATION")
-            audioManager.isWiredHeadsetOn || audioManager.isBluetoothA2dpOn
+        } catch (e: Exception) {
+            false
         }
     }
 
@@ -51,7 +55,7 @@ class HeadphoneModule(private val reactContext: ReactApplicationContext) : React
             val connected = checkIsHeadsetConnected()
             promise.resolve(connected)
         } catch (e: Exception) {
-            promise.reject("HEADPHONE_ERROR", e.message, e)
+            promise.resolve(false)
         }
     }
 
@@ -123,7 +127,7 @@ class HeadphoneModule(private val reactContext: ReactApplicationContext) : React
 
             promise.resolve(true)
         } catch (e: Exception) {
-            promise.reject("AUDIO_ERROR", e.message, e)
+            promise.resolve(false)
         }
     }
 
@@ -143,12 +147,17 @@ class HeadphoneModule(private val reactContext: ReactApplicationContext) : React
                     addAction(BluetoothHeadset.ACTION_CONNECTION_STATE_CHANGED)
                     addAction(AudioManager.ACTION_AUDIO_BECOMING_NOISY)
                 }
-                reactContext.registerReceiver(receiver, filter)
+
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    reactContext.registerReceiver(receiver, filter, Context.RECEIVER_EXPORTED)
+                } else {
+                    reactContext.registerReceiver(receiver, filter)
+                }
             }
             sendHeadphoneStatusEvent(checkIsHeadsetConnected())
             promise.resolve(true)
         } catch (e: Exception) {
-            promise.reject("HEADPHONE_ERROR", e.message, e)
+            promise.resolve(false)
         }
     }
 
@@ -161,17 +170,19 @@ class HeadphoneModule(private val reactContext: ReactApplicationContext) : React
             }
             promise.resolve(true)
         } catch (e: Exception) {
-            promise.reject("HEADPHONE_ERROR", e.message, e)
+            promise.resolve(false)
         }
     }
 
     private fun sendHeadphoneStatusEvent(connected: Boolean) {
-        if (reactContext.hasActiveReactInstance()) {
-            val params = WritableNativeMap()
-            params.putBoolean("connected", connected)
-            reactContext
-                .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter::class.java)
-                .emit("HeadphoneStatusEvent", params)
-        }
+        try {
+            if (reactContext.hasActiveReactInstance()) {
+                val params = WritableNativeMap()
+                params.putBoolean("connected", connected)
+                reactContext
+                    .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter::class.java)
+                    .emit("HeadphoneStatusEvent", params)
+            }
+        } catch (e: Exception) {}
     }
 }

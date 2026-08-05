@@ -114,7 +114,7 @@ const AccelerometerTestScreen = ({ navigation }) => {
 
             <View style={[styles.sensorStatusBadge, isLevelAligned && styles.sensorStatusBadgeAligned]}>
               <Text style={styles.sensorStatusText}>
-                {isLevelAligned ? '✓ HARDWARE SENSOR LEVEL' : '📱 HARDWARE MOTION ACTIVE'}
+                {isLevelAligned ? '✓ HARDWARE SENSOR LEVEL' : 'HARDWARE MOTION ACTIVE'}
               </Text>
             </View>
           </View>
