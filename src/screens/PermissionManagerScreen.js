@@ -43,68 +43,108 @@ const RingChart = ({ percentage = '0%', ringColor = '#EF4444' }) => (
   </View>
 );
 
-// Permission Risk Engines & Constants
-const HIGH_RISK_PERMS = [
-  'CAMERA',
-  'RECORD_AUDIO',
-  'ACCESS_FINE_LOCATION',
-  'ACCESS_COARSE_LOCATION',
-  'READ_SMS',
-  'SEND_SMS',
-  'RECEIVE_SMS',
-  'READ_CONTACTS',
-  'WRITE_CONTACTS',
-  'READ_CALL_LOG',
-  'WRITE_CALL_LOG',
-  'MANAGE_EXTERNAL_STORAGE',
+// Permission Category Groups (Matching OS App Settings Groups - Each group counted ONCE per app)
+const PERMISSION_GROUPS = [
+  {
+    name: 'Camera',
+    risk: 'High',
+    targets: ['CAMERA'],
+  },
+  {
+    name: 'Microphone',
+    risk: 'High',
+    targets: ['RECORD_AUDIO'],
+  },
+  {
+    name: 'Location',
+    risk: 'High',
+    targets: ['ACCESS_FINE_LOCATION', 'ACCESS_COARSE_LOCATION', 'ACCESS_BACKGROUND_LOCATION'],
+  },
+  {
+    name: 'Photos & Storage',
+    risk: 'Medium',
+    targets: [
+      'READ_EXTERNAL_STORAGE',
+      'WRITE_EXTERNAL_STORAGE',
+      'MANAGE_EXTERNAL_STORAGE',
+      'READ_MEDIA_IMAGES',
+      'READ_MEDIA_VIDEO',
+      'READ_MEDIA_AUDIO',
+      'READ_MEDIA_VISUAL_USER_SELECTED',
+    ],
+  },
+  {
+    name: 'Contacts',
+    risk: 'High',
+    targets: ['READ_CONTACTS', 'WRITE_CONTACTS', 'GET_ACCOUNTS'],
+  },
+  {
+    name: 'Phone & Call Logs',
+    risk: 'High',
+    targets: [
+      'READ_PHONE_STATE',
+      'CALL_PHONE',
+      'READ_CALL_LOG',
+      'WRITE_CALL_LOG',
+      'READ_PHONE_NUMBERS',
+    ],
+  },
+  {
+    name: 'SMS',
+    risk: 'High',
+    targets: ['READ_SMS', 'SEND_SMS', 'RECEIVE_SMS', 'RECEIVE_MMS', 'RECEIVE_WAP_PUSH'],
+  },
+  {
+    name: 'Physical Activity & Sensors',
+    risk: 'Medium',
+    targets: ['ACTIVITY_RECOGNITION', 'BODY_SENSORS', 'BODY_SENSORS_BACKGROUND'],
+  },
+  {
+    name: 'Bluetooth & Nearby Devices',
+    risk: 'Medium',
+    targets: ['BLUETOOTH_CONNECT', 'BLUETOOTH_SCAN', 'NEARBY_WIFI_DEVICES'],
+  },
+  {
+    name: 'Calendar',
+    risk: 'Low',
+    targets: ['READ_CALENDAR', 'WRITE_CALENDAR'],
+  },
+  {
+    name: 'Notifications',
+    risk: 'Low',
+    targets: ['POST_NOTIFICATIONS'],
+  },
+  {
+    name: 'Special Access',
+    risk: 'Medium',
+    targets: ['SYSTEM_ALERT_WINDOW', 'PACKAGE_USAGE_STATS', 'REQUEST_INSTALL_PACKAGES'],
+  },
 ];
 
-const MEDIUM_RISK_PERMS = [
-  'READ_PHONE_STATE',
-  'PACKAGE_USAGE_STATS',
-  'BLUETOOTH_CONNECT',
-  'BLUETOOTH_SCAN',
-  'READ_EXTERNAL_STORAGE',
-  'WRITE_EXTERNAL_STORAGE',
-  'SYSTEM_ALERT_WINDOW',
-];
-
-const LOW_RISK_PERMS = [
-  'INTERNET',
-  'ACCESS_NETWORK_STATE',
-  'ACCESS_WIFI_STATE',
-  'VIBRATE',
-  'POST_NOTIFICATIONS',
-  'WAKE_LOCK',
-  'RECEIVE_BOOT_COMPLETED',
-  'FOREGROUND_SERVICE',
-];
-
-const classifyAppRisk = (requestedPerms = []) => {
-  if (!requestedPerms || requestedPerms.length === 0) {
-    return 'None';
-  }
-
+const getAppPermissionGroups = (requestedPerms = []) => {
+  if (!requestedPerms || requestedPerms.length === 0) return [];
   const upperPerms = requestedPerms.map((p) => p.toUpperCase());
 
-  // Check High Risk
-  const hasHighRisk = upperPerms.some((perm) =>
-    HIGH_RISK_PERMS.some((target) => perm.includes(target))
-  );
-  if (hasHighRisk) return 'High';
+  const matchedGroups = [];
+  PERMISSION_GROUPS.forEach((group) => {
+    const hasGroup = upperPerms.some((perm) =>
+      group.targets.some((target) => perm.includes(target))
+    );
+    if (hasGroup) {
+      matchedGroups.push(group);
+    }
+  });
 
-  // Check Medium Risk
-  const hasMediumRisk = upperPerms.some((perm) =>
-    MEDIUM_RISK_PERMS.some((target) => perm.includes(target))
-  );
-  if (hasMediumRisk) return 'Medium';
+  return matchedGroups;
+};
 
-  // Check Low Risk
-  const hasLowRisk = upperPerms.some((perm) =>
-    LOW_RISK_PERMS.some((target) => perm.includes(target))
-  );
-  if (hasLowRisk) return 'Low';
-
+const classifyAppRiskFromGroups = (matchedGroups = []) => {
+  if (!matchedGroups || matchedGroups.length === 0) {
+    return 'None';
+  }
+  if (matchedGroups.some((g) => g.risk === 'High')) return 'High';
+  if (matchedGroups.some((g) => g.risk === 'Medium')) return 'Medium';
+  if (matchedGroups.some((g) => g.risk === 'Low')) return 'Low';
   return 'None';
 };
 
@@ -154,15 +194,19 @@ const PermissionManagerScreen = ({ navigation }) => {
     const system = { High: [], Medium: [], Low: [], None: [], total: 0 };
 
     rawApps.forEach((app) => {
-      const riskLevel = classifyAppRisk(app.requestedPermissions || []);
+      const matchedGroups = getAppPermissionGroups(app.requestedPermissions || []);
+      const riskLevel = classifyAppRiskFromGroups(matchedGroups);
+      const count = matchedGroups.length;
+
       const formattedApp = {
         id: app.packageName,
         name: app.appName || app.packageName,
         packageName: app.packageName,
-        permissionsCount: `${app.permissionsCount || 0} Permissions`,
-        rawCount: app.permissionsCount || 0,
+        permissionsCount: `${count} ${count === 1 ? 'Permission' : 'Permissions'}`,
+        rawCount: count,
         riskLevel,
         appIcon: app.appIcon,
+        permissionGroups: matchedGroups.map((g) => g.name),
       };
 
       if (app.isSystemApp) {
@@ -182,7 +226,7 @@ const PermissionManagerScreen = ({ navigation }) => {
   };
 
   const handleSettingsPress = () => {
-    Linking.openSettings();
+    navigation.navigate('SettingsScreen');
   };
 
   const handleAppPress = async (packageName) => {

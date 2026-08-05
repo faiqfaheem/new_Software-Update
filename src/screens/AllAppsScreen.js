@@ -98,7 +98,7 @@ const AllAppsScreen = ({ navigation }) => {
   });
 
   const handleSettingsPress = () => {
-    Linking.openSettings();
+    navigation.navigate('SettingsScreen');
   };
 
   const handleAppPress = async (packageName) => {

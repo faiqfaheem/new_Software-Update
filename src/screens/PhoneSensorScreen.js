@@ -47,7 +47,7 @@ const SENSOR_TESTS = [
 
 const PhoneSensorScreen = ({ navigation }) => {
   const handleSettingsPress = () => {
-    Linking.openSettings();
+    navigation.navigate('SettingsScreen');
   };
 
   const handleTestPress = (test) => {

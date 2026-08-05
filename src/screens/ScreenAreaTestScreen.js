@@ -74,7 +74,7 @@ const ScreenAreaTestScreen = ({ navigation }) => {
   ).current;
 
   const handleSettingsPress = () => {
-    Linking.openSettings();
+    navigation.navigate('SettingsScreen');
   };
 
   const handleResultPress = (passed) => {

@@ -47,7 +47,7 @@ const FlashlightTestScreen = ({ navigation }) => {
   };
 
   const handleSettingsPress = () => {
-    Linking.openSettings();
+    navigation.navigate('SettingsScreen');
   };
 
   const handleBack = () => {

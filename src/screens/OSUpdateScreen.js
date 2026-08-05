@@ -61,7 +61,7 @@ const OSUpdateScreen = ({ navigation }) => {
   };
 
   const handleSettingsPress = () => {
-    Linking.openSettings();
+    navigation.navigate('SettingsScreen');
   };
 
   return (

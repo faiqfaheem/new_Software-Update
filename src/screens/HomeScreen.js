@@ -56,7 +56,7 @@ const HomeScreen = ({ navigation }) => {
   };
 
   const handleSettingsPress = () => {
-    Linking.openSettings();
+    navigation.navigate('SettingsScreen');
   };
 
   // --- Tools Tab Action Handlers ---

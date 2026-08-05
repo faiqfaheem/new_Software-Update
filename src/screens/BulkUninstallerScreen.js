@@ -167,7 +167,7 @@ const BulkUninstallerScreen = ({ navigation }) => {
   };
 
   const handleSettingsPress = () => {
-    Linking.openSettings();
+    navigation.navigate('SettingsScreen');
   };
 
   const isAllSelected = apps.length > 0 && selectedIds.length === apps.length;

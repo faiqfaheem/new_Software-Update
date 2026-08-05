@@ -37,7 +37,7 @@ const SpeakerTestScreen = ({ navigation }) => {
   };
 
   const handleSettingsPress = () => {
-    Linking.openSettings();
+    navigation.navigate('SettingsScreen');
   };
 
   const handleResultPress = (passed) => {
