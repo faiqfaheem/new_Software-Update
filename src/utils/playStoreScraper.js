@@ -7,6 +7,129 @@ const PLAY_STORE_BASE_URL = 'https://play.google.com/store/apps/details?id=';
 const DEFAULT_TIMEOUT_MS = 3500; // Fast 3.5 seconds timeout limit
 
 /**
+ * Filter out user-facing vs background OS system apps for unified counting.
+ * @param {Object} app - App metadata object from PackageManager
+ * @returns {boolean} true if the app is a user-facing system app
+ */
+export const isUserFacingSystemApp = (app) => {
+  if (!app || !app.isSystemApp) return true;
+
+  const name = (app.appName || app.name || '').trim();
+  const pkg = (app.packageName || '').trim().toLowerCase();
+
+  if (!name || name.toLowerCase() === pkg) return false;
+
+  const lowerName = name.toLowerCase();
+
+  if (
+    lowerName.startsWith('com.') ||
+    lowerName.startsWith('org.') ||
+    lowerName.startsWith('net.') ||
+    lowerName.startsWith('android.') ||
+    lowerName.startsWith('sys.') ||
+    lowerName.startsWith('io.') ||
+    lowerName.includes('.')
+  ) {
+    return false;
+  }
+
+  const OS_BACKGROUND_KEYWORDS = [
+    'provider',
+    'service',
+    'services',
+    'system',
+    'framework',
+    'installer',
+    'spooler',
+    'carrier',
+    'companion',
+    'dictionary',
+    'overlay',
+    'stub',
+    'proxy',
+    'captive',
+    'fused',
+    'storage',
+    'telephony',
+    'keychain',
+    'feedback',
+    'agent',
+    'daemon',
+    'engine',
+    'component',
+    'shell',
+    'interface',
+    'extension',
+    'plugin',
+    'helper',
+    'wallpaper',
+    'carousel',
+    'analytics',
+    'msa',
+    'security core',
+    'guard',
+    'intent',
+    'permission',
+    'print',
+    'bluetooth',
+    'sim',
+    'manager',
+    'module',
+    'handler',
+  ];
+
+  const PRIMARY_SYSTEM_NAMES = [
+    'settings',
+    'camera',
+    'gallery',
+    'photos',
+    'phone',
+    'dialer',
+    'messages',
+    'messaging',
+    'contacts',
+    'clock',
+    'alarm',
+    'calculator',
+    'calendar',
+    'files',
+    'file manager',
+    'my files',
+    'chrome',
+    'google',
+    'youtube',
+    'maps',
+    'gmail',
+    'drive',
+    'play store',
+    'notes',
+    'keep',
+    'voice recorder',
+    'recorder',
+    'compass',
+    'weather',
+    'radio',
+    'fm radio',
+    'music',
+    'video',
+    'browser',
+    'screen recorder',
+    'gboard',
+    'duo',
+    'meet',
+  ];
+
+  const isPrimaryName = PRIMARY_SYSTEM_NAMES.some((pName) => lowerName.includes(pName));
+  if (isPrimaryName) return true;
+
+  const isBackgroundKeyword = OS_BACKGROUND_KEYWORDS.some((kw) => lowerName.includes(kw));
+  if (isBackgroundKeyword) return false;
+
+  if (name.length > 30) return false;
+  return true;
+};
+
+/**
  * Filter out internal kernel packages that lack a public Google Play Store listing.
  * @param {Object} app - App metadata object from PackageManager
  * @returns {boolean} true if the app should be excluded from Play Store scanning
@@ -246,9 +369,11 @@ export const scanInstalledAppsForUpdates = async (rawApps = [], onProgress = nul
     };
   }
 
-  // 1. Separate installed user apps and system apps
-  const userApps = rawApps.filter((a) => !a.isSystemApp);
-  const systemApps = rawApps.filter((a) => a.isSystemApp);
+  // 1. Separate installed user apps and user-facing system apps to match HomeScreen & AllAppsScreen counts
+  const userApps = rawApps.filter((a) => !a.isSystemApp && (a.apkSize || 0) > 100 * 1024);
+  const systemApps = rawApps.filter(
+    (a) => a.isSystemApp && (a.apkSize || 0) > 100 * 1024 && isUserFacingSystemApp(a)
+  );
 
   // 2. Include ALL installed packages except core OS kernel
   const validCandidateApps = rawApps.filter((app) => !isSystemAppExcludedFromStore(app));
@@ -310,6 +435,7 @@ export default {
   parseJsonLdSoftwareVersion,
   compareVersions,
   isStoreVersionHigher,
+  isUserFacingSystemApp,
   isSystemAppExcludedFromStore,
   scanInstalledAppsForUpdates,
 };
