@@ -4,74 +4,31 @@
  */
 
 const PLAY_STORE_BASE_URL = 'https://play.google.com/store/apps/details?id=';
-const DEFAULT_TIMEOUT_MS = 5000; // 5 seconds limit
+const DEFAULT_TIMEOUT_MS = 3500; // Fast 3.5 seconds timeout limit
 
 /**
- * Primary system app packages that DO have active Google Play Store pages.
- */
-const ALLOWED_SYSTEM_PACKAGES = [
-  'com.android.chrome',
-  'com.google.android.youtube',
-  'com.google.android.apps.maps',
-  'com.google.android.gm',
-  'com.google.android.apps.photos',
-  'com.google.android.calculator',
-  'com.google.android.calendar',
-  'com.google.android.deskclock',
-  'com.google.android.keep',
-  'com.google.android.inputmethod.latin',
-  'com.google.android.tts',
-  'com.google.android.apps.docs',
-  'com.google.android.videos',
-  'com.google.android.music',
-  'com.google.android.webview',
-  'com.google.android.gms',
-];
-
-/**
- * Filter out system apps that lack a public Google Play Store listing.
+ * Filter out internal kernel packages that lack a public Google Play Store listing.
  * @param {Object} app - App metadata object from PackageManager
  * @returns {boolean} true if the app should be excluded from Play Store scanning
  */
 export const isSystemAppExcludedFromStore = (app) => {
-  if (!app) return true;
+  if (!app || !app.packageName) return true;
 
-  const pkg = (app.packageName || '').toLowerCase().trim();
+  const pkg = app.packageName.toLowerCase().trim();
 
-  // Core internal framework packages with no Play Store presence
+  // Exclude core Android OS kernel & low-level framework packages that never have Play Store pages
   if (
     pkg === 'android' ||
     pkg.startsWith('com.android.internal') ||
-    pkg.startsWith('com.android.providers.')
+    pkg.startsWith('com.android.providers.telephony') ||
+    pkg.startsWith('com.android.providers.contacts') ||
+    pkg.startsWith('com.android.providers.media')
   ) {
     return true;
   }
 
-  // 1. Non-system user apps are always included
-  if (!app.isSystemApp) {
-    return false;
-  }
-
-  // 2. System apps with Launcher icons, Play Store installer, or known system apps
-  if (
-    app.hasLaunchIntent ||
-    app.installer === 'com.android.vending' ||
-    ALLOWED_SYSTEM_PACKAGES.includes(pkg)
-  ) {
-    return false;
-  }
-
-  // 3. Google system services with Play Store updates (e.g., WebView, Play Services, Carrier Services)
-  if (
-    pkg.startsWith('com.google.android.') ||
-    pkg.startsWith('com.google.ar.') ||
-    pkg === 'com.whatsapp'
-  ) {
-    return false;
-  }
-
-  // 4. Exclude background OS daemons without launch intent or Play Store installer
-  return true;
+  // Include ALL other installed packages (User Apps + System Apps like Chrome, YouTube, WebView, Samsung/Xiaomi Apps, etc.)
+  return false;
 };
 
 /**
@@ -133,15 +90,16 @@ export const parseJsonLdSoftwareVersion = (html) => {
     }
 
     // 3. Play Store Embedded Version Pattern Extraction
-    const verMatches = html.match(/"(\d{1,4}\.\d{1,4}\.\d{1,4}(?:\.\d{1,6}){0,2})"/g);
+    const verMatches = html.match(/\b\d{1,4}\.\d{1,4}\.\d{1,5}(?:\.\d{1,8}){0,4}\b/g);
     if (verMatches && verMatches.length > 0) {
-      const cleanVers = verMatches.map((v) => v.replace(/"/g, ''));
+      const cleanVers = verMatches.map((v) => v.trim());
       const validAppVers = cleanVers.filter(
         (v) =>
           !v.startsWith('124.') &&
           !v.startsWith('537.') &&
           !v.startsWith('10.0') &&
           !v.startsWith('1.0.0') &&
+          !v.startsWith('0.') &&
           !v.startsWith('2000.') &&
           v.includes('.')
       );
@@ -169,7 +127,7 @@ export const parseJsonLdSoftwareVersion = (html) => {
 /**
  * Asynchronously fetch Google Play Store page HTML and extract software version.
  * @param {string} packageName - e.g. "com.whatsapp"
- * @param {number} timeoutMs - Timeout limit in milliseconds (default 5000ms)
+ * @param {number} timeoutMs - Timeout limit in milliseconds (default 3500ms)
  * @returns {Promise<string|null>} Software version string or null
  */
 export const fetchStoreVersion = async (packageName, timeoutMs = DEFAULT_TIMEOUT_MS) => {
@@ -268,6 +226,7 @@ export const isStoreVersionHigher = (storeVersion, installedVersion) => {
 
 /**
  * Scan device installed apps and check for available updates via JSON-LD scraping.
+ * Ultra-fast parallel worker pool execution across ALL installed packages.
  * @param {Array} rawApps - Installed apps from Android PackageManager
  * @param {Function} [onProgress] - Optional progress callback (scannedCount, totalCount)
  * @returns {Promise<Object>} Scan results containing availableUpdates, upToDateApps, counts
@@ -287,15 +246,15 @@ export const scanInstalledAppsForUpdates = async (rawApps = [], onProgress = nul
   const userApps = rawApps.filter((a) => !a.isSystemApp);
   const systemApps = rawApps.filter((a) => a.isSystemApp);
 
-  // 2. Filter out non-public internal system apps
+  // 2. Include ALL installed packages except core OS kernel
   const validCandidateApps = rawApps.filter((app) => !isSystemAppExcludedFromStore(app));
 
   const availableUpdates = [];
   const upToDateApps = [];
   let completed = 0;
 
-  // Process in parallel batches of 8 for high speed scanning
-  const BATCH_SIZE = 8;
+  // Process in high-concurrency parallel batches of 20 requests
+  const BATCH_SIZE = 20;
   for (let i = 0; i < validCandidateApps.length; i += BATCH_SIZE) {
     const batch = validCandidateApps.slice(i, i + BATCH_SIZE);
 
@@ -304,7 +263,7 @@ export const scanInstalledAppsForUpdates = async (rawApps = [], onProgress = nul
         const packageName = app.packageName;
         const installedVer = app.versionName || String(app.versionCode || '1.0.0');
 
-        const storeVer = await fetchStoreVersion(packageName);
+        const storeVer = await fetchStoreVersion(packageName, 3500);
 
         if (storeVer && isStoreVersionHigher(storeVer, installedVer)) {
           const appWithUpdate = {
