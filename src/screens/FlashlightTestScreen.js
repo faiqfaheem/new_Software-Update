@@ -76,10 +76,6 @@ const FlashlightTestScreen = ({ navigation }) => {
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Flash Light Test</Text>
         </View>
-
-        <TouchableOpacity style={styles.settingsButton} onPress={handleSettingsPress}>
-          <WhitePlaceholder size={18} borderRadius={4} color="#FFFFFF" />
-        </TouchableOpacity>
       </View>
 
       {/* Main Content Body */}

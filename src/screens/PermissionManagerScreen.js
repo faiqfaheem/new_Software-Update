@@ -491,10 +491,6 @@ const PermissionManagerScreen = ({ navigation }) => {
             {selectedRiskDetail !== null ? `${selectedRiskDetail} Risk Apps` : 'App Permission'}
           </Text>
         </View>
-
-        <TouchableOpacity style={styles.settingsButton} onPress={handleSettingsPress}>
-          <Text style={{ color: '#FFFFFF', fontSize: 18 }}>⚙</Text>
-        </TouchableOpacity>
       </View>
 
       {/* MAIN CONTENT AREA */}

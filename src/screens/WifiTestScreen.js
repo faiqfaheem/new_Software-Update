@@ -75,10 +75,6 @@ const WifiTestScreen = ({ navigation }) => {
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Wifi Test</Text>
         </View>
-
-        <TouchableOpacity style={styles.settingsButton} onPress={handleSettingsPress}>
-          <WhitePlaceholder size={18} borderRadius={4} color="#FFFFFF" />
-        </TouchableOpacity>
       </View>
 
       {/* Main Content Body */}

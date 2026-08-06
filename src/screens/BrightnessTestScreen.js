@@ -68,10 +68,6 @@ const BrightnessTestScreen = ({ navigation }) => {
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Brightness Test</Text>
         </View>
-
-        <TouchableOpacity style={styles.settingsButton} onPress={handleSettingsPress}>
-          <WhitePlaceholder size={18} borderRadius={4} color="#FFFFFF" />
-        </TouchableOpacity>
       </View>
 
       {/* Main Content Body */}

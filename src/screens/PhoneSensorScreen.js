@@ -88,10 +88,6 @@ const PhoneSensorScreen = ({ navigation }) => {
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Phone Sensor</Text>
         </View>
-
-        <TouchableOpacity style={styles.settingsButton} onPress={handleSettingsPress}>
-          <WhitePlaceholder size={18} borderRadius={4} color="#FFFFFF" />
-        </TouchableOpacity>
       </View>
 
       {/* Scrollable Sensor Tests List */}
