@@ -137,7 +137,7 @@ const StorageInfoScreen = ({ navigation }) => {
         usedSpaceFormatted: formatBytes(usedBytes),
         usedPercentage,
       }));
-    } catch (e) {}
+    } catch (e) { }
   };
 
   const scanFolderRecursive = async (dirPath, depth = 0, maxDepth = 3) => {
@@ -171,7 +171,7 @@ const StorageInfoScreen = ({ navigation }) => {
           audios += subResult.audios;
         }
       }
-    } catch (e) {}
+    } catch (e) { }
 
     return { images, videos, audios };
   };

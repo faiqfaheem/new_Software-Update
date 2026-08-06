@@ -65,7 +65,7 @@ const OSUpdateScreen = ({ navigation }) => {
       let deviceName = '';
       try {
         deviceName = await DeviceInfo.getDeviceName();
-      } catch (_e) {}
+      } catch (_e) { }
 
       // 6. Hardware / Board Chipset
       const hardware =
@@ -75,13 +75,13 @@ const OSUpdateScreen = ({ navigation }) => {
       let buildId = '';
       try {
         buildId = DeviceInfo.getDisplaySync() || DeviceInfo.getBuildNumber() || '';
-      } catch (_e) {}
+      } catch (_e) { }
 
       // 8. Exact Security Patch Date (Settings > About Phone Security Patch)
       let securityPatch = '';
       try {
         securityPatch = DeviceInfo.getSecurityPatchSync() || '';
-      } catch (_e) {}
+      } catch (_e) { }
 
       setDeviceDetails({
         androidVersion: version,

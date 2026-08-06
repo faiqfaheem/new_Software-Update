@@ -24,6 +24,9 @@ const SETTINGS_ICON = require('../assets/settings_icon.png');
 const SCAN_APPS_ICON = require('../assets/scan_apps_icon.png');
 const TAB_HOME_ICON = require('../assets/tab_home_icon.png');
 const TAB_TOOLS_ICON = require('../assets/tab_tools_icon.png');
+const TOOL_STORAGE_INFO_ICON = require('../assets/tool_storage_info_icon.png');
+const TOOL_PERMISSION_MANAGER_ICON = require('../assets/tool_permission_manager_icon.png');
+const TOOL_PHONE_SENSOR_ICON = require('../assets/tool_phone_sensor_icon.png');
 
 // --- Simple White Placeholder Box Component ---
 const WhitePlaceholder = ({ size = 22, borderRadius = 4, color = '#FFFFFF', opacity = 1 }) => (
@@ -410,7 +413,7 @@ const HomeScreen = ({ navigation }) => {
             {/* Tool 1: Storage INFO */}
             <TouchableOpacity style={styles.toolCard} onPress={handleStorageInfo}>
               <View style={styles.toolIconWrapper}>
-                <WhitePlaceholder size={44} borderRadius={10} color="#FFFFFF" />
+                <Image source={TOOL_STORAGE_INFO_ICON} style={{ width: 44, height: 44 }} resizeMode="contain" />
               </View>
               <Text style={styles.toolCardTitle}>Storage INFO</Text>
             </TouchableOpacity>
@@ -418,7 +421,7 @@ const HomeScreen = ({ navigation }) => {
             {/* Tool 2: Permission Manager */}
             <TouchableOpacity style={styles.toolCard} onPress={handlePermissionManager}>
               <View style={styles.toolIconWrapper}>
-                <WhitePlaceholder size={44} borderRadius={10} color="#FFFFFF" />
+                <Image source={TOOL_PERMISSION_MANAGER_ICON} style={{ width: 44, height: 44 }} resizeMode="contain" />
               </View>
               <Text style={styles.toolCardTitle}>Permission Manager</Text>
             </TouchableOpacity>
@@ -426,7 +429,7 @@ const HomeScreen = ({ navigation }) => {
             {/* Tool 3: Phone Sensor */}
             <TouchableOpacity style={styles.toolCard} onPress={handlePhoneSensor}>
               <View style={styles.toolIconWrapper}>
-                <WhitePlaceholder size={44} borderRadius={10} color="#FFFFFF" />
+                <Image source={TOOL_PHONE_SENSOR_ICON} style={{ width: 44, height: 44 }} resizeMode="contain" />
               </View>
               <Text style={styles.toolCardTitle}>Phone Sensor</Text>
             </TouchableOpacity>
@@ -725,8 +728,8 @@ const styles = StyleSheet.create({
   toolCard: {
     width: '48%',
     height: 165,
-    backgroundColor: '#131C31',
-    borderRadius: 20,
+    backgroundColor: '#121B2E',
+    borderRadius: 30,
     borderWidth: 1,
     borderColor: '#1E293B',
     alignItems: 'center',
@@ -742,7 +745,7 @@ const styles = StyleSheet.create({
   toolCardTitle: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#FFFFFF',
+    color: '#DAE2FD',
     textAlign: 'center',
   },
   // Bottom Tab Bar
