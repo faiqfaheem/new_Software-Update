@@ -90,6 +90,7 @@ export const parseJsonLdSoftwareVersion = (html) => {
     }
 
     // 3. Play Store Embedded Version Pattern Extraction
+    // Filter out Google web asset tracking versions: 24.04.47.09, 24.05.x, 124.0.0.0, 537.36, 10.0, 1.0.0, 2000.
     const verMatches = html.match(/\b\d{1,4}\.\d{1,4}\.\d{1,5}(?:\.\d{1,8}){0,4}\b/g);
     if (verMatches && verMatches.length > 0) {
       const cleanVers = verMatches.map((v) => v.trim());
@@ -101,6 +102,9 @@ export const parseJsonLdSoftwareVersion = (html) => {
           !v.startsWith('1.0.0') &&
           !v.startsWith('0.') &&
           !v.startsWith('2000.') &&
+          !v.startsWith('24.04.') && // Exclude Google internal Live Ops asset version
+          !v.startsWith('24.05.') &&
+          !v.startsWith('24.06.') &&
           v.includes('.')
       );
 
