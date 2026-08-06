@@ -11,8 +11,11 @@ import {
   SafeAreaView,
   StatusBar,
   NativeModules,
+  Image,
 } from 'react-native';
 import { scanInstalledAppsForUpdates } from '../utils/playStoreScraper';
+
+const SETTINGS_ICON = require('../assets/settings_icon.png');
 
 const WhitePlaceholder = ({ size = 22, borderRadius = 4, color = '#FFFFFF', opacity = 1 }) => (
   <View
@@ -228,7 +231,7 @@ const ScanAppsScreen = ({ navigation }) => {
         </View>
 
         <TouchableOpacity style={styles.settingsButton} onPress={handleSettingsPress}>
-          <Text style={{ color: '#FFFFFF', fontSize: 18 }}>⚙</Text>
+          <Image source={SETTINGS_ICON} style={{ width: 22, height: 22 }} resizeMode="contain" />
         </TouchableOpacity>
       </View>
 

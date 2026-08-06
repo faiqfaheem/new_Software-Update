@@ -38,10 +38,10 @@ export const TRANSLATIONS = {
     getStarted: 'Get Started',
     slide1Title: 'Update Scanner Info',
     slide1Desc: 'Scan pending app updates easily and keep all your software up to date with one tap.',
-    slide2Title: 'Hardware & Sensor Testing',
-    slide2Desc: "Check your phone's screen, speaker, camera, and sensors for hardware health diagnostics.",
-    slide3Title: 'Storage & Usage Tracker',
-    slide3Desc: 'Monitor storage usage, app screen time, and detailed battery performance analytics.',
+    slide2Title: 'Bulk Uninstaller',
+    slide2Desc: 'Declutter your phone by removing multiple unused apps at once. Save time and storage.',
+    slide3Title: 'Meet Your AI Assistant',
+    slide3Desc: 'Get personalized recommendations to optimize your phone performance and app usage.',
 
     // Home Screen
     appHeaderTitle: 'Software Update',

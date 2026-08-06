@@ -10,8 +10,11 @@ import {
   SafeAreaView,
   StatusBar,
   ActivityIndicator,
+  Image,
 } from 'react-native';
 import DeviceInfo from 'react-native-device-info';
+
+const SETTINGS_ICON = require('../assets/settings_icon.png');
 
 const BackArrow = ({ color = '#FFFFFF', size = 22 }) => (
   <Text style={{ color, fontSize: size, fontWeight: 'bold' }}>←</Text>
@@ -145,7 +148,7 @@ const OSUpdateScreen = ({ navigation }) => {
         </View>
 
         <TouchableOpacity style={styles.settingsButton} onPress={handleSettingsPress}>
-          <Text style={{ color: '#FFFFFF', fontSize: 18 }}>⚙</Text>
+          <Image source={SETTINGS_ICON} style={{ width: 22, height: 22 }} resizeMode="contain" />
         </TouchableOpacity>
       </View>
 

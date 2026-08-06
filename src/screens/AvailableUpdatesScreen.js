@@ -14,6 +14,8 @@ import {
 } from 'react-native';
 import { scanInstalledAppsForUpdates } from '../utils/playStoreScraper';
 
+const SETTINGS_ICON = require('../assets/settings_icon.png');
+
 
 const BackArrow = ({ color = '#FFFFFF', size = 22 }) => (
   <Text style={{ color, fontSize: size, fontWeight: 'bold' }}>←</Text>
@@ -228,7 +230,7 @@ const AvailableUpdatesScreen = ({ route, navigation }) => {
           style={styles.settingsButton}
           onPress={() => navigation.navigate('SettingsScreen')}
         >
-          <Text style={{ color: '#FFFFFF', fontSize: 20 }}>⚙️</Text>
+          <Image source={SETTINGS_ICON} style={{ width: 22, height: 22 }} resizeMode="contain" />
         </TouchableOpacity>
       </View>
 

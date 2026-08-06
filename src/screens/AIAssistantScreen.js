@@ -21,8 +21,11 @@ import {
   KeyboardAvoidingView,
   Platform,
   Animated,
+  Image,
 } from 'react-native';
 import { GROQ_API_KEY } from '../config/env';
+
+const AI_ICON = require('../assets/ai_assistant_icon.png');
 
 /* ─────────────────────────────────────────────────────────────────
    GROQ CONSTANTS
@@ -105,8 +108,8 @@ const MessageBubble = ({ item }) => {
 ───────────────────────────────────────────────────────────────── */
 const HeroHeader = () => (
   <View style={styles.heroSection}>
-    {/* ── 96×96 white logo placeholder ── */}
-    <View style={styles.logoBotPlaceholder} />
+    {/* ── AI Assistant Icon ── */}
+    <Image source={AI_ICON} style={styles.logoBotPlaceholder} resizeMode="contain" />
 
     {/* ── SYSTEMS ONLINE ── */}
     <View style={styles.statusRow}>

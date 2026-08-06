@@ -11,9 +11,12 @@ import {
   StatusBar,
   PermissionsAndroid,
   ActivityIndicator,
+  Image,
 } from 'react-native';
 import DeviceInfo from 'react-native-device-info';
 import RNFS from 'react-native-fs';
+
+const SETTINGS_ICON = require('../assets/settings_icon.png');
 
 const WhitePlaceholder = ({ size = 22, borderRadius = 4, color = '#FFFFFF', opacity = 1 }) => (
   <View
@@ -233,7 +236,7 @@ const StorageInfoScreen = ({ navigation }) => {
         </View>
 
         <TouchableOpacity style={styles.settingsButton} onPress={handleSettingsPress}>
-          <WhitePlaceholder size={18} borderRadius={4} color="#FFFFFF" />
+          <Image source={SETTINGS_ICON} style={{ width: 22, height: 22 }} resizeMode="contain" />
         </TouchableOpacity>
       </View>
 

@@ -6,13 +6,19 @@ import {
   StyleSheet,
   FlatList,
   Dimensions,
+  Image,
+  SafeAreaView,
+  StatusBar,
 } from 'react-native';
 import { setFirstLaunchCompleted } from '../utils/storage';
 import { useLanguage } from '../i18n/LanguageContext';
-
 import { checkAllPermissions } from '../utils/permissions';
 
 const { width } = Dimensions.get('window');
+
+const ONBOARDING_IMAGE_1 = require('../assets/onboardings/onboarding1.png');
+const ONBOARDING_IMAGE_2 = require('../assets/onboardings/onboarding2.png');
+const ONBOARDING_IMAGE_3 = require('../assets/onboardings/onboarding3.png');
 
 const OnboardingScreen = ({ navigation }) => {
   const { t } = useLanguage();
@@ -22,21 +28,24 @@ const OnboardingScreen = ({ navigation }) => {
   const SLIDES = [
     {
       id: '1',
-      title: t('slide1Title'),
-      description: t('slide1Desc'),
-      iconPlaceholder: '[ 🚀 Update Scanner ]',
+      title: 'Keep Your Apps Fresh',
+      description:
+        'Automatically scan all installed applications and find the latest updates in seconds.',
+      image: ONBOARDING_IMAGE_1,
     },
     {
       id: '2',
-      title: t('slide2Title'),
-      description: t('slide2Desc'),
-      iconPlaceholder: '[ 🛠 Hardware Test ]',
+      title: 'Bulk Uninstaller',
+      description:
+        'Declutter your phone by removing multiple unused apps at once. Save time and storage.',
+      image: ONBOARDING_IMAGE_2,
     },
     {
       id: '3',
-      title: t('slide3Title'),
-      description: t('slide3Desc'),
-      iconPlaceholder: '[ 📊 Usage Tracker ]',
+      title: 'Meet Your AI Assistant',
+      description:
+        'Get personalized recommendations to optimize your phone performance and app usage.',
+      image: ONBOARDING_IMAGE_3,
     },
   ];
 
@@ -77,9 +86,16 @@ const OnboardingScreen = ({ navigation }) => {
   const renderSlide = ({ item }) => {
     return (
       <View style={styles.slide}>
-        <View style={styles.iconContainer}>
-          <Text style={styles.iconText}>{item.iconPlaceholder}</Text>
+        {/* Uniform Hero Image Box for 100% Locked Position Across All 3 Slides */}
+        <View style={styles.heroImageContainer}>
+          <Image
+            source={item.image}
+            style={styles.heroImage}
+            resizeMode="contain"
+          />
         </View>
+
+        {/* Title & Description */}
         <Text style={styles.title}>{item.title}</Text>
         <Text style={styles.description}>{item.description}</Text>
       </View>
@@ -97,7 +113,10 @@ const OnboardingScreen = ({ navigation }) => {
   const isLastSlide = currentIndex === SLIDES.length - 1;
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
+      <StatusBar barStyle="light-content" backgroundColor="#0B1326" />
+
+      {/* Top Navigation Bar with Skip */}
       <View style={styles.topBar}>
         {!isLastSlide ? (
           <TouchableOpacity onPress={handleSkip}>
@@ -108,6 +127,7 @@ const OnboardingScreen = ({ navigation }) => {
         )}
       </View>
 
+      {/* Slide Carousel */}
       <FlatList
         ref={flatListRef}
         data={SLIDES}
@@ -120,110 +140,121 @@ const OnboardingScreen = ({ navigation }) => {
         scrollEventThrottle={16}
       />
 
-      <View style={styles.paginationContainer}>
-        {SLIDES.map((_, index) => (
-          <View
-            key={index}
-            style={[
-              styles.dot,
-              currentIndex === index ? styles.activeDot : styles.inactiveDot,
-            ]}
-          />
-        ))}
-      </View>
+      {/* Bottom Footer Stack: Centered Page Indicators & Centered Next Button */}
+      <View style={styles.bottomVerticalStack}>
+        {/* Step Indicator Bars */}
+        <View style={styles.paginationRow}>
+          {SLIDES.map((_, index) => (
+            <View
+              key={index}
+              style={[
+                styles.dotBar,
+                currentIndex === index ? styles.activeDotBar : styles.inactiveDotBar,
+              ]}
+            />
+          ))}
+        </View>
 
-      <View style={styles.bottomContainer}>
-        <TouchableOpacity style={styles.nextButton} onPress={handleNext}>
-          <Text style={styles.nextButtonText}>
-            {isLastSlide ? t('getStarted') : t('next')}
+        {/* Next -> Action Button */}
+        <TouchableOpacity style={styles.nextLink} onPress={handleNext}>
+          <Text style={styles.nextLinkText}>
+            {isLastSlide ? t('getStarted') : 'Next'}
           </Text>
+          <Text style={styles.arrowIcon}> →</Text>
         </TouchableOpacity>
       </View>
-    </View>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#0B1326',
   },
   topBar: {
-    paddingHorizontal: 20,
-    paddingTop: 40,
+    paddingHorizontal: 24,
+    paddingTop: 10,
+    height: 45,
     alignItems: 'flex-end',
-    height: 70,
+    justifyContent: 'center',
   },
   skipText: {
-    fontSize: 16,
-    color: '#007AFF',
+    fontSize: 15,
+    color: '#94A3B8',
     fontWeight: '500',
   },
   slide: {
     width: width,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 30,
+    paddingHorizontal: 24,
   },
-  iconContainer: {
-    width: 140,
-    height: 140,
-    borderRadius: 70,
-    backgroundColor: '#EBF5FF',
+  heroImageContainer: {
+    width: 326,
+    height: 295,
+    marginTop: 25,
+    marginBottom: 30,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 30,
+    alignSelf: 'center',
   },
-  iconText: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#007AFF',
+  heroImage: {
+    width: '100%',
+    height: '100%',
   },
   title: {
     fontSize: 22,
     fontWeight: 'bold',
-    color: '#111111',
+    color: '#FFFFFF',
     textAlign: 'center',
-    marginBottom: 15,
+    marginBottom: 12,
+    fontFamily: 'Gilroy-Bold',
   },
   description: {
-    fontSize: 15,
-    color: '#666666',
+    fontSize: 14,
+    color: '#94A3B8',
     textAlign: 'center',
     lineHeight: 22,
+    paddingHorizontal: 28,
   },
-  paginationContainer: {
-    flexDirection: 'row',
+  bottomVerticalStack: {
+    alignItems: 'center',
     justifyContent: 'center',
+    paddingBottom: 40,
+  },
+  paginationRow: {
+    flexDirection: 'row',
     alignItems: 'center',
-    marginVertical: 20,
+    justifyContent: 'center',
+    marginBottom: 24,
   },
-  dot: {
-    height: 8,
-    borderRadius: 4,
-    marginHorizontal: 4,
+  dotBar: {
+    height: 4,
+    borderRadius: 2,
+    marginHorizontal: 3,
   },
-  activeDot: {
-    width: 24,
-    backgroundColor: '#007AFF',
+  activeDotBar: {
+    width: 28,
+    backgroundColor: '#6695FF',
   },
-  inactiveDot: {
-    width: 8,
-    backgroundColor: '#CCCCCC',
+  inactiveDotBar: {
+    width: 5,
+    backgroundColor: '#334155',
   },
-  bottomContainer: {
-    paddingHorizontal: 20,
-    paddingBottom: 30,
-  },
-  nextButton: {
-    backgroundColor: '#007AFF',
-    paddingVertical: 15,
-    borderRadius: 8,
+  nextLink: {
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
   },
-  nextButtonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
+  nextLinkText: {
+    color: '#6695FF',
+    fontSize: 17,
+    fontWeight: '600',
+  },
+  arrowIcon: {
+    color: '#6695FF',
+    fontSize: 18,
     fontWeight: '600',
   },
 });

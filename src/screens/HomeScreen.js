@@ -11,9 +11,19 @@ import {
   SafeAreaView,
   StatusBar,
   NativeModules,
+  Image,
 } from 'react-native';
 import DeviceInfo from 'react-native-device-info';
 import { useLanguage } from '../i18n/LanguageContext';
+
+const AI_ICON = require('../assets/ai_assistant_icon.png');
+const OS_UPDATE_ICON = require('../assets/os_update_icon.png');
+const BULK_UNINSTALLER_ICON = require('../assets/bulk_uninstaller_icon.png');
+const ALL_APPS_ICON = require('../assets/all_apps_icon.png');
+const SETTINGS_ICON = require('../assets/settings_icon.png');
+const SCAN_APPS_ICON = require('../assets/scan_apps_icon.png');
+const TAB_HOME_ICON = require('../assets/tab_home_icon.png');
+const TAB_TOOLS_ICON = require('../assets/tab_tools_icon.png');
 
 // --- Simple White Placeholder Box Component ---
 const WhitePlaceholder = ({ size = 22, borderRadius = 4, color = '#FFFFFF', opacity = 1 }) => (
@@ -174,7 +184,7 @@ const HomeScreen = ({ navigation }) => {
       try {
         totalDisk = await DeviceInfo.getTotalDiskCapacity();
         freeDisk = await DeviceInfo.getFreeDiskStorage();
-      } catch (_e) {}
+      } catch (_e) { }
 
       let healthPct = 82;
       if (totalDisk > 0 && freeDisk > 0) {
@@ -209,7 +219,7 @@ const HomeScreen = ({ navigation }) => {
         systemAppsCount: systemCount,
         optimizedPercentage: `${optPct}%`,
       });
-    } catch (_e) {}
+    } catch (_e) { }
   };
 
   // --- Home Tab Action Handlers ---
@@ -259,7 +269,7 @@ const HomeScreen = ({ navigation }) => {
         <Text style={styles.headerAppTitle}>Software Update</Text>
 
         <TouchableOpacity style={styles.settingsButton} onPress={handleSettingsPress}>
-          <WhitePlaceholder size={18} borderRadius={4} color="#FFFFFF" />
+          <Image source={SETTINGS_ICON} style={{ width: 22, height: 22 }} resizeMode="contain" />
         </TouchableOpacity>
       </View>
 
@@ -274,19 +284,25 @@ const HomeScreen = ({ navigation }) => {
         >
           {/* Hero Card - Scan Apps */}
           <View style={styles.heroCard}>
-            <TouchableOpacity style={styles.heroCircleButton} onPress={handleScanAppUpdates}>
-              <View style={styles.heroIconWrapper}>
-                <WhitePlaceholder size={32} borderRadius={6} color="#1D4ED8" />
-              </View>
-              <Text style={styles.heroTitle}>Scan Apps</Text>
-              <Text style={styles.heroSub}>Check Updates</Text>
-            </TouchableOpacity>
+            <View style={styles.heroGlowBackdrop}>
+              <TouchableOpacity
+                style={styles.heroCircleButton}
+                onPress={handleScanAppUpdates}
+                activeOpacity={0.85}
+              >
+                <View style={styles.heroIconWrapper}>
+                  <Image source={SCAN_APPS_ICON} style={{ width: 36, height: 36 }} resizeMode="contain" />
+                </View>
+                <Text style={styles.heroTitle}>Scan Apps</Text>
+                <Text style={styles.heroSub}>Check Updates</Text>
+              </TouchableOpacity>
+            </View>
           </View>
 
           {/* All Apps Full Width Card */}
           <TouchableOpacity style={styles.rowCard} onPress={handleAllApps}>
-            <View style={[styles.iconSquare, { backgroundColor: '#1E293B' }]}>
-              <WhitePlaceholder size={22} borderRadius={4} color="#FFFFFF" />
+            <View style={[styles.iconSquare, { backgroundColor: '#2B3E62' }]}>
+              <Image source={ALL_APPS_ICON} style={{ width: 28, height: 28 }} resizeMode="contain" />
             </View>
             <View style={styles.rowCardTextContainer}>
               <Text style={styles.rowCardTitle}>All Apps</Text>
@@ -299,30 +315,35 @@ const HomeScreen = ({ navigation }) => {
           <View style={styles.gridRow}>
             {/* OS Update Card */}
             <TouchableOpacity style={styles.gridCard} onPress={handleSystemOSUpdate}>
-              <View style={[styles.iconSquare, { backgroundColor: '#991B1B', marginBottom: 16 }]}>
-                <WhitePlaceholder size={22} borderRadius={4} color="#FFFFFF" />
+              <View style={[styles.iconSquare, { backgroundColor: '#93000A', marginBottom: 16 }]}>
+                <Image source={OS_UPDATE_ICON} style={{ width: 28, height: 28 }} resizeMode="contain" />
               </View>
               <Text style={styles.gridCardTitle}>OS Update</Text>
               <Text style={styles.gridCardSub}>UPDATE AVAILABLE</Text>
             </TouchableOpacity>
 
-            {/* AI Assistant Card (Orange Gradient Accent) */}
+            {/* AI Assistant Card (Full Linear Fill Gradient Effect) */}
             <TouchableOpacity
               style={[styles.gridCard, styles.aiCardGradient]}
               onPress={handleAIAssistantGuide}
+              activeOpacity={0.85}
             >
-              <View style={[styles.iconSquare, { backgroundColor: 'rgba(255,255,255,0.25)', marginBottom: 16 }]}>
-                <WhitePlaceholder size={22} borderRadius={4} color="#FFFFFF" />
+              {/* Linear Fill Gradient Effect Layers */}
+              <View style={styles.linearGradientBase} />
+              <View style={styles.linearGradientHighlight} />
+
+              <View style={[styles.iconSquare, styles.aiIconSquare]}>
+                <Image source={AI_ICON} style={{ width: 26, height: 26 }} resizeMode="contain" />
               </View>
               <Text style={[styles.gridCardTitle, { color: '#FFFFFF' }]}>AI Assistant</Text>
-              <Text style={[styles.gridCardSub, { color: 'rgba(255,255,255,0.85)' }]}>SMART OPTIMIZATION</Text>
+              <Text style={[styles.gridCardSub, { color: 'rgba(255,255,255,0.9)' }]}>SMART OPTIMIZATION</Text>
             </TouchableOpacity>
           </View>
 
           {/* Bulk Uninstaller Card */}
           <TouchableOpacity style={styles.rowCard} onPress={handleBulkUninstaller}>
             <View style={[styles.iconSquare, { backgroundColor: '#371B36' }]}>
-              <WhitePlaceholder size={22} borderRadius={4} color="#FFFFFF" />
+              <Image source={BULK_UNINSTALLER_ICON} style={{ width: 28, height: 28 }} resizeMode="contain" />
             </View>
             <View style={styles.rowCardTextContainer}>
               <Text style={styles.rowCardTitle}>Bulk Uninstaller</Text>
@@ -419,10 +440,14 @@ const HomeScreen = ({ navigation }) => {
           style={styles.tabItem}
           onPress={() => setActiveTab('home')}
         >
-          <WhitePlaceholder
-            size={20}
-            borderRadius={4}
-            color={activeTab === 'home' ? '#3B82F6' : '#64748B'}
+          <Image
+            source={TAB_HOME_ICON}
+            style={{
+              width: 22,
+              height: 22,
+              tintColor: activeTab === 'home' ? '#3B82F6' : '#64748B',
+            }}
+            resizeMode="contain"
           />
           <Text style={[styles.tabLabel, activeTab === 'home' && styles.tabLabelActive]}>
             Home
@@ -433,10 +458,14 @@ const HomeScreen = ({ navigation }) => {
           style={styles.tabItem}
           onPress={() => setActiveTab('tools')}
         >
-          <WhitePlaceholder
-            size={20}
-            borderRadius={4}
-            color={activeTab === 'tools' ? '#3B82F6' : '#64748B'}
+          <Image
+            source={TAB_TOOLS_ICON}
+            style={{
+              width: 22,
+              height: 22,
+              tintColor: activeTab === 'tools' ? '#3B82F6' : '#64748B',
+            }}
+            resizeMode="contain"
           />
           <Text style={[styles.tabLabel, activeTab === 'tools' && styles.tabLabelActive]}>
             Tools
@@ -471,7 +500,7 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
-    backgroundColor: '#0B1120',
+    backgroundColor: '#0B1326',
   },
   scrollContent: {
     paddingHorizontal: 16,
@@ -480,7 +509,7 @@ const styles = StyleSheet.create({
   },
   // Hero Card
   heroCard: {
-    backgroundColor: '#131C31',
+    backgroundColor: '#0B1326',
     borderRadius: 18,
     paddingVertical: 28,
     alignItems: 'center',
@@ -489,20 +518,29 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#1E293B',
   },
+  heroGlowBackdrop: {
+    borderRadius: 70,
+    backgroundColor: '#ADC6FF',
+    shadowColor: '#ADC6FF',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.85,
+    shadowRadius: 24,
+    elevation: 70,
+  },
   heroCircleButton: {
     width: 140,
     height: 140,
     borderRadius: 70,
-    backgroundColor: '#C7D2FE',
+    backgroundColor: '#ADC6FF',
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#3B82F6',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.35,
-    shadowRadius: 12,
-    elevation: 8,
-    borderWidth: 4,
-    borderColor: '#93C5FD',
+    shadowColor: '#ADC6FF',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.80,
+    shadowRadius: 20,
+    elevation: 70,
+    borderWidth: 1,
+    borderColor: '#E8F0FF',
   },
   heroIconWrapper: {
     marginBottom: 6,
@@ -514,7 +552,7 @@ const styles = StyleSheet.create({
   },
   heroSub: {
     fontSize: 11,
-    color: '#3B82F6',
+    color: '#002E6A',
     fontWeight: '600',
     marginTop: 2,
   },
@@ -522,7 +560,7 @@ const styles = StyleSheet.create({
   rowCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#131C31',
+    backgroundColor: '#121B2E',
     borderRadius: 14,
     padding: 16,
     marginBottom: 14,
@@ -553,12 +591,14 @@ const styles = StyleSheet.create({
   // 2-Column Grid
   gridRow: {
     flexDirection: 'row',
-    justify: 'space-between',
+    justifyContent: 'space-between',
+    alignItems: 'stretch',
+    gap: 12,
     marginBottom: 14,
   },
   gridCard: {
-    width: '48%',
-    backgroundColor: '#131C31',
+    flex: 1,
+    backgroundColor: '#121B2E',
     borderRadius: 14,
     padding: 16,
     borderWidth: 1,
@@ -566,8 +606,35 @@ const styles = StyleSheet.create({
     minHeight: 125,
   },
   aiCardGradient: {
-    backgroundColor: '#F97316',
+    backgroundColor: '#EA580C',
     borderColor: '#FB923C',
+    overflow: 'hidden',
+    shadowColor: '#F97316',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.35,
+    shadowRadius: 8,
+    elevation: 4,
+    position: 'relative',
+  },
+  linearGradientBase: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: '#EA580C',
+  },
+  linearGradientHighlight: {
+    position: 'absolute',
+    top: -25,
+    left: -25,
+    width: '150%',
+    height: '150%',
+    backgroundColor: '#FB923C',
+    opacity: 0.7,
+    borderRadius: 35,
+    transform: [{ rotate: '-30deg' }],
+  },
+  aiIconSquare: {
+    backgroundColor: '#D97706',
+    marginBottom: 16,
+    borderRadius: 14,
   },
   gridCardTitle: {
     fontSize: 15,
@@ -583,7 +650,7 @@ const styles = StyleSheet.create({
   },
   // Stats Card
   statsCard: {
-    backgroundColor: '#131C31',
+    backgroundColor: '#121B2E',
     borderRadius: 14,
     padding: 18,
     marginBottom: 10,
@@ -599,23 +666,23 @@ const styles = StyleSheet.create({
   statsTitle: {
     fontSize: 15,
     fontWeight: 'bold',
-    color: '#FFFFFF',
+    color: '#ADC6FF',
   },
   statsHealthBadge: {
     fontSize: 13,
     fontWeight: '600',
-    color: '#60A5FA',
+    color: '#ADC6FF',
   },
   progressBarTrack: {
     height: 8,
-    backgroundColor: '#1E293B',
+    backgroundColor: 'rgba(173, 198, 255, 0.18)',
     borderRadius: 4,
     overflow: 'hidden',
     marginBottom: 20,
   },
   progressBarFill: {
     height: '100%',
-    backgroundColor: '#60A5FA',
+    backgroundColor: '#ADC6FF',
     borderRadius: 4,
   },
   statsColumnsRow: {
@@ -630,19 +697,19 @@ const styles = StyleSheet.create({
   statLabel: {
     fontSize: 10,
     fontWeight: '700',
-    color: '#94A3B8',
+    color: '#ADC6FF',
     letterSpacing: 0.5,
     marginBottom: 4,
   },
   statVal: {
     fontSize: 22,
     fontWeight: 'bold',
-    color: '#FFFFFF',
+    color: '#ADC6FF',
   },
   statDivider: {
     width: 1,
     height: 28,
-    backgroundColor: '#1E293B',
+    backgroundColor: '#ADC6FF',
   },
   // --- Tools Screen Styles ---
   toolsScrollContent: {
@@ -681,7 +748,7 @@ const styles = StyleSheet.create({
   // Bottom Tab Bar
   bottomTabBar: {
     flexDirection: 'row',
-    backgroundColor: '#0B1120',
+    backgroundColor: '#171F33',
     borderTopWidth: 1,
     borderTopColor: '#1E293B',
     paddingVertical: 8,
@@ -700,7 +767,7 @@ const styles = StyleSheet.create({
     marginTop: 3,
   },
   tabLabelActive: {
-    color: '#3B82F6',
+    color: '#ADC6FF',
   },
 });
 
