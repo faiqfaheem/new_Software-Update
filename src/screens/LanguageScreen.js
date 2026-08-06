@@ -5,8 +5,22 @@ import {
   TouchableOpacity,
   FlatList,
   StyleSheet,
+  SafeAreaView,
+  StatusBar,
+  Image,
 } from 'react-native';
 import { useLanguage } from '../i18n/LanguageContext';
+
+const FLAG_ICONS = {
+  en: require('../assets/flags/ic_uk.png'),
+  ar: require('../assets/flags/ic_uae.png'),
+  fr: require('../assets/flags/ic_france.png'),
+  de: require('../assets/flags/ic_germany.png'),
+  zh: require('../assets/flags/ic_china.png'),
+  pt: require('../assets/flags/portugal.png'),
+  es: require('../assets/flags/ic_spain.png'),
+  ru: require('../assets/flags/ic_russia.png'),
+};
 
 const LanguageScreen = ({ navigation }) => {
   const { language, changeLanguage, t, LANGUAGES } = useLanguage();
@@ -23,7 +37,16 @@ const LanguageScreen = ({ navigation }) => {
         onPress={() => changeLanguage(item.code)}
       >
         <View style={styles.leftContainer}>
-          <Text style={styles.flagText}>{item.flag}</Text>
+          {FLAG_ICONS[item.code] ? (
+            <Image
+              source={FLAG_ICONS[item.code]}
+              style={styles.flagIcon}
+              resizeMode="cover"
+            />
+          ) : (
+            <View style={styles.flagPlaceholder} />
+          )}
+
           <Text style={[styles.itemText, isSelected && styles.itemTextSelected]}>
             {item.name}
           </Text>
@@ -37,10 +60,18 @@ const LanguageScreen = ({ navigation }) => {
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>{t('selectLanguage')}</Text>
-      <Text style={styles.subtitle}>{t('chooseLanguageSub')}</Text>
+    <SafeAreaView style={styles.container}>
+      <StatusBar barStyle="light-content" backgroundColor="#0B1326" />
 
+      {/* Header Row with Title and Top Right Next Button */}
+      <View style={styles.headerRow}>
+        <Text style={styles.title}>{t('selectLanguage')}</Text>
+        <TouchableOpacity style={styles.nextButton} onPress={handleContinue}>
+          <Text style={styles.nextText}>Next</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Language List */}
       <FlatList
         data={LANGUAGES}
         keyExtractor={(item) => item.code}
@@ -48,34 +79,44 @@ const LanguageScreen = ({ navigation }) => {
         contentContainerStyle={styles.listContainer}
         showsVerticalScrollIndicator={false}
       />
-
-      <TouchableOpacity style={styles.continueButton} onPress={handleContinue}>
-        <Text style={styles.continueText}>{t('continueNext')}</Text>
-      </TouchableOpacity>
-    </View>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
-    backgroundColor: '#0F1424',
+    paddingHorizontal: 20,
+    backgroundColor: '#0B1326',
+  },
+  headerRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 20,
+    marginBottom: 24,
   },
   title: {
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: 'bold',
     color: '#FFFFFF',
-    marginTop: 30,
+    fontFamily: 'Gilroy-Bold',
   },
-  subtitle: {
-    fontSize: 14,
-    color: '#94A3B8',
-    marginVertical: 8,
-    marginBottom: 20,
+  nextButton: {
+    backgroundColor: '#6695FF',
+    paddingHorizontal: 24,
+    paddingVertical: 10,
+    borderRadius: 14,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  nextText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
   },
   listContainer: {
-    paddingBottom: 20,
+    paddingBottom: 30,
   },
   itemContainer: {
     flexDirection: 'row',
@@ -84,26 +125,36 @@ const styles = StyleSheet.create({
     padding: 16,
     borderWidth: 1,
     borderColor: '#1E293B',
-    borderRadius: 12,
-    marginBottom: 12,
-    backgroundColor: '#1E253B',
+    borderRadius: 14,
+    marginBottom: 14,
+    backgroundColor: '#232A3B',
   },
   itemSelected: {
-    borderColor: '#5B8DEF',
-    backgroundColor: '#4C82F6',
+    borderColor: '#5B93FF',
+    backgroundColor: '#6695FF',
   },
   leftContainer: {
     flexDirection: 'row',
     alignItems: 'center',
   },
-  flagText: {
-    fontSize: 24,
+  flagIcon: {
+    width: 35,
+    height: 35,
+    borderRadius: 17.5,
+    marginRight: 14,
+  },
+  flagPlaceholder: {
+    width: 35,
+    height: 35,
+    borderRadius: 17.5,
+    backgroundColor: '#FFFFFF',
     marginRight: 14,
   },
   itemText: {
-    fontSize: 16,
+    fontSize: 18,
     color: '#CBD5E1',
     fontWeight: '500',
+    paddingLeft: 10,
   },
   itemTextSelected: {
     fontWeight: 'bold',
@@ -126,19 +177,7 @@ const styles = StyleSheet.create({
     width: 10,
     height: 10,
     borderRadius: 5,
-    backgroundColor: '#4C82F6',
-  },
-  continueButton: {
-    backgroundColor: '#4C82F6',
-    paddingVertical: 16,
-    borderRadius: 12,
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  continueText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '600',
+    backgroundColor: '#0F1424',
   },
 });
 

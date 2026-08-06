@@ -51,7 +51,8 @@ const SplashScreen = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
-      <ActivityIndicator size="large" color="#4C82F6" />
+      <ActivityIndicator size="large" color="#ADC6FF" />
+
       <Text style={styles.loadingText}>Initializing App...</Text>
     </View>
   );
