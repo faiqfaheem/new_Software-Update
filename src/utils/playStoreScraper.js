@@ -1,10 +1,11 @@
 /**
  * Pure JavaScript Google Play Store Web Scraper & Semantic Version Engine
  * Method 1: Direct JSON-LD Web Scraping & Play Store Version Extraction
+ * Strict 3-Tier Filtering Implementation
  */
 
 const PLAY_STORE_BASE_URL = 'https://play.google.com/store/apps/details?id=';
-const DEFAULT_TIMEOUT_MS = 3500; // Fast 3.5 seconds timeout limit
+const DEFAULT_TIMEOUT_MS = 3000; // 3 seconds timeout limit
 
 /**
  * Filter out user-facing vs background OS system apps for unified counting.
@@ -130,36 +131,81 @@ export const isUserFacingSystemApp = (app) => {
 };
 
 /**
- * Filter out internal kernel packages that lack a public Google Play Store listing.
+ * Tier 1: Strict Native System App Filter
+ * Filters out all System Apps & Pre-installed OS packages using native flags:
+ * ((appInfo.flags & ApplicationInfo.FLAG_SYSTEM) === 0) AND ((appInfo.flags & ApplicationInfo.FLAG_UPDATED_SYSTEM_APP) === 0)
+ * Only returns true if the app is a user-installed, third-party app.
  * @param {Object} app - App metadata object from PackageManager
- * @returns {boolean} true if the app should be excluded from Play Store scanning
+ * @returns {boolean} true if the app is a user-installed third-party app
  */
-export const isSystemAppExcludedFromStore = (app) => {
-  if (!app || !app.packageName) return true;
-
-  const pkg = app.packageName.toLowerCase().trim();
-
-  // Exclude core Android OS kernel & low-level framework packages that never have Play Store pages
-  if (
-    pkg === 'android' ||
-    pkg.startsWith('com.android.internal') ||
-    pkg.startsWith('com.android.providers.telephony') ||
-    pkg.startsWith('com.android.providers.contacts') ||
-    pkg.startsWith('com.android.providers.media')
-  ) {
-    return true;
-  }
-
-  // Include ALL other installed packages (User Apps + System Apps like Chrome, YouTube, WebView, Samsung/Xiaomi Apps, etc.)
-  return false;
+export const isUserThirdPartyApp = (app) => {
+  if (!app) return false;
+  return app.isSystemApp === false;
 };
 
 /**
- * Parse JSON-LD script and Play Store HTML source to extract software version.
+ * Returns true if system app is excluded from third-party update scan list
+ */
+export const isSystemAppExcludedFromStore = (app) => {
+  if (!app) return true;
+  return app.isSystemApp === true;
+};
+
+/**
+ * Compare two versions in descending order
+ */
+const compareVerDesc = (a, b) => {
+  const pA = a.split('.').map(Number);
+  const pB = b.split('.').map(Number);
+  for (let i = 0; i < Math.max(pA.length, pB.length); i++) {
+    const nA = pA[i] || 0;
+    const nB = pB[i] || 0;
+    if (nA !== nB) return nB - nA;
+  }
+  return 0;
+};
+
+/**
+ * Select the exact Play Store release version matching installed app version major context
+ */
+const selectBestStoreVersion = (validAppVers, installedVersion) => {
+  if (!validAppVers || validAppVers.length === 0) return null;
+  if (!installedVersion) {
+    validAppVers.sort(compareVerDesc);
+    return validAppVers[0];
+  }
+
+  const instParts = installedVersion.split('.').map(Number);
+  const instMajor = instParts[0];
+
+  if (!isNaN(instMajor)) {
+    // 1. First priority: Candidates matching installed major version (e.g. 2.x -> 2.x)
+    const sameMajor = validAppVers.filter((v) => parseInt(v.split('.')[0], 10) === instMajor);
+    if (sameMajor.length > 0) {
+      sameMajor.sort(compareVerDesc);
+      return sameMajor[0];
+    }
+
+    // 2. Second priority: Candidates with next major version (e.g. 1.x -> 2.x or 4.x -> 5.x)
+    const nextMajor = validAppVers.filter((v) => parseInt(v.split('.')[0], 10) === instMajor + 1);
+    if (nextMajor.length > 0) {
+      nextMajor.sort(compareVerDesc);
+      return nextMajor[0];
+    }
+  }
+
+  // Fallback: highest valid version
+  validAppVers.sort(compareVerDesc);
+  return validAppVers[0];
+};
+
+/**
+ * Tier 2: Parse JSON-LD script and Play Store HTML source to extract software version.
  * @param {string} html - Raw HTML source code from Play Store page
+ * @param {string} [installedVersion=''] - Device installed version for format context
  * @returns {string|null} Scraped software version or null
  */
-export const parseJsonLdSoftwareVersion = (html) => {
+export const parseJsonLdSoftwareVersion = (html, installedVersion = '') => {
   if (!html || typeof html !== 'string') return null;
 
   try {
@@ -213,38 +259,44 @@ export const parseJsonLdSoftwareVersion = (html) => {
     }
 
     // 3. Play Store Embedded Version Pattern Extraction
-    // Filter out Google web asset tracking versions: 24.04.47.09, 24.05.x, 124.0.0.0, 537.36, 10.0, 1.0.0, 2000.
     const verMatches = html.match(/\b\d{1,4}\.\d{1,4}\.\d{1,5}(?:\.\d{1,8}){0,4}\b/g);
     if (verMatches && verMatches.length > 0) {
-      const cleanVers = verMatches.map((v) => v.trim());
-      const validAppVers = cleanVers.filter(
-        (v) =>
-          !v.startsWith('124.') &&
-          !v.startsWith('537.') &&
-          !v.startsWith('10.0') &&
-          !v.startsWith('1.0.0') &&
-          !v.startsWith('0.') &&
-          !v.startsWith('2000.') &&
-          !v.startsWith('24.04.') && // Exclude Google internal Live Ops asset version
-          !v.startsWith('24.05.') &&
-          !v.startsWith('24.06.') &&
-          v.includes('.')
-      );
+      const cleanVers = [...new Set(verMatches.map((v) => v.trim()))];
+      const installedIsYear = installedVersion.startsWith('202') || installedVersion.startsWith('201');
 
-      if (validAppVers.length > 0) {
-        validAppVers.sort((a, b) => {
-          const pA = a.split('.').map(Number);
-          const pB = b.split('.').map(Number);
-          for (let i = 0; i < Math.max(pA.length, pB.length); i++) {
-            const nA = pA[i] || 0;
-            const nB = pB[i] || 0;
-            if (nA !== nB) return nB - nA;
-          }
-          return 0;
-        });
+      const validAppVers = cleanVers.filter((v) => {
+        if (
+          v.startsWith('124.') ||
+          v.startsWith('537.') ||
+          v.startsWith('10.0') ||
+          v.startsWith('1.0.0') ||
+          v.startsWith('0.') ||
+          v.startsWith('2000.')
+        ) {
+          return false;
+        }
+        if (
+          v.startsWith('24.04.') ||
+          v.startsWith('24.05.') ||
+          v.startsWith('24.06.') ||
+          v.startsWith('24.07.')
+        ) {
+          return false;
+        }
+        // Exclude footer dates like 2024.x, 2025.x, 2026.x UNLESS installed version is a year version
+        if (
+          !installedIsYear &&
+          (v.startsWith('2024.') ||
+            v.startsWith('2025.') ||
+            v.startsWith('2026.') ||
+            v.startsWith('2027.'))
+        ) {
+          return false;
+        }
+        return v.includes('.');
+      });
 
-        return validAppVers[0];
-      }
+      return selectBestStoreVersion(validAppVers, installedVersion);
     }
   } catch (_e) {}
 
@@ -253,11 +305,17 @@ export const parseJsonLdSoftwareVersion = (html) => {
 
 /**
  * Asynchronously fetch Google Play Store page HTML and extract software version.
+ * If 404 or missing tag occurs, returns null.
  * @param {string} packageName - e.g. "com.whatsapp"
- * @param {number} timeoutMs - Timeout limit in milliseconds (default 3500ms)
+ * @param {number} timeoutMs - Timeout limit in milliseconds (default 3000ms)
+ * @param {string} [installedVersion=''] - Optional installed version for format context
  * @returns {Promise<string|null>} Software version string or null
  */
-export const fetchStoreVersion = async (packageName, timeoutMs = DEFAULT_TIMEOUT_MS) => {
+export const fetchStoreVersion = async (
+  packageName,
+  timeoutMs = DEFAULT_TIMEOUT_MS,
+  installedVersion = ''
+) => {
   if (!packageName) return null;
 
   const url = `${PLAY_STORE_BASE_URL}${encodeURIComponent(packageName)}&hl=en`;
@@ -280,12 +338,12 @@ export const fetchStoreVersion = async (packageName, timeoutMs = DEFAULT_TIMEOUT
     if (timeoutId) clearTimeout(timeoutId);
 
     if (!response.ok) {
-      // 404 Not Found or Network Error
+      // 404 Not Found or Network Error: Immediately return null
       return null;
     }
 
     const html = await response.text();
-    const storeVersion = parseJsonLdSoftwareVersion(html);
+    const storeVersion = parseJsonLdSoftwareVersion(html, installedVersion);
 
     if (storeVersion && storeVersion.toLowerCase() !== 'varies with device') {
       return storeVersion;
@@ -294,13 +352,13 @@ export const fetchStoreVersion = async (packageName, timeoutMs = DEFAULT_TIMEOUT
     return null;
   } catch (_error) {
     if (timeoutId) clearTimeout(timeoutId);
-    // Timeout or network failure: gracefully return null without throwing
+    // Timeout or network failure: gracefully return null
     return null;
   }
 };
 
 /**
- * Semantic Version Comparison (SemVer Engine)
+ * Tier 3: Semantic Version Comparison (SemVer Engine)
  * Compares two version strings numerically segment by segment.
  * @param {string} storeVersion - Version scraped from Google Play Store
  * @param {string} installedVersion - Installed version on device
@@ -352,8 +410,7 @@ export const isStoreVersionHigher = (storeVersion, installedVersion) => {
 };
 
 /**
- * Scan device installed apps and check for available updates via JSON-LD scraping.
- * Ultra-fast parallel worker pool execution across ALL installed packages.
+ * Scan device installed apps and check for available updates using Strict 3-Tier Filtering.
  * @param {Array} rawApps - Installed apps from Android PackageManager
  * @param {Function} [onProgress] - Optional progress callback (scannedCount, totalCount)
  * @returns {Promise<Object>} Scan results containing availableUpdates, upToDateApps, counts
@@ -369,31 +426,31 @@ export const scanInstalledAppsForUpdates = async (rawApps = [], onProgress = nul
     };
   }
 
-  // 1. Separate installed user apps and user-facing system apps to match HomeScreen & AllAppsScreen counts
-  const userApps = rawApps.filter((a) => !a.isSystemApp && (a.apkSize || 0) > 100 * 1024);
+  // Tier 1: Strict Native System App Filter
+  // Filter out ALL System Apps & Pre-installed OS packages. ONLY pass third-party user apps.
+  const userThirdPartyApps = rawApps.filter((a) => !a.isSystemApp);
   const systemApps = rawApps.filter(
     (a) => a.isSystemApp && (a.apkSize || 0) > 100 * 1024 && isUserFacingSystemApp(a)
   );
-
-  // 2. Include ALL installed packages except core OS kernel
-  const validCandidateApps = rawApps.filter((app) => !isSystemAppExcludedFromStore(app));
 
   const availableUpdates = [];
   const upToDateApps = [];
   let completed = 0;
 
-  // Process in high-concurrency parallel batches of 20 requests
-  const BATCH_SIZE = 20;
-  for (let i = 0; i < validCandidateApps.length; i += BATCH_SIZE) {
-    const batch = validCandidateApps.slice(i, i + BATCH_SIZE);
+  // Process in parallel batches of 15 requests
+  const BATCH_SIZE = 15;
+  for (let i = 0; i < userThirdPartyApps.length; i += BATCH_SIZE) {
+    const batch = userThirdPartyApps.slice(i, i + BATCH_SIZE);
 
     await Promise.all(
       batch.map(async (app) => {
         const packageName = app.packageName;
         const installedVer = app.versionName || String(app.versionCode || '1.0.0');
 
-        const storeVer = await fetchStoreVersion(packageName, 3500);
+        // Tier 2: Play Store Verification & JSON-LD Scraping (Returns null on 404 / non-market)
+        const storeVer = await fetchStoreVersion(packageName, 3000, installedVer);
 
+        // Tier 3: Strict Semantic Version Check (ONLY push if Store Version > Installed Device Version)
         if (storeVer && isStoreVersionHigher(storeVer, installedVer)) {
           const appWithUpdate = {
             ...app,
@@ -415,7 +472,7 @@ export const scanInstalledAppsForUpdates = async (rawApps = [], onProgress = nul
 
         completed++;
         if (typeof onProgress === 'function') {
-          onProgress(completed, validCandidateApps.length);
+          onProgress(completed, userThirdPartyApps.length);
         }
       })
     );
@@ -424,9 +481,9 @@ export const scanInstalledAppsForUpdates = async (rawApps = [], onProgress = nul
   return {
     availableUpdates,
     upToDateApps,
-    installedCount: userApps.length,
+    installedCount: userThirdPartyApps.length,
     systemCount: systemApps.length,
-    totalScanned: validCandidateApps.length,
+    totalScanned: userThirdPartyApps.length,
   };
 };
 
@@ -435,7 +492,8 @@ export default {
   parseJsonLdSoftwareVersion,
   compareVersions,
   isStoreVersionHigher,
-  isUserFacingSystemApp,
+  isUserThirdPartyApp,
   isSystemAppExcludedFromStore,
+  isUserFacingSystemApp,
   scanInstalledAppsForUpdates,
 };
