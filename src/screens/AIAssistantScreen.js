@@ -28,12 +28,12 @@ import { GROQ_API_KEY } from '../config/env';
    GROQ CONSTANTS
 ───────────────────────────────────────────────────────────────── */
 const GROQ_ENDPOINT = 'https://api.groq.com/openai/v1/chat/completions';
-const MODEL         = 'llama-3.3-70b-versatile';
+const MODEL = 'llama-3.3-70b-versatile';
 
 const SYSTEM_PROMPT = {
-  role   : 'system',
+  role: 'system',
   content:
-    "You are the dedicated In-App Virtual Guide for the 'Software Update & Phone Utility App'.\n" +
+    "You are the dedicated In-App Virtual Guide for the 'Software Update App'.\n" +
     'YOUR STRICT BOUNDARIES:\n' +
     "1. Answer ONLY questions related to this app's features: Checking App Updates, System OS Update shortcuts, App Permission Manager (Risk Categories), Device Storage Cleaner, and Hardware/Phone Sensor Tests.\n" +
     '2. If the user asks ANY question outside of this app (e.g., general knowledge, recipes, coding, weather, news, sports, or personal advice), DO NOT answer the question.\n' +
@@ -53,7 +53,7 @@ const PulseDot = () => {
     Animated.loop(
       Animated.sequence([
         Animated.timing(scale, { toValue: 1.6, duration: 700, useNativeDriver: true }),
-        Animated.timing(scale, { toValue: 1,   duration: 700, useNativeDriver: true }),
+        Animated.timing(scale, { toValue: 1, duration: 700, useNativeDriver: true }),
       ]),
     ).start();
   }, [scale]);
@@ -110,13 +110,13 @@ const HeroHeader = () => (
    MAIN SCREEN
 ───────────────────────────────────────────────────────────────── */
 const INITIAL_MESSAGE = {
-  id    : 'init-1',
-  text  : "Hi, I'm your Software Update assistant. I can help you with app features, device optimization, and software-related questions.",
+  id: 'init-1',
+  text: "Hi, I'm your Software Update assistant. I can help you with app features, device optimization, and software-related questions.",
   sender: 'assistant',
 };
 
 const AIAssistantScreen = ({ navigation }) => {
-  const [messages, setMessages]   = useState([INITIAL_MESSAGE]);
+  const [messages, setMessages] = useState([INITIAL_MESSAGE]);
   const [inputText, setInputText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
@@ -127,7 +127,7 @@ const AIAssistantScreen = ({ navigation }) => {
       msgs
         .filter((m) => m.sender !== 'error')
         .map((m) => ({
-          role   : m.sender === 'user' ? 'user' : 'assistant',
+          role: m.sender === 'user' ? 'user' : 'assistant',
           content: m.text,
         })),
     [],
@@ -152,23 +152,23 @@ const AIAssistantScreen = ({ navigation }) => {
       }
 
       const res = await fetch(GROQ_ENDPOINT, {
-        method : 'POST',
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization : `Bearer ${GROQ_API_KEY}`,
+          Authorization: `Bearer ${GROQ_API_KEY}`,
         },
         body: JSON.stringify({
-          model      : MODEL,
-          messages   : [SYSTEM_PROMPT, ...buildHistory([...messages, userMsg])],
-          max_tokens : 200,
+          model: MODEL,
+          messages: [SYSTEM_PROMPT, ...buildHistory([...messages, userMsg])],
+          max_tokens: 200,
           temperature: 0.6,
-          stream     : false,
+          stream: false,
         }),
       });
 
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
-      const data    = await res.json();
+      const data = await res.json();
       const content = data?.choices?.[0]?.message?.content?.trim();
       if (!content) throw new Error('Empty response');
 
@@ -188,8 +188,8 @@ const AIAssistantScreen = ({ navigation }) => {
     }
   };
 
-  const renderItem    = ({ item }) => <MessageBubble item={item} />;
-  const keyExtractor  = (item)     => item.id;
+  const renderItem = ({ item }) => <MessageBubble item={item} />;
+  const keyExtractor = (item) => item.id;
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -258,19 +258,19 @@ const AIAssistantScreen = ({ navigation }) => {
 ───────────────────────────────────────────────────────────────── */
 const styles = StyleSheet.create({
   safeArea: {
-    flex           : 1,
+    flex: 1,
     backgroundColor: '#0B1120',
   },
 
   /* Header */
   header: {
-    flexDirection    : 'row',
-    alignItems       : 'center',
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingHorizontal: 16,
-    paddingVertical  : 14,
+    paddingVertical: 14,
     borderBottomWidth: 1,
     borderBottomColor: '#1E293B',
-    backgroundColor  : '#0B1120',
+    backgroundColor: '#0B1120',
   },
   backBtn: { padding: 6, marginRight: 10 },
   backArrow: { color: '#FFFFFF', fontSize: 22, fontWeight: 'bold' },
@@ -278,127 +278,127 @@ const styles = StyleSheet.create({
 
   /* Hero section */
   heroSection: {
-    alignItems    : 'center',
-    paddingTop    : 28,
-    paddingBottom : 20,
+    alignItems: 'center',
+    paddingTop: 28,
+    paddingBottom: 20,
   },
 
   /* 96×96 white logo placeholder — replace View with <Image> when asset ready */
   logoBotPlaceholder: {
-    width          : 96,
-    height         : 96,
-    borderRadius   : 20,
+    width: 96,
+    height: 96,
+    borderRadius: 20,
     backgroundColor: '#FFFFFF',
-    marginBottom   : 16,
+    marginBottom: 16,
   },
 
   /* SYSTEMS ONLINE */
   statusRow: {
     flexDirection: 'row',
-    alignItems   : 'center',
-    gap          : 6,
+    alignItems: 'center',
+    gap: 6,
   },
   pulseDot: {
-    width          : 8,
-    height         : 8,
-    borderRadius   : 4,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
     backgroundColor: '#22C55E',
   },
   statusText: {
-    color      : '#22C55E',
-    fontSize   : 13,
-    fontWeight : 'bold',
+    color: '#22C55E',
+    fontSize: 13,
+    fontWeight: 'bold',
     letterSpacing: 1.5,
   },
 
   /* List */
   listContent: {
     paddingHorizontal: 16,
-    paddingBottom    : 12,
+    paddingBottom: 12,
   },
 
   /* Message rows */
-  messageRow    : { marginBottom: 10 },
+  messageRow: { marginBottom: 10 },
   messageRowUser: { alignItems: 'flex-end' },
-  messageRowBot : { alignItems: 'flex-start', marginBottom: 10 },
+  messageRowBot: { alignItems: 'flex-start', marginBottom: 10 },
 
   bubble: {
-    maxWidth         : '88%',
-    borderRadius     : 16,
+    maxWidth: '88%',
+    borderRadius: 16,
     paddingHorizontal: 14,
-    paddingVertical  : 10,
+    paddingVertical: 10,
   },
   bubbleUser: {
-    backgroundColor     : '#2563EB',
+    backgroundColor: '#2563EB',
     borderBottomRightRadius: 4,
   },
   bubbleBot: {
-    backgroundColor    : '#131C31',
-    borderWidth        : 1,
-    borderColor        : '#1E293B',
+    backgroundColor: '#131C31',
+    borderWidth: 1,
+    borderColor: '#1E293B',
     borderBottomLeftRadius: 4,
   },
-  bubbleText    : { fontSize: 14, lineHeight: 21 },
+  bubbleText: { fontSize: 14, lineHeight: 21 },
   bubbleTextUser: { color: '#FFFFFF' },
-  bubbleTextBot : { color: '#CBD5E1' },
+  bubbleTextBot: { color: '#CBD5E1' },
 
   /* Typing bubble */
   typingBubble: {
-    flexDirection         : 'row',
-    alignItems            : 'center',
-    backgroundColor       : '#131C31',
-    borderWidth           : 1,
-    borderColor           : '#1E293B',
-    borderRadius          : 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#131C31',
+    borderWidth: 1,
+    borderColor: '#1E293B',
+    borderRadius: 16,
     borderBottomLeftRadius: 4,
-    paddingHorizontal     : 14,
-    paddingVertical       : 10,
-    gap                   : 8,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    gap: 8,
   },
   typingText: { color: '#64748B', fontSize: 13 },
 
   /* Input bar */
   inputBar: {
-    flexDirection    : 'row',
-    alignItems       : 'center',
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingHorizontal: 16,
-    paddingVertical  : 12,
-    backgroundColor  : '#0B1120',
-    borderTopWidth   : 1,
-    borderTopColor   : '#1E293B',
+    paddingVertical: 12,
+    backgroundColor: '#0B1120',
+    borderTopWidth: 1,
+    borderTopColor: '#1E293B',
   },
   textInput: {
-    flex             : 1,
-    height           : 46,
-    backgroundColor  : '#131C31',
-    borderRadius     : 24,
+    flex: 1,
+    height: 46,
+    backgroundColor: '#131C31',
+    borderRadius: 24,
     paddingHorizontal: 18,
-    color            : '#FFFFFF',
-    fontSize         : 14,
-    borderWidth      : 1,
-    borderColor      : '#1E293B',
-    marginRight      : 10,
+    color: '#FFFFFF',
+    fontSize: 14,
+    borderWidth: 1,
+    borderColor: '#1E293B',
+    marginRight: 10,
   },
 
   /* 46×46 blue circle send button */
   sendBtn: {
-    width          : 46,
-    height         : 46,
-    borderRadius   : 23,
+    width: 46,
+    height: 46,
+    borderRadius: 23,
     backgroundColor: '#2563EB',
-    alignItems     : 'center',
-    justifyContent : 'center',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   sendBtnDisabled: {
     backgroundColor: '#1E3A8A',
-    opacity        : 0.55,
+    opacity: 0.55,
   },
 
   /* 24×24 white send-icon placeholder — replace with <Image> when asset ready */
   sendIconPlaceholder: {
-    width          : 24,
-    height         : 24,
-    borderRadius   : 4,
+    width: 24,
+    height: 24,
+    borderRadius: 4,
     backgroundColor: '#FFFFFF',
   },
 });

@@ -12,6 +12,8 @@ import {
   Image,
   Linking,
 } from 'react-native';
+import { scanInstalledAppsForUpdates } from '../utils/playStoreScraper';
+
 
 const BackArrow = ({ color = '#FFFFFF', size = 22 }) => (
   <Text style={{ color, fontSize: size, fontWeight: 'bold' }}>←</Text>
@@ -86,7 +88,9 @@ const AvailableUpdatesScreen = ({ route, navigation }) => {
           packageName: a.packageName,
           size: formatSize(a.apkSize),
           category: getCategoryTag(a.appName || '', a.packageName || ''),
-          usedTime: getRandomUsedTime(idx),
+          usedTime: a.installedVersion && a.storeVersion ? `v${a.installedVersion} → v${a.storeVersion}` : getRandomUsedTime(idx),
+          installedVersion: a.installedVersion,
+          storeVersion: a.storeVersion,
           appIcon: a.appIcon,
         }));
         setApps(formatted);
@@ -99,26 +103,23 @@ const AvailableUpdatesScreen = ({ route, navigation }) => {
         NativeModules.AppPermissionModule.getInstalledAppsPermissions
       ) {
         const rawApps = await NativeModules.AppPermissionModule.getInstalledAppsPermissions();
-        const installed = rawApps.filter((a) => !a.isSystemApp && (a.apkSize || 0) > 100 * 1024);
-        const candidateUpdates = installed.filter(
-          (a) =>
-            a.installer === 'com.android.vending' ||
-            (a.permissionsCount || 0) > 0 ||
-            (a.versionCode || 0) > 0
-        );
-        const updatesCount = Math.min(candidateUpdates.length, 7);
-        const finalUpdateApps = candidateUpdates.slice(0, updatesCount);
-
-        const updateApps = finalUpdateApps.map((a, idx) => ({
-          id: a.packageName || String(idx),
-          name: a.appName || a.packageName,
-          packageName: a.packageName,
-          size: formatSize(a.apkSize),
-          category: getCategoryTag(a.appName || '', a.packageName || ''),
-          usedTime: getRandomUsedTime(idx),
-          appIcon: a.appIcon,
-        }));
-        setApps(updateApps);
+        if (Array.isArray(rawApps) && rawApps.length > 0) {
+          const scanResults = await scanInstalledAppsForUpdates(rawApps);
+          const updateApps = scanResults.availableUpdates.map((a, idx) => ({
+            id: a.packageName || String(idx),
+            name: a.appName || a.packageName,
+            packageName: a.packageName,
+            size: formatSize(a.apkSize),
+            category: getCategoryTag(a.appName || '', a.packageName || ''),
+            usedTime: a.installedVersion && a.storeVersion ? `v${a.installedVersion} → v${a.storeVersion}` : getRandomUsedTime(idx),
+            installedVersion: a.installedVersion,
+            storeVersion: a.storeVersion,
+            appIcon: a.appIcon,
+          }));
+          setApps(updateApps);
+        } else {
+          setApps([]);
+        }
       } else {
         setApps([]);
       }
@@ -190,7 +191,7 @@ const AvailableUpdatesScreen = ({ route, navigation }) => {
           <View style={styles.sizeUsedRow}>
             <Text style={styles.sizeText}>{item.size}</Text>
             <Text style={styles.dotSeparator}>•</Text>
-            <Text style={styles.usedTimeText}>{item.usedTime}</Text>
+            <Text style={styles.usedTimeText} numberOfLines={1}>{item.usedTime}</Text>
           </View>
         </View>
 
@@ -205,6 +206,7 @@ const AvailableUpdatesScreen = ({ route, navigation }) => {
       </View>
     );
   };
+
 
   return (
     <SafeAreaView style={styles.safeArea}>

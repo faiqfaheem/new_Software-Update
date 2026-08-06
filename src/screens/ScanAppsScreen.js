@@ -12,6 +12,7 @@ import {
   StatusBar,
   NativeModules,
 } from 'react-native';
+import { scanInstalledAppsForUpdates } from '../utils/playStoreScraper';
 
 const WhitePlaceholder = ({ size = 22, borderRadius = 4, color = '#FFFFFF', opacity = 1 }) => (
   <View
@@ -176,47 +177,32 @@ const ScanAppsScreen = ({ navigation }) => {
         NativeModules.AppPermissionModule.getInstalledAppsPermissions
       ) {
         const rawApps = await NativeModules.AppPermissionModule.getInstalledAppsPermissions();
-        if (Array.isArray(rawApps)) {
-          const installed = rawApps.filter((a) => !a.isSystemApp && (a.apkSize || 0) > 100 * 1024);
-          const system = rawApps.filter(
-            (a) => a.isSystemApp && (a.apkSize || 0) > 100 * 1024 && isUserFacingSystemApp(a)
-          );
+        if (Array.isArray(rawApps) && rawApps.length > 0) {
+          const scanResults = await scanInstalledAppsForUpdates(rawApps, (scanned, total) => {
+            if (total > 0) {
+              const currentPct = Math.min(Math.round((scanned / total) * 100), 99);
+              setProgress(currentPct);
+            }
+          });
 
-          installedCount = installed.length;
-          systemCount = system.length;
-
-          // Candidate apps for updates: Play Store downloadable user apps with active versioning/permissions
-          const candidateUpdates = installed.filter(
-            (a) =>
-              a.installer === 'com.android.vending' ||
-              (a.permissionsCount || 0) > 0 ||
-              (a.versionCode || 0) > 0
-          );
-          // Realistic active Play Store update candidate count (e.g. ~5-7 active Play Store apps)
-          updatesCount = Math.min(candidateUpdates.length, 7);
-          finalUpdateApps = candidateUpdates.slice(0, updatesCount);
+          installedCount = scanResults.installedCount;
+          systemCount = scanResults.systemCount;
+          finalUpdateApps = scanResults.availableUpdates;
+          updatesCount = scanResults.availableUpdates.length;
         }
       }
-    } catch (e) {}
+    } catch (e) {
+      console.warn('Realtime app scan error:', e);
+    }
 
-    // Animate scanning progress smooth 0 to 100%
-    let currentProgress = 0;
-    const interval = setInterval(() => {
-      currentProgress += Math.floor(Math.random() * 9) + 5;
-      if (currentProgress >= 100) {
-        currentProgress = 100;
-        clearInterval(interval);
-        setProgress(100);
-        setIsScanning(false);
-        setInstalledAppsCount(String(installedCount || 24));
-        setSystemAppsCount(String(systemCount || 160));
-        setAvailableUpdatesCount(String(updatesCount || 5));
-        setCandidateUpdateAppsList(finalUpdateApps);
-      } else {
-        setProgress(currentProgress);
-      }
-    }, 110);
+    setProgress(100);
+    setIsScanning(false);
+    setInstalledAppsCount(String(installedCount || 0));
+    setSystemAppsCount(String(systemCount || 0));
+    setAvailableUpdatesCount(String(updatesCount || 0));
+    setCandidateUpdateAppsList(finalUpdateApps);
   };
+
 
   const handleBulkUpdate = () => {
     navigation.navigate('AvailableUpdatesScreen', {
