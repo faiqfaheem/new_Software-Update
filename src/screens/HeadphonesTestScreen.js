@@ -15,6 +15,8 @@ import {
 const PASS_ICON = require('../assets/test_pass_icon.png');
 const FAIL_ICON = require('../assets/test_fail_icon.png');
 const HERO_ICON = require('../assets/test_screen_headphone.png');
+const LEFT_EARPHONE_ICON = require('../assets/left_earphone_icon.png');
+const RIGHT_EARPHONE_ICON = require('../assets/right_earphone_icon.png');
 
 const WhitePlaceholder = ({ size = 22, borderRadius = 4, color = '#FFFFFF' }) => (
   <View
@@ -138,7 +140,7 @@ const HeadphonesTestScreen = ({ navigation }) => {
             {/* Left Earphone Card */}
             <View style={styles.channelCard}>
               <View style={styles.channelHeader}>
-                <WhitePlaceholder size={24} borderRadius={6} color="#FFFFFF" />
+                <Image source={LEFT_EARPHONE_ICON} style={{ width: 28, height: 28 }} resizeMode="contain" />
                 <Text style={styles.channelTitle}>Left Earphone</Text>
               </View>
               <TouchableOpacity
@@ -157,7 +159,7 @@ const HeadphonesTestScreen = ({ navigation }) => {
             {/* Right Earphone Card */}
             <View style={styles.channelCard}>
               <View style={styles.channelHeader}>
-                <WhitePlaceholder size={24} borderRadius={6} color="#FFFFFF" />
+                <Image source={RIGHT_EARPHONE_ICON} style={{ width: 28, height: 28 }} resizeMode="contain" />
                 <Text style={styles.channelTitle}>Right Earphone</Text>
               </View>
               <TouchableOpacity
