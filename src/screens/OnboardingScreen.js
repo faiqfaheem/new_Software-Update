@@ -28,23 +28,20 @@ const OnboardingScreen = ({ navigation }) => {
   const SLIDES = [
     {
       id: '1',
-      title: 'Keep Your Apps Fresh',
-      description:
-        'Automatically scan all installed applications and find the latest updates in seconds.',
+      title: t('slide1Title'),
+      description: t('slide1Desc'),
       image: ONBOARDING_IMAGE_1,
     },
     {
       id: '2',
-      title: 'Bulk Uninstaller',
-      description:
-        'Declutter your phone by removing multiple unused apps at once. Save time and storage.',
+      title: t('slide2Title'),
+      description: t('slide2Desc'),
       image: ONBOARDING_IMAGE_2,
     },
     {
       id: '3',
-      title: 'Meet Your AI Assistant',
-      description:
-        'Get personalized recommendations to optimize your phone performance and app usage.',
+      title: t('slide3Title'),
+      description: t('slide3Desc'),
       image: ONBOARDING_IMAGE_3,
     },
   ];
