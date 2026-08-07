@@ -155,7 +155,7 @@ const OnboardingScreen = ({ navigation }) => {
         {/* Next -> Action Button */}
         <TouchableOpacity style={styles.nextLink} onPress={handleNext}>
           <Text style={styles.nextLinkText}>
-            {isLastSlide ? t('getStarted') : 'Next'}
+            {isLastSlide ? t('getStarted') : t('next')}
           </Text>
           <Text style={styles.arrowIcon}> →</Text>
         </TouchableOpacity>
