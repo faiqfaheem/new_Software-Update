@@ -13,6 +13,7 @@ import {
 
 const PASS_ICON = require('../assets/test_pass_icon.png');
 const FAIL_ICON = require('../assets/test_fail_icon.png');
+const HERO_ICON = require('../assets/test_screen_brightness.png');
 
 const WhitePlaceholder = ({ size = 22, borderRadius = 4, color = '#FFFFFF' }) => (
   <View
@@ -79,7 +80,7 @@ const BrightnessTestScreen = ({ navigation }) => {
         {/* Top Hero Section */}
         <View style={styles.heroSection}>
           <View style={styles.placeholderContainer}>
-            <WhitePlaceholder size={70} borderRadius={16} color="#FFFFFF" />
+            <Image source={HERO_ICON} style={{ width: 80, height: 80 }} resizeMode="contain" />
           </View>
 
           <Text style={styles.instructionText}>
