@@ -211,7 +211,8 @@ const styles = StyleSheet.create({
     marginRight: 16,
   },
   headerTitle: {
-    fontSize: 22,
+    fontSize: 24,
+    fontFamily: 'Gilroy-Bold',
     fontWeight: 'bold',
     color: '#FFFFFF',
     letterSpacing: 0.3,

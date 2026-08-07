@@ -289,7 +289,8 @@ const styles = StyleSheet.create({
     marginRight: 10,
   },
   headerTitle: {
-    fontSize: 20,
+    fontSize: 24,
+    fontFamily: 'Gilroy-Bold',
     fontWeight: 'bold',
     color: '#FFFFFF',
     marginRight: 10,
