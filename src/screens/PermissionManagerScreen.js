@@ -16,6 +16,7 @@ import {
   Platform,
   BackHandler,
 } from 'react-native';
+import Svg, { Circle } from 'react-native-svg';
 
 const WhitePlaceholder = ({ size = 22, borderRadius = 4, color = '#FFFFFF', opacity = 1 }) => (
   <View
@@ -37,12 +38,60 @@ const ChevronRight = ({ color = '#94A3B8', size = 16 }) => (
   <Text style={{ color, fontSize: size, fontWeight: '600' }}>›</Text>
 );
 
-// Circular Ring Chart Component matching exact screenshot layout
-const RingChart = ({ percentage = '0%', ringColor = '#EF4444' }) => (
-  <View style={[styles.ringContainer, { borderColor: ringColor }]}>
-    <Text style={styles.ringPercentageText}>{percentage}</Text>
-  </View>
-);
+const TRACK_COLORS = {
+  '#EF4444': 'rgba(239, 68, 68, 0.25)',
+  '#06B6D4': 'rgba(6, 182, 212, 0.25)',
+  '#EAB308': 'rgba(234, 179, 8, 0.25)',
+  '#10B981': 'rgba(16, 185, 129, 0.25)',
+};
+
+// Circular Ring Chart Component with exact SVG arc calculation matching percentage
+const RingChart = ({ percentage = '0%', ringColor = '#EF4444' }) => {
+  const size = 62;
+  const strokeWidth = 6;
+  const radius = (size - strokeWidth) / 2;
+  const circumference = 2 * Math.PI * radius;
+
+  const numValue = Math.min(100, Math.max(0, parseFloat(percentage) || 0));
+  const strokeDashoffset = circumference - (circumference * numValue) / 100;
+  const trackColor = TRACK_COLORS[ringColor] || 'rgba(255, 255, 255, 0.2)';
+
+  return (
+    <View style={styles.ringWrapper}>
+      <Svg width={size} height={size}>
+        {/* Background Track Circle */}
+        <Circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          stroke={trackColor}
+          strokeWidth={strokeWidth}
+          fill="none"
+        />
+        {/* Progress Arc Circle */}
+        {numValue > 0 && (
+          <Circle
+            cx={size / 2}
+            cy={size / 2}
+            r={radius}
+            stroke={ringColor}
+            strokeWidth={strokeWidth}
+            fill="none"
+            strokeDasharray={circumference}
+            strokeDashoffset={strokeDashoffset}
+            strokeLinecap="round"
+            originX={size / 2}
+            originY={size / 2}
+            rotation="-90"
+          />
+        )}
+      </Svg>
+      <View style={styles.ringTextOverlay}>
+        <Text style={styles.ringPercentageText}>{percentage}</Text>
+      </View>
+    </View>
+  );
+};
 
 // Permission Category Groups (Matching OS App Settings Groups - Each group counted ONCE per app)
 const PERMISSION_GROUPS = [
@@ -796,14 +845,18 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#1E293B',
   },
-  ringContainer: {
+  ringWrapper: {
     width: 62,
     height: 62,
-    borderRadius: 31,
-    borderWidth: 6,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 16,
+    position: 'relative',
+  },
+  ringTextOverlay: {
+    position: 'absolute',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   ringPercentageText: {
     fontSize: 12,

@@ -15,8 +15,13 @@ import {
 } from 'react-native';
 import DeviceInfo from 'react-native-device-info';
 import RNFS from 'react-native-fs';
+import Svg, { Circle } from 'react-native-svg';
 
 const SETTINGS_ICON = require('../assets/settings_icon.png');
+const AUDIO_ICON = require('../assets/Group.png');
+const VIDEO_ICON = require('../assets/video_icon.png');
+const IMAGE_ICON = require('../assets/image_icon.png');
+const APPS_ICON = require('../assets/apps_icon.png');
 
 const WhitePlaceholder = ({ size = 22, borderRadius = 4, color = '#FFFFFF', opacity = 1 }) => (
   <View
@@ -254,7 +259,31 @@ const StorageInfoScreen = ({ navigation }) => {
         >
           {/* Top Circular Progress Card */}
           <View style={styles.storageCircleCard}>
-            <View style={styles.circleOuterRing}>
+            <View style={{ width: 170, height: 170, alignItems: 'center', justifyContent: 'center' }}>
+              <Svg style={{ position: 'absolute' }} width={170} height={170}>
+                <Circle
+                  stroke="#E2E8F0"
+                  fill="none"
+                  cx={170 / 2}
+                  cy={170 / 2}
+                  r={(170 - 16) / 2}
+                  strokeWidth={16}
+                />
+                <Circle
+                  stroke="#97EF5B"
+                  fill="none"
+                  cx={170 / 2}
+                  cy={170 / 2}
+                  r={(170 - 16) / 2}
+                  strokeWidth={16}
+                  strokeDasharray={(170 - 16) / 2 * 2 * Math.PI}
+                  strokeDashoffset={((170 - 16) / 2 * 2 * Math.PI) - ((storageData.usedPercentage || 0) / 100) * ((170 - 16) / 2 * 2 * Math.PI)}
+                  strokeLinecap="round"
+                  originX={170 / 2}
+                  originY={170 / 2}
+                  rotation="-90"
+                />
+              </Svg>
               <View style={styles.circleInnerContainer}>
                 <Text style={styles.percentageText}>{storageData.usedPercentage}%</Text>
                 <Text style={styles.usedSubText}>Used</Text>
@@ -289,8 +318,8 @@ const StorageInfoScreen = ({ navigation }) => {
           {/* Storage Breakdown Item Cards */}
           {/* Item 1: Audios */}
           <View style={styles.breakdownCard}>
-            <View style={[styles.iconSquare, { backgroundColor: '#8B5CF6' }]}>
-              <WhitePlaceholder size={22} borderRadius={4} color="#FFFFFF" />
+            <View style={styles.iconSquare}>
+              <Image source={AUDIO_ICON} style={{ width: 36, height: 36 }} resizeMode="contain" />
             </View>
             <Text style={styles.breakdownTitle}>Audios</Text>
             <Text style={styles.breakdownSize}>{storageData.audiosSizeFormatted}</Text>
@@ -298,8 +327,8 @@ const StorageInfoScreen = ({ navigation }) => {
 
           {/* Item 2: Videos */}
           <View style={styles.breakdownCard}>
-            <View style={[styles.iconSquare, { backgroundColor: '#EF4444' }]}>
-              <WhitePlaceholder size={22} borderRadius={4} color="#FFFFFF" />
+            <View style={styles.iconSquare}>
+              <Image source={VIDEO_ICON} style={{ width: 36, height: 36 }} resizeMode="contain" />
             </View>
             <Text style={styles.breakdownTitle}>Videos</Text>
             <Text style={styles.breakdownSize}>{storageData.videosSizeFormatted}</Text>
@@ -307,8 +336,8 @@ const StorageInfoScreen = ({ navigation }) => {
 
           {/* Item 3: Images */}
           <View style={styles.breakdownCard}>
-            <View style={[styles.iconSquare, { backgroundColor: '#3B82F6' }]}>
-              <WhitePlaceholder size={22} borderRadius={4} color="#FFFFFF" />
+            <View style={styles.iconSquare}>
+              <Image source={IMAGE_ICON} style={{ width: 36, height: 36 }} resizeMode="contain" />
             </View>
             <Text style={styles.breakdownTitle}>Images</Text>
             <Text style={styles.breakdownSize}>{storageData.imagesSizeFormatted}</Text>
@@ -316,8 +345,8 @@ const StorageInfoScreen = ({ navigation }) => {
 
           {/* Item 4: All Apps */}
           <View style={styles.breakdownCard}>
-            <View style={[styles.iconSquare, { backgroundColor: '#22C55E' }]}>
-              <WhitePlaceholder size={22} borderRadius={4} color="#FFFFFF" />
+            <View style={styles.iconSquare}>
+              <Image source={APPS_ICON} style={{ width: 36, height: 36 }} resizeMode="contain" />
             </View>
             <Text style={styles.breakdownTitle}>All Apps</Text>
             <Text style={styles.breakdownSize}>{storageData.allAppsSizeFormatted}</Text>
@@ -356,6 +385,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#FFFFFF',
     letterSpacing: 0.3,
+    fontFamily: 'Gilroy-Bold',
   },
   settingsButton: {
     padding: 6,
@@ -374,7 +404,7 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
-    backgroundColor: '#0B1120',
+    backgroundColor: '#0B1326',
   },
   scrollContent: {
     paddingHorizontal: 16,
@@ -391,15 +421,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#1E293B',
   },
-  circleOuterRing: {
-    width: 170,
-    height: 170,
-    borderRadius: 85,
-    borderWidth: 16,
-    borderColor: '#84CC16',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
+
   circleInnerContainer: {
     alignItems: 'center',
     justifyContent: 'center',
@@ -460,7 +482,7 @@ const styles = StyleSheet.create({
   spaceCardVal: {
     fontSize: 13,
     fontWeight: '600',
-    color: '#94A3B8',
+    color: '#ffffff',
   },
   breakdownCard: {
     flexDirection: 'row',
