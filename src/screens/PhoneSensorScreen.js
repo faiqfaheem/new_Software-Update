@@ -36,8 +36,10 @@ const WhitePlaceholder = ({ size = 22, borderRadius = 4, color = '#FFFFFF', opac
   />
 );
 
-const BackArrow = ({ color = '#FFFFFF', size = 22 }) => (
-  <Text style={{ color, fontSize: size, fontWeight: 'bold' }}>←</Text>
+const BACK_ARROW_ICON = require('../assets/back_arrow_icon.png');
+
+const BackArrow = ({ size = 20 }) => (
+  <Image source={BACK_ARROW_ICON} style={{ width: size, height: size }} resizeMode="contain" />
 );
 
 const ChevronRight = ({ color = '#94A3B8', size = 18 }) => (

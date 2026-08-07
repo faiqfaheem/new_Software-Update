@@ -28,8 +28,10 @@ const WhitePlaceholder = ({ size = 22, borderRadius = 4, color = '#FFFFFF' }) =>
   />
 );
 
-const BackArrow = ({ color = '#FFFFFF', size = 22 }) => (
-  <Text style={{ color, fontSize: size, fontWeight: 'bold' }}>←</Text>
+const BACK_ARROW_ICON = require('../assets/back_arrow_icon.png');
+
+const BackArrow = ({ size = 20 }) => (
+  <Image source={BACK_ARROW_ICON} style={{ width: size, height: size }} resizeMode="contain" />
 );
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
