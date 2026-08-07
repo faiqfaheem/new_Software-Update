@@ -26,9 +26,9 @@ import {
 import { GROQ_API_KEY } from '../config/env';
 
 const AI_ICON = require('../assets/ai_assistant_icon.png');
-const VIRTUAL_ASSISTANT_LOGO = require('../assets/virtual-assistant_11103482 1.png');
-const SEND_BTN_ICON = require('../assets/Button - Send message.png');
+const VIRTUAL_ASSISTANT_LOGO = require('../assets/virtual_assistant_icon.png');
 const BACK_ARROW_ICON = require('../assets/back_arrow_icon.png');
+const SEND_SVG_ICON = require('../assets/send_icon_svg.png');
 
 /* ─────────────────────────────────────────────────────────────────
    GROQ CONSTANTS
@@ -261,7 +261,9 @@ const AIAssistantScreen = ({ navigation }) => {
             activeOpacity={0.8}
             disabled={!inputText.trim() || isLoading}
           >
-            <Image source={SEND_BTN_ICON} style={{ width: 44, height: 44 }} resizeMode="contain" />
+            <View style={styles.sendIconPlaceholder}>
+              <Image source={SEND_SVG_ICON} style={{ width: '100%', height: '100%' }} resizeMode="contain" />
+            </View>
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
@@ -394,10 +396,8 @@ const styles = StyleSheet.create({
     marginRight: 10,
   },
 
-  /* Send button — no background, uses custom image */
+  /* Send button wrapper */
   sendBtn: {
-    width: 48,
-    height: 48,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -405,12 +405,13 @@ const styles = StyleSheet.create({
     opacity: 0.4,
   },
 
-  /* 24×24 white send-icon placeholder — replace with <Image> when asset ready */
+  /* Send placeholder — Figma spec: 37.85×37.85, radius 12.62, padding 8.41 */
   sendIconPlaceholder: {
-    width: 24,
-    height: 24,
-    borderRadius: 4,
-    backgroundColor: '#FFFFFF',
+    width: 38,
+    height: 38,
+    borderRadius: 13,
+    backgroundColor: '#3B82F6',
+    padding: 8,
   },
 });
 
