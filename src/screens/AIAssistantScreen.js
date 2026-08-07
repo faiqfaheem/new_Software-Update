@@ -26,6 +26,9 @@ import {
 import { GROQ_API_KEY } from '../config/env';
 
 const AI_ICON = require('../assets/ai_assistant_icon.png');
+const VIRTUAL_ASSISTANT_LOGO = require('../assets/virtual-assistant_11103482 1.png');
+const SEND_BTN_ICON = require('../assets/Button - Send message.png');
+const BACK_ARROW_ICON = require('../assets/back_arrow_icon.png');
 
 /* ─────────────────────────────────────────────────────────────────
    GROQ CONSTANTS
@@ -108,8 +111,8 @@ const MessageBubble = ({ item }) => {
 ───────────────────────────────────────────────────────────────── */
 const HeroHeader = () => (
   <View style={styles.heroSection}>
-    {/* ── AI Assistant Icon ── */}
-    <Image source={AI_ICON} style={styles.logoBotPlaceholder} resizeMode="contain" />
+    {/* ── Virtual Assistant Logo ── */}
+    <Image source={VIRTUAL_ASSISTANT_LOGO} style={styles.logoBotPlaceholder} resizeMode="contain" />
 
     {/* ── SYSTEMS ONLINE ── */}
     <View style={styles.statusRow}>
@@ -211,7 +214,7 @@ const AIAssistantScreen = ({ navigation }) => {
       {/* ── Header ── */}
       <View style={styles.header}>
         <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
-          <Text style={styles.backArrow}>←</Text>
+          <Image source={BACK_ARROW_ICON} style={{ width: 20, height: 20 }} resizeMode="contain" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>AI Assistant</Text>
       </View>
@@ -258,7 +261,7 @@ const AIAssistantScreen = ({ navigation }) => {
             activeOpacity={0.8}
             disabled={!inputText.trim() || isLoading}
           >
-            <View style={styles.sendIconPlaceholder} />
+            <Image source={SEND_BTN_ICON} style={{ width: 44, height: 44 }} resizeMode="contain" />
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
