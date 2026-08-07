@@ -10,7 +10,19 @@ import {
   SafeAreaView,
   StatusBar,
   Alert,
+  Image,
 } from 'react-native';
+
+const DISPLAY_ICON = require('../assets/display_icon.png');
+const FLASHLIGHT_ICON = require('../assets/flashlight_icon.png');
+const TAP_ICON = require('../assets/tap_icon.png');
+const SCREEN_AREA_ICON = require('../assets/screen_area_icon.png');
+const ACCELEROMETER_ICON = require('../assets/accelerometer_icon.png');
+const HEADPHONES_ICON = require('../assets/headphones_icon.png');
+const WIFI_ICON = require('../assets/wifi_icon.png');
+const VIBRATION_ICON = require('../assets/vibration_icon.png');
+const BRIGHTNESS_ICON = require('../assets/brightness_icon.png');
+const SPEAKER_ICON = require('../assets/speaker_icon.png');
 
 const WhitePlaceholder = ({ size = 22, borderRadius = 4, color = '#FFFFFF', opacity = 1 }) => (
   <View
@@ -33,16 +45,16 @@ const ChevronRight = ({ color = '#94A3B8', size = 18 }) => (
 );
 
 const SENSOR_TESTS = [
-  { id: '1', title: 'Display', subtitle: 'Test Screen Functionality', passed: true },
-  { id: '2', title: 'Flash Light', subtitle: 'Camera Flash Test', passed: true },
-  { id: '3', title: 'Tap Test', subtitle: 'Multi-Touch Test', passed: true },
-  { id: '4', title: 'Screen Area', subtitle: 'Display Area Test', passed: false },
-  { id: '5', title: 'Accelerometer', subtitle: 'Motion Sensor Test', passed: false },
-  { id: '6', title: 'Headphones', subtitle: 'Headphones Test', passed: false },
-  { id: '7', title: 'Wifi Test', subtitle: 'Wifi Test', passed: false },
-  { id: '8', title: 'Vibration', subtitle: 'Haptics & Vibration Test', passed: false },
-  { id: '9', title: 'Brightness', subtitle: 'Screen Brightness', passed: false },
-  { id: '10', title: 'Speaker Test', subtitle: 'Speaker Audio Test', passed: false },
+  { id: '1', title: 'Display', subtitle: 'Test Screen Functionality', icon: DISPLAY_ICON, passed: true },
+  { id: '2', title: 'Flash Light', subtitle: 'Camera Flash Test', icon: FLASHLIGHT_ICON, passed: true },
+  { id: '3', title: 'Tap Test', subtitle: 'Multi-Touch Test', icon: TAP_ICON, passed: true },
+  { id: '4', title: 'Screen Area', subtitle: 'Display Area Test', icon: SCREEN_AREA_ICON, passed: false },
+  { id: '5', title: 'Accelerometer', subtitle: 'Motion Sensor Test', icon: ACCELEROMETER_ICON, passed: false },
+  { id: '6', title: 'Headphones', subtitle: 'Headphones Test', icon: HEADPHONES_ICON, passed: false },
+  { id: '7', title: 'Wifi Test', subtitle: 'Wifi Test', icon: WIFI_ICON, passed: false },
+  { id: '8', title: 'Vibration', subtitle: 'Haptics & Vibration Test', icon: VIBRATION_ICON, passed: false },
+  { id: '9', title: 'Brightness', subtitle: 'Screen Brightness', icon: BRIGHTNESS_ICON, passed: false },
+  { id: '10', title: 'Speaker Test', subtitle: 'Speaker Audio Test', icon: SPEAKER_ICON, passed: false },
 ];
 
 const PhoneSensorScreen = ({ navigation }) => {
@@ -103,9 +115,13 @@ const PhoneSensorScreen = ({ navigation }) => {
             activeOpacity={0.7}
             onPress={() => handleTestPress(test)}
           >
-            {/* Left White Placeholder Icon Container */}
-            <View style={styles.iconContainer}>
-              <WhitePlaceholder size={28} borderRadius={6} color="#FFFFFF" />
+            {/* Left Icon Container */}
+            <View style={[styles.iconContainer, test.icon && { backgroundColor: 'transparent' }]}>
+              {test.icon ? (
+                <Image source={test.icon} style={{ width: 36, height: 36 }} resizeMode="contain" />
+              ) : (
+                <WhitePlaceholder size={28} borderRadius={6} color="#FFFFFF" />
+              )}
             </View>
 
             {/* Middle Info */}

@@ -8,7 +8,11 @@ import {
   StatusBar,
   Linking,
   NativeModules,
+  Image,
 } from 'react-native';
+
+const PASS_ICON = require('../assets/test_pass_icon.png');
+const FAIL_ICON = require('../assets/test_fail_icon.png');
 
 const WhitePlaceholder = ({ size = 22, borderRadius = 4, color = '#FFFFFF' }) => (
   <View
@@ -129,20 +133,20 @@ const BrightnessTestScreen = ({ navigation }) => {
           <Text style={styles.questionText}>Is the brightness working?</Text>
 
           <View style={styles.feedbackButtonsRow}>
-            {/* Pass White Circle Placeholder Button */}
+            {/* Pass Icon Button */}
             <TouchableOpacity
               style={styles.circlePlaceholderButton}
               onPress={() => handleResultPress(true)}
             >
-              <WhitePlaceholder size={60} borderRadius={30} color="#FFFFFF" />
+              <Image source={PASS_ICON} style={{ width: 60, height: 60 }} resizeMode="contain" />
             </TouchableOpacity>
 
-            {/* Fail White Circle Placeholder Button */}
+            {/* Fail Icon Button */}
             <TouchableOpacity
               style={styles.circlePlaceholderButton}
               onPress={() => handleResultPress(false)}
             >
-              <WhitePlaceholder size={60} borderRadius={30} color="#FFFFFF" />
+              <Image source={FAIL_ICON} style={{ width: 60, height: 60 }} resizeMode="contain" />
             </TouchableOpacity>
           </View>
         </View>

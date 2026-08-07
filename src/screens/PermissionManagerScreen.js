@@ -521,6 +521,7 @@ const PermissionManagerScreen = ({ navigation }) => {
 
             <Text style={styles.consentBodyText}>
               To help see which apps have access to things like your camera, location, microphone, and more, this app needs permission to read the list of permissions each installed app is using. The scan happens only on your device - nothing is collected or shared. It's used only to show you which apps have access to sensitive features, so you can decide what to keep or change.
+
             </Text>
 
             <TouchableOpacity style={styles.agreeButton} onPress={handleAgreeAndContinue}>
@@ -874,7 +875,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   greenCountBadge: {
-    backgroundColor: '#84CC16',
+    backgroundColor: '#97EF5B',
     paddingHorizontal: 22,
     paddingVertical: 8,
     borderRadius: 20,
