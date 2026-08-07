@@ -299,12 +299,10 @@ const styles = StyleSheet.create({
     paddingBottom: 20,
   },
 
-  /* 96×96 white logo placeholder — replace View with <Image> when asset ready */
+  /* Virtual assistant logo */
   logoBotPlaceholder: {
-    width: 96,
-    height: 96,
-    borderRadius: 20,
-    backgroundColor: '#FFFFFF',
+    width: 110,
+    height: 110,
     marginBottom: 16,
   },
 
@@ -396,18 +394,15 @@ const styles = StyleSheet.create({
     marginRight: 10,
   },
 
-  /* 46×46 blue circle send button */
+  /* Send button — no background, uses custom image */
   sendBtn: {
-    width: 46,
-    height: 46,
-    borderRadius: 23,
-    backgroundColor: '#2563EB',
+    width: 48,
+    height: 48,
     alignItems: 'center',
     justifyContent: 'center',
   },
   sendBtnDisabled: {
-    backgroundColor: '#1E3A8A',
-    opacity: 0.55,
+    opacity: 0.4,
   },
 
   /* 24×24 white send-icon placeholder — replace with <Image> when asset ready */
