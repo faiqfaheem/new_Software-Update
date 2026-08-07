@@ -338,7 +338,7 @@ const styles = StyleSheet.create({
     borderRadius: 18,
   },
   testPillActive: {
-    backgroundColor: '#60A5FA',
+    backgroundColor: '#3B82F6',
   },
   testPillText: {
     color: '#FFFFFF',

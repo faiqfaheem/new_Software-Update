@@ -234,7 +234,7 @@ const styles = StyleSheet.create({
   },
   modeButtonActive: {
     backgroundColor: '#3B82F6',
-    borderColor: '#60A5FA',
+    borderColor: '#3B82F6',
   },
   modeButtonInactive: {
     backgroundColor: '#131C31',

@@ -264,7 +264,7 @@ const styles = StyleSheet.create({
     borderColor: '#3B82F6',
   },
   tapsRecordedText: {
-    color: '#60A5FA',
+    color: '#3B82F6',
     fontSize: 14,
     fontWeight: 'bold',
   },

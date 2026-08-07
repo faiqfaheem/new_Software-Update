@@ -176,7 +176,7 @@ const styles = StyleSheet.create({
     borderRadius: 24,
   },
   testButtonActive: {
-    backgroundColor: '#60A5FA',
+    backgroundColor: '#3B82F6',
   },
   testButtonText: {
     color: '#FFFFFF',
