@@ -1,5 +1,6 @@
 import { SvgXml } from 'react-native-svg';
 import React, { useState, useEffect } from 'react';
+import { setStoredTestResult } from '../utils/storage';
 import {
   View,
   Text,
@@ -67,10 +68,11 @@ const FlashlightTestScreen = ({ navigation }) => {
     navigation.goBack();
   };
 
-  const handleResultPress = (passed) => {
+  const handleResultPress = async (passed) => {
     if (NativeModules.FlashlightModule && NativeModules.FlashlightModule.setTorchMode) {
       NativeModules.FlashlightModule.setTorchMode(false).catch(() => {});
     }
+    await setStoredTestResult('2', passed ? 'pass' : 'fail');
     navigation.goBack();
   };
 

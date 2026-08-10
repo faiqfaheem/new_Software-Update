@@ -1,5 +1,6 @@
 import { SvgXml } from 'react-native-svg';
 import React, { useState, useEffect } from 'react';
+import { setStoredTestResult } from '../utils/storage';
 import {
   View,
   Text,
@@ -69,7 +70,8 @@ const WifiTestScreen = ({ navigation }) => {
     navigation.navigate('SettingsScreen');
   };
 
-  const handleResultPress = (passed) => {
+  const handleResultPress = async (passed) => {
+    await setStoredTestResult('7', passed ? 'pass' : 'fail');
     navigation.goBack();
   };
 

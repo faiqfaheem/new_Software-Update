@@ -1,5 +1,6 @@
 import { SvgXml } from 'react-native-svg';
 import React, { useState, useEffect } from 'react';
+import { setStoredTestResult } from '../utils/storage';
 import {
   View,
   Text,
@@ -95,7 +96,8 @@ const HeadphonesTestScreen = ({ navigation }) => {
     navigation.navigate('SettingsScreen');
   };
 
-  const handleResultPress = (passed) => {
+  const handleResultPress = async (passed) => {
+    await setStoredTestResult('6', passed ? 'pass' : 'fail');
     navigation.goBack();
   };
 

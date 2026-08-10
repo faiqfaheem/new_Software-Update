@@ -1,5 +1,6 @@
 import { SvgXml } from 'react-native-svg';
 import React, { useState } from 'react';
+import { setStoredTestResult } from '../utils/storage';
 import {
   View,
   Text,
@@ -50,7 +51,8 @@ const VibrationTestScreen = ({ navigation }) => {
     navigation.navigate('SettingsScreen');
   };
 
-  const handleResultPress = (passed) => {
+  const handleResultPress = async (passed) => {
+    await setStoredTestResult('8', passed ? 'pass' : 'fail');
     navigation.goBack();
   };
 

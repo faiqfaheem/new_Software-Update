@@ -1,5 +1,6 @@
 import { SvgXml } from 'react-native-svg';
 import React, { useState, useRef } from 'react';
+import { setStoredTestResult } from '../utils/storage';
 import {
   View,
   Text,
@@ -48,14 +49,22 @@ const ScreenAreaTestScreen = ({ navigation }) => {
 
   const filledRef = useRef({});
   filledRef.current = filledCells;
+  const isCompletedRef = useRef(false);
+  const completionTimeoutRef = useRef(null);
 
   const handleStartDrawing = () => {
+    if (completionTimeoutRef.current) {
+      clearTimeout(completionTimeoutRef.current);
+      completionTimeoutRef.current = null;
+    }
     setFilledCells({});
     filledRef.current = {};
+    isCompletedRef.current = false;
     setIsDrawingActive(true);
   };
 
   const markCellAtPoint = (x, y) => {
+    if (isCompletedRef.current) return;
     if (x < 0 || y < 0 || x > SCREEN_WIDTH || y > SCREEN_HEIGHT) return;
     const col = Math.min(GRID_COLS - 1, Math.max(0, Math.floor((x / SCREEN_WIDTH) * GRID_COLS)));
     const row = Math.min(GRID_ROWS - 1, Math.max(0, Math.floor((y / SCREEN_HEIGHT) * GRID_ROWS)));
@@ -65,6 +74,15 @@ const ScreenAreaTestScreen = ({ navigation }) => {
       const nextState = { ...filledRef.current, [cellKey]: true };
       filledRef.current = nextState;
       setFilledCells(nextState);
+
+      // When 100% grid cells are filled, wait 2 seconds so user sees full green grid before auto-closing
+      if (Object.keys(nextState).length >= TOTAL_CELLS) {
+        isCompletedRef.current = true;
+        completionTimeoutRef.current = setTimeout(async () => {
+          setIsDrawingActive(false);
+          await setStoredTestResult('4', 'pass');
+        }, 2000);
+      }
     }
   };
 
@@ -87,7 +105,8 @@ const ScreenAreaTestScreen = ({ navigation }) => {
     navigation.navigate('SettingsScreen');
   };
 
-  const handleResultPress = (passed) => {
+  const handleResultPress = async (passed) => {
+    await setStoredTestResult('4', passed ? 'pass' : 'fail');
     navigation.goBack();
   };
 
@@ -126,30 +145,6 @@ const ScreenAreaTestScreen = ({ navigation }) => {
                 })}
               </View>
             ))}
-          </View>
-
-          {/* Floating HUD Header Controls */}
-          <View style={styles.floatingHudContainer} pointerEvents="box-none">
-            <TouchableOpacity
-              style={styles.closeHudButton}
-              onPress={() => setIsDrawingActive(false)}
-            >
-              <Text style={styles.closeHudText}>✕ Exit Test</Text>
-            </TouchableOpacity>
-
-            <View style={styles.percentBadge}>
-              <Text style={styles.percentText}>Coverage: {coveragePercent}%</Text>
-            </View>
-
-            <TouchableOpacity
-              style={styles.resetHudButton}
-              onPress={() => {
-                setFilledCells({});
-                filledRef.current = {};
-              }}
-            >
-              <Text style={styles.resetHudText}>Reset</Text>
-            </TouchableOpacity>
           </View>
         </View>
       </Modal>

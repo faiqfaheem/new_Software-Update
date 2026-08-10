@@ -4,6 +4,33 @@ export const KEYS = {
   LANGUAGE: '@user_language',
   FIRST_LAUNCH_COMPLETED: 'isFirstLaunchCompleted',
   USAGE_PERMISSION_GRANTED: '@usage_permission_granted',
+  SENSOR_TEST_RESULTS: '@sensor_test_results',
+};
+
+/**
+ * Get stored sensor test results
+ */
+export const getStoredTestResults = async () => {
+  try {
+    const value = await AsyncStorage.getItem(KEYS.SENSOR_TEST_RESULTS);
+    return value ? JSON.parse(value) : {};
+  } catch (e) {
+    console.error('Error reading sensor test results:', e);
+    return {};
+  }
+};
+
+/**
+ * Save stored sensor test result (result = 'pass' | 'fail')
+ */
+export const setStoredTestResult = async (testId, result) => {
+  try {
+    const current = await getStoredTestResults();
+    current[testId] = result;
+    await AsyncStorage.setItem(KEYS.SENSOR_TEST_RESULTS, JSON.stringify(current));
+  } catch (e) {
+    console.error('Error saving sensor test result:', e);
+  }
 };
 
 /**
