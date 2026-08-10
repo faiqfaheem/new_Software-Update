@@ -13,7 +13,7 @@ import {
   NativeModules,
   Image,
 } from 'react-native';
-import { SvgXml } from 'react-native-svg';
+import Svg, { Circle, SvgXml } from 'react-native-svg';
 import { scanInstalledAppsForUpdates } from '../utils/playStoreScraper';
 
 const LAYER_35_SVG = `<svg width="26" height="26" viewBox="0 0 31 32" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -294,6 +294,34 @@ const ScanAppsScreen = ({ navigation }) => {
         {/* Top Progress Circle Card */}
         <View style={styles.progressCard}>
           <View style={styles.circleOuterRing}>
+            <Svg style={StyleSheet.absoluteFill} width={150} height={150}>
+              {/* Background Track Circle */}
+              <Circle
+                cx={75}
+                cy={75}
+                r={69}
+                stroke="#1E293B"
+                strokeWidth={12}
+                fill="none"
+              />
+              {/* Dynamic Progress Arc Circle */}
+              {progress > 0 && (
+                <Circle
+                  cx={75}
+                  cy={75}
+                  r={69}
+                  stroke="#ADC6FF"
+                  strokeWidth={12}
+                  fill="none"
+                  strokeDasharray={433.54}
+                  strokeDashoffset={433.54 - (433.54 * Math.min(progress, 100)) / 100}
+                  strokeLinecap="round"
+                  originX={75}
+                  originY={75}
+                  rotation="-90"
+                />
+              )}
+            </Svg>
             <View style={styles.circleInnerContainer}>
               <Text style={styles.percentageText}>{progress}%</Text>
             </View>
@@ -424,9 +452,6 @@ const styles = StyleSheet.create({
   circleOuterRing: {
     width: 150,
     height: 150,
-    borderRadius: 75,
-    borderWidth: 12,
-    borderColor: '#ADC6FF',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 16,
