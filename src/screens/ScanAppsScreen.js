@@ -394,7 +394,7 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontFamily: 'Gilroy-Bold',
     fontWeight: 'bold',
-    color: '#FFFFFF',
+    color: '#DAE2FD',
     letterSpacing: 0.3,
   },
   settingsButton: {
@@ -468,7 +468,7 @@ const styles = StyleSheet.create({
   statCardTitle: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#FFFFFF',
+    color: '#DAE2FD',
     marginBottom: 2,
   },
   statCardSubText: {

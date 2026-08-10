@@ -214,7 +214,7 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontFamily: 'Gilroy-Bold',
     fontWeight: 'bold',
-    color: '#FFFFFF',
+    color: '#DAE2FD',
     letterSpacing: 0.3,
   },
   container: {
@@ -248,7 +248,7 @@ const styles = StyleSheet.create({
   settingsTitle: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#FFFFFF',
+    color: '#DAE2FD',
     letterSpacing: 0.2,
   },
   modalOverlay: {
@@ -268,7 +268,7 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#FFFFFF',
+    color: '#DAE2FD',
     marginBottom: 14,
   },
   modalScroll: {

@@ -209,7 +209,7 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontFamily: 'Gilroy-Bold',
     fontWeight: 'bold',
-    color: '#FFFFFF',
+    color: '#DAE2FD',
     letterSpacing: 0.3,
   },
   settingsButton: {

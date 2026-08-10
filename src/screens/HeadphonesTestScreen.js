@@ -233,7 +233,7 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontFamily: 'Gilroy-Bold',
     fontWeight: 'bold',
-    color: '#FFFFFF',
+    color: '#DAE2FD',
     letterSpacing: 0.3,
   },
   settingsButton: {
@@ -329,7 +329,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   channelTitle: {
-    color: '#FFFFFF',
+    color: '#DAE2FD',
     fontSize: 15,
     fontWeight: '600',
     marginLeft: 12,

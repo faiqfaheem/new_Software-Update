@@ -99,7 +99,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 22,
     fontWeight: 'bold',
-    color: '#FFFFFF',
+    color: '#DAE2FD',
     fontFamily: 'Gilroy-Bold',
   },
   nextButton: {

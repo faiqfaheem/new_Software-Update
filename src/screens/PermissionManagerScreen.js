@@ -727,7 +727,7 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontFamily: 'Gilroy-Bold',
     fontWeight: 'bold',
-    color: '#FFFFFF',
+    color: '#DAE2FD',
     letterSpacing: 0.3,
   },
   settingsButton: {
@@ -780,7 +780,7 @@ const styles = StyleSheet.create({
   consentTitle: {
     fontSize: 22,
     fontWeight: 'bold',
-    color: '#FFFFFF',
+    color: '#DAE2FD',
     marginBottom: 14,
   },
   consentBodyText: {
@@ -871,7 +871,7 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#FFFFFF',
+    color: '#DAE2FD',
   },
   badgeChevronContainer: {
     flexDirection: 'row',

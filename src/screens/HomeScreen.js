@@ -542,7 +542,7 @@ const styles = StyleSheet.create({
   headerAppTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#FFFFFF',
+    color: '#DAE2FD',
     letterSpacing: 0.3,
   },
   settingsButton: {
@@ -631,7 +631,7 @@ const styles = StyleSheet.create({
   rowCardTitle: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#FFFFFF',
+    color: '#DAE2FD',
     marginBottom: 3,
   },
   rowCardSub: {
@@ -689,7 +689,7 @@ const styles = StyleSheet.create({
   gridCardTitle: {
     fontSize: 15,
     fontWeight: 'bold',
-    color: '#FFFFFF',
+    color: '#DAE2FD',
     marginBottom: 4,
   },
   gridCardSub: {
