@@ -13,7 +13,6 @@ import {
 } from 'react-native';
 import { setFirstLaunchCompleted } from '../utils/storage';
 import { useLanguage } from '../i18n/LanguageContext';
-import { checkAllPermissions } from '../utils/permissions';
 
 const { width } = Dimensions.get('window');
 
@@ -49,22 +48,10 @@ const OnboardingScreen = ({ navigation }) => {
 
   const handleFinishOnboarding = async () => {
     await setFirstLaunchCompleted(true);
-    try {
-      const { isAllGranted } = await checkAllPermissions();
-      if (isAllGranted) {
-        navigation.reset({
-          index: 0,
-          routes: [{ name: 'HomeScreen' }],
-        });
-      } else {
-        navigation.reset({
-          index: 0,
-          routes: [{ name: 'PermissionScreen' }],
-        });
-      }
-    } catch (e) {
-      navigation.navigate('PermissionScreen');
-    }
+    navigation.reset({
+      index: 0,
+      routes: [{ name: 'HomeScreen' }],
+    });
   };
 
   const handleNext = async () => {
@@ -219,39 +206,56 @@ const styles = StyleSheet.create({
   bottomVerticalStack: {
     alignItems: 'center',
     justifyContent: 'center',
-    paddingBottom: 40,
+    paddingBottom: 36,
   },
   paginationRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+    marginTop: 24,
     marginBottom: 24,
   },
   dotBar: {
-    height: 4,
-    borderRadius: 2,
+    height: 5,
+    borderRadius: 2.5,
     marginHorizontal: 3,
   },
   activeDotBar: {
     width: 28,
     backgroundColor: '#6695FF',
+    shadowColor: '#6695FF',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.6,
+    shadowRadius: 6,
+    elevation: 4,
   },
   inactiveDotBar: {
-    width: 5,
-    backgroundColor: '#334155',
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: 'rgba(102, 149, 255, 0.3)',
   },
   nextLink: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+    backgroundColor: '#6695FF',
+    paddingVertical: 14,
+    paddingHorizontal: 36,
+    borderRadius: 30,
+    shadowColor: '#6695FF',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.45,
+    shadowRadius: 12,
+    elevation: 8,
   },
   nextLinkText: {
-    color: '#6695FF',
-    fontSize: 17,
+    color: '#FFFFFF',
+    fontSize: 16,
     fontWeight: '600',
   },
   arrowIcon: {
-    color: '#6695FF',
+    color: '#FFFFFF',
     fontSize: 18,
     fontWeight: '600',
   },

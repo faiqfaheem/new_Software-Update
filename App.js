@@ -6,7 +6,6 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { LanguageProvider } from './src/i18n/LanguageContext';
 import SplashScreen from './src/screens/SplashScreen';
 import LanguageScreen from './src/screens/LanguageScreen';
-import PermissionScreen from './src/screens/PermissionScreen';
 import OnboardingScreen from './src/screens/OnboardingScreen';
 import HomeScreen from './src/screens/HomeScreen';
 import ScanAppsScreen from './src/screens/ScanAppsScreen';
@@ -46,7 +45,6 @@ const App = () => {
         >
           <Stack.Screen name="SplashScreen" component={SplashScreen} />
           <Stack.Screen name="LanguageScreen" component={LanguageScreen} />
-          <Stack.Screen name="PermissionScreen" component={PermissionScreen} />
           <Stack.Screen name="OnboardingScreen" component={OnboardingScreen} />
           <Stack.Screen name="HomeScreen" component={HomeScreen} />
           <Stack.Screen name="ScanAppsScreen" component={ScanAppsScreen} />

@@ -2,7 +2,6 @@ import { SvgXml } from 'react-native-svg';
 import React, { useEffect } from 'react';
 import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';
 import { getFirstLaunchCompleted } from '../utils/storage';
-import { checkAllPermissions } from '../utils/permissions';
 
 const SplashScreen = ({ navigation }) => {
   useEffect(() => {
@@ -13,7 +12,6 @@ const SplashScreen = ({ navigation }) => {
     const startTime = Date.now();
     try {
       const isFirstLaunchCompleted = await getFirstLaunchCompleted();
-      const { isAllGranted } = await checkAllPermissions();
 
       // Ensure minimum display duration of 2.5 seconds (2500ms)
       const elapsedTime = Date.now() - startTime;
@@ -23,22 +21,16 @@ const SplashScreen = ({ navigation }) => {
       }
 
       if (!isFirstLaunchCompleted) {
-        // First Time User: LanguageScreen -> OnboardingScreen -> PermissionScreen
+        // First Time User: LanguageScreen -> OnboardingScreen -> HomeScreen
         navigation.reset({
           index: 0,
           routes: [{ name: 'LanguageScreen' }],
         });
-      } else if (isAllGranted) {
-        // Returning User with ALL permissions granted -> Direct to HomeScreen (Background check complete)
+      } else {
+        // Returning User -> Direct to HomeScreen
         navigation.reset({
           index: 0,
           routes: [{ name: 'HomeScreen' }],
-        });
-      } else {
-        // Returning User with MISSING permissions -> Direct to PermissionScreen to grant
-        navigation.reset({
-          index: 0,
-          routes: [{ name: 'PermissionScreen' }],
         });
       }
     } catch (error) {

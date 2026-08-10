@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -12,6 +12,7 @@ import {
   PermissionsAndroid,
   ActivityIndicator,
   Image,
+  AppState,
 } from 'react-native';
 import DeviceInfo from 'react-native-device-info';
 import RNFS from 'react-native-fs';
@@ -120,6 +121,7 @@ const VIDEOS_SVG = `<svg width="50" height="50" viewBox="0 0 50 50" fill="none" 
 const StorageInfoScreen = ({ navigation }) => {
   const [loading, setLoading] = useState(true);
   const [permissionGranted, setPermissionGranted] = useState(false);
+  const appStateRef = useRef(AppState.currentState);
   const [storageData, setStorageData] = useState({
     totalSpaceFormatted: '0.00 GB',
     usedSpaceFormatted: '0.00 GB',
@@ -132,6 +134,20 @@ const StorageInfoScreen = ({ navigation }) => {
 
   useEffect(() => {
     initStorageScan();
+
+    const subscription = AppState.addEventListener('change', (nextAppState) => {
+      if (
+        appStateRef.current.match(/inactive|background/) &&
+        nextAppState === 'active'
+      ) {
+        initStorageScan();
+      }
+      appStateRef.current = nextAppState;
+    });
+
+    return () => {
+      subscription.remove();
+    };
   }, []);
 
   const checkPermissions = async () => {

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -15,8 +15,10 @@ import {
   Image,
   Platform,
   BackHandler,
+  AppState,
 } from 'react-native';
 import Svg, { Circle, SvgXml } from 'react-native-svg';
+import { checkNativeUsagePermission } from '../utils/permissions';
 
 const WhitePlaceholder = ({ size = 22, borderRadius = 4, color = '#FFFFFF', opacity = 1 }) => (
   <View
@@ -226,14 +228,40 @@ const PermissionManagerScreen = ({ navigation }) => {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('Installed Apps'); // 'Installed Apps', 'System Apps'
   const [selectedRiskDetail, setSelectedRiskDetail] = useState(null); // null, 'High', 'Medium', 'Low', 'None'
+  const appStateRef = useRef(AppState.currentState);
 
   const [appsData, setAppsData] = useState({
     installed: { High: [], Medium: [], Low: [], None: [], total: 0 },
     system: { High: [], Medium: [], Low: [], None: [], total: 0 },
   });
 
+  const checkUsageAccessPermission = async () => {
+    try {
+      const isGranted = await checkNativeUsagePermission();
+      if (isGranted) {
+        setHasAgreed(true);
+      }
+    } catch (e) {}
+  };
+
   useEffect(() => {
+    checkUsageAccessPermission();
     fetchDeviceAppsAndPermissions();
+
+    const subscription = AppState.addEventListener('change', (nextAppState) => {
+      if (
+        appStateRef.current.match(/inactive|background/) &&
+        nextAppState === 'active'
+      ) {
+        checkUsageAccessPermission();
+        fetchDeviceAppsAndPermissions();
+      }
+      appStateRef.current = nextAppState;
+    });
+
+    return () => {
+      subscription.remove();
+    };
   }, []);
 
   useEffect(() => {
@@ -426,7 +454,14 @@ const PermissionManagerScreen = ({ navigation }) => {
     setAppsData({ installed, system });
   };
 
-  const handleAgreeAndContinue = () => {
+  const handleAgreeAndContinue = async () => {
+    if (Platform.OS === 'android') {
+      try {
+        await Linking.sendIntent('android.settings.USAGE_ACCESS_SETTINGS');
+      } catch (e) {
+        Linking.openSettings();
+      }
+    }
     setHasAgreed(true);
   };
 
