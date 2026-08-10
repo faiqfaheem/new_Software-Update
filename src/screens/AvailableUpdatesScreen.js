@@ -98,10 +98,7 @@ const AvailableUpdatesScreen = ({ route, navigation }) => {
           name: a.appName || a.packageName,
           packageName: a.packageName,
           size: formatSize(a.apkSize),
-          category: getCategoryTag(a.appName || '', a.packageName || ''),
-          usedTime: a.installedVersion && a.storeVersion ? `v${a.installedVersion} → v${a.storeVersion}` : getRandomUsedTime(idx),
-          installedVersion: a.installedVersion,
-          storeVersion: a.storeVersion,
+          appType: a.isSystemApp ? 'System App' : 'Installed App',
           appIcon: a.appIcon,
         }));
         setApps(formatted);
@@ -121,10 +118,7 @@ const AvailableUpdatesScreen = ({ route, navigation }) => {
             name: a.appName || a.packageName,
             packageName: a.packageName,
             size: formatSize(a.apkSize),
-            category: getCategoryTag(a.appName || '', a.packageName || ''),
-            usedTime: a.installedVersion && a.storeVersion ? `v${a.installedVersion} → v${a.storeVersion}` : getRandomUsedTime(idx),
-            installedVersion: a.installedVersion,
-            storeVersion: a.storeVersion,
+            appType: a.isSystemApp ? 'System App' : 'Installed App',
             appIcon: a.appIcon,
           }));
           setApps(updateApps);
@@ -173,7 +167,7 @@ const AvailableUpdatesScreen = ({ route, navigation }) => {
           await Linking.openSettings();
         });
       }
-    } catch (e) {}
+    } catch (e) { }
   };
 
   const renderAppItem = ({ item }) => {
@@ -190,19 +184,12 @@ const AvailableUpdatesScreen = ({ route, navigation }) => {
 
         {/* Middle App Details */}
         <View style={styles.appInfoGroup}>
-          <View style={styles.nameCategoryRow}>
-            <Text style={styles.appNameText} numberOfLines={1}>
-              {item.name}
-            </Text>
-            <View style={styles.categoryTagBadge}>
-              <Text style={styles.categoryTagText}>{item.category}</Text>
-            </View>
-          </View>
+          <Text style={styles.appNameText} numberOfLines={1}>
+            {item.name}
+          </Text>
 
           <View style={styles.sizeUsedRow}>
             <Text style={styles.sizeText}>{item.size}</Text>
-            <Text style={styles.dotSeparator}>•</Text>
-            <Text style={styles.usedTimeText} numberOfLines={1}>{item.usedTime}</Text>
           </View>
         </View>
 
@@ -230,9 +217,6 @@ const AvailableUpdatesScreen = ({ route, navigation }) => {
             <BackArrow size={22} color="#FFFFFF" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Available Updates</Text>
-          <View style={styles.proBadge}>
-            <Text style={styles.proBadgeText}>PRO</Text>
-          </View>
         </View>
 
         <TouchableOpacity
@@ -302,19 +286,6 @@ const styles = StyleSheet.create({
     color: '#DAE2FD',
     marginRight: 10,
   },
-  proBadge: {
-    backgroundColor: '#1E293B',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#3B82F6',
-  },
-  proBadgeText: {
-    color: '#3B82F6',
-    fontSize: 11,
-    fontWeight: 'bold',
-  },
   settingsButton: {
     padding: 6,
   },
@@ -326,7 +297,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
   },
   updateAllText: {
-    color: '#FFFFFF',
+    color: '#DAE2FD',
     fontSize: 18,
     fontWeight: 'bold',
     letterSpacing: 0.3,
@@ -387,7 +358,7 @@ const styles = StyleSheet.create({
   appNameText: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#FFFFFF',
+    color: '#DAE2FD',
     marginRight: 8,
     maxWidth: 130,
   },
@@ -420,7 +391,7 @@ const styles = StyleSheet.create({
     fontSize: 13,
   },
   updateItemButton: {
-    backgroundColor: '#BFDBFE',
+    backgroundColor: '#ADC6FF',
     paddingHorizontal: 18,
     paddingVertical: 10,
     borderRadius: 10,
@@ -428,7 +399,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   updateItemBtnText: {
-    color: '#1E3A8A',
+    color: '#002E6A',
     fontSize: 14,
     fontWeight: 'bold',
   },

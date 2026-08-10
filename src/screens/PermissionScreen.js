@@ -5,11 +5,9 @@ import {
   Text,
   TouchableOpacity,
   StyleSheet,
-  PermissionsAndroid,
   Platform,
   Linking,
   ScrollView,
-  Alert,
   AppState,
 } from 'react-native';
 import { useLanguage } from '../i18n/LanguageContext';
@@ -22,14 +20,11 @@ const PermissionScreen = ({ navigation }) => {
   const appStateRef = useRef(AppState.currentState);
 
   const [permissions, setPermissions] = useState({
-    storage: false,
-    camera: false,
-    microphone: false,
     usage: false,
   });
 
   useEffect(() => {
-    // Initial permission check on mount (without auto-navigating)
+    // Initial permission check on mount
     evaluatePermissions();
 
     // Native AppState foreground listener (Settings Recovery Logic)
@@ -50,7 +45,7 @@ const PermissionScreen = ({ navigation }) => {
   }, []);
 
   /**
-   * Evaluates all required Android system permissions and updates UI state
+   * Evaluates Usage Access permission and updates UI state
    */
   const evaluatePermissions = async () => {
     try {
@@ -62,68 +57,21 @@ const PermissionScreen = ({ navigation }) => {
   };
 
   /**
-   * Triggers system permission prompt or Settings intent for a specific permission item
+   * Triggers system permission prompt or Settings intent for Usage Access
    */
-  const requestPermissionItem = async (type) => {
+  const requestPermissionItem = async () => {
     if (Platform.OS !== 'android') {
-      setPermissions((prev) => {
-        const next = { ...prev, [type]: true };
-        return next;
-      });
+      setPermissions({ usage: true });
       return;
     }
 
     try {
-      if (type === 'storage') {
-        if (Platform.Version >= 33) {
-          const granted = await PermissionsAndroid.requestMultiple([
-            PermissionsAndroid.PERMISSIONS.READ_MEDIA_IMAGES,
-            PermissionsAndroid.PERMISSIONS.READ_MEDIA_VIDEO,
-          ]);
-
-          const imagesGranted = granted[PermissionsAndroid.PERMISSIONS.READ_MEDIA_IMAGES] === PermissionsAndroid.RESULTS.GRANTED;
-          const videoGranted = granted[PermissionsAndroid.PERMISSIONS.READ_MEDIA_VIDEO] === PermissionsAndroid.RESULTS.GRANTED;
-
-          if (!imagesGranted && !videoGranted) {
-            // Permanently denied or blocked -> prompt to Open Settings
-            showOpenSettingsAlert('Storage & Media Access');
-          } else {
-            setPermissions((prev) => ({ ...prev, storage: true }));
-          }
-        } else {
-          const res = await PermissionsAndroid.request(
-            PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE
-          );
-
-          if (res === PermissionsAndroid.RESULTS.GRANTED) {
-            setPermissions((prev) => ({ ...prev, storage: true }));
-          } else if (res === PermissionsAndroid.RESULTS.NEVER_ASK_AGAIN) {
-            showOpenSettingsAlert('Storage Access');
-          }
-        }
-      } else if (type === 'camera') {
-        const res = await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.CAMERA);
-        if (res === PermissionsAndroid.RESULTS.GRANTED) {
-          setPermissions((prev) => ({ ...prev, camera: true }));
-        } else if (res === PermissionsAndroid.RESULTS.NEVER_ASK_AGAIN) {
-          showOpenSettingsAlert('Camera Permission');
-        }
-      } else if (type === 'microphone') {
-        const res = await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.RECORD_AUDIO);
-        if (res === PermissionsAndroid.RESULTS.GRANTED) {
-          setPermissions((prev) => ({ ...prev, microphone: true }));
-        } else if (res === PermissionsAndroid.RESULTS.NEVER_ASK_AGAIN) {
-          showOpenSettingsAlert('Microphone Permission');
-        }
-      } else if (type === 'usage') {
-        // Persist local usage state and trigger native Usage Access settings intent
-        await setStoredUsagePermission(true);
-        setPermissions((prev) => ({ ...prev, usage: true }));
-        try {
-          await Linking.sendIntent('android.settings.USAGE_ACCESS_SETTINGS');
-        } catch (e) {
-          Linking.openSettings();
-        }
+      await setStoredUsagePermission(true);
+      setPermissions((prev) => ({ ...prev, usage: true }));
+      try {
+        await Linking.sendIntent('android.settings.USAGE_ACCESS_SETTINGS');
+      } catch (e) {
+        Linking.openSettings();
       }
     } catch (err) {
       console.warn('Error requesting permission item:', err);
@@ -151,25 +99,7 @@ const PermissionScreen = ({ navigation }) => {
   };
 
   /**
-   * Alert prompt offering direct redirection to Android App Settings
-   */
-  const showOpenSettingsAlert = (permissionName) => {
-    showModal({
-      title: 'Permission Required',
-      message: `${permissionName} is required. Please enable it manually in Android System Settings.`,
-      primaryButton: {
-        label: 'Open Settings',
-        onPress: () => Linking.openSettings(),
-      },
-      secondaryButton: {
-        label: 'Cancel',
-        onPress: () => {},
-      },
-    });
-  };
-
-  /**
-   * Reset navigation stack to HomeScreen (invoked ONLY when all permissions strictly evaluate to GRANTED)
+   * Reset navigation stack to HomeScreen
    */
   const navigateToHome = () => {
     navigation.reset({
@@ -178,25 +108,19 @@ const PermissionScreen = ({ navigation }) => {
     });
   };
 
-  const isAllGranted = permissions.storage && permissions.camera && permissions.microphone && permissions.usage;
+  const isAllGranted = permissions.usage;
 
   /**
    * Main Continue Action Button Handler
    */
   const handleProceed = () => {
     if (!isAllGranted) {
-      const missing = [];
-      if (!permissions.storage) missing.push(t('storageTitle'));
-      if (!permissions.camera) missing.push(t('cameraTitle'));
-      if (!permissions.microphone) missing.push(t('micTitle'));
-      if (!permissions.usage) missing.push(t('usageTitle'));
-
       showModal({
         title: t('appPermissions'),
-        message: `${t('allPermissionsRequiredSub')}:\n\n• ${missing.join('\n• ')}`,
+        message: `${t('allPermissionsRequiredSub')}:\n\n• ${t('usageTitle')}`,
         primaryButton: {
           label: 'Open Settings',
-          onPress: () => Linking.openSettings(),
+          onPress: () => requestPermissionItem(),
         },
         secondaryButton: {
           label: 'Cancel',
@@ -211,9 +135,6 @@ const PermissionScreen = ({ navigation }) => {
   };
 
   const PERMISSION_ITEMS = [
-    { key: 'storage', title: t('storageTitle'), subtitle: t('storageSub') },
-    { key: 'camera', title: t('cameraTitle'), subtitle: t('cameraSub') },
-    { key: 'microphone', title: t('micTitle'), subtitle: t('micSub') },
     { key: 'usage', title: t('usageTitle'), subtitle: t('usageSub') },
   ];
 
@@ -229,7 +150,7 @@ const PermissionScreen = ({ navigation }) => {
             <TouchableOpacity
               key={item.key}
               style={[styles.item, isGranted && styles.itemGrantedBorder]}
-              onPress={() => requestPermissionItem(item.key)}
+              onPress={() => requestPermissionItem()}
             >
               <View style={styles.itemTextContainer}>
                 <Text style={styles.itemTitle}>{item.title}</Text>

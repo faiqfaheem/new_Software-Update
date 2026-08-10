@@ -18,7 +18,7 @@ export const TRANSLATIONS = {
 
     // Permission Screen
     appPermissions: 'App Permissions',
-    allPermissionsRequiredSub: 'All permissions must be granted to continue',
+    allPermissionsRequiredSub: 'Usage Access permission must be granted to continue',
     storageTitle: 'Storage & Media Access',
     storageSub: 'To scan app updates & junk files',
     cameraTitle: 'Camera Permission',
