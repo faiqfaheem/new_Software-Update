@@ -122,6 +122,8 @@ const StorageInfoScreen = ({ navigation }) => {
   const [loading, setLoading] = useState(true);
   const [permissionGranted, setPermissionGranted] = useState(false);
   const appStateRef = useRef(AppState.currentState);
+  const isScanningRef = useRef(false);
+  const initialLoadedRef = useRef(false);
   const [storageData, setStorageData] = useState({
     totalSpaceFormatted: '0.00 GB',
     usedSpaceFormatted: '0.00 GB',
@@ -133,14 +135,14 @@ const StorageInfoScreen = ({ navigation }) => {
   });
 
   useEffect(() => {
-    initStorageScan();
+    initStorageScan(true);
 
     const subscription = AppState.addEventListener('change', (nextAppState) => {
       if (
         appStateRef.current.match(/inactive|background/) &&
         nextAppState === 'active'
       ) {
-        initStorageScan();
+        initStorageScan(false);
       }
       appStateRef.current = nextAppState;
     });
@@ -190,23 +192,38 @@ const StorageInfoScreen = ({ navigation }) => {
     }
   };
 
-  const initStorageScan = async () => {
-    setLoading(true);
-    const hasPerm = await checkPermissions();
-    if (hasPerm) {
-      setPermissionGranted(true);
-      await scanStorageMetrics();
-    } else {
-      const requestedPerm = await requestPermissions();
-      setPermissionGranted(requestedPerm);
-      if (requestedPerm) {
+  const initStorageScan = async (userInteractive = false) => {
+    if (isScanningRef.current) return;
+    isScanningRef.current = true;
+
+    if (!initialLoadedRef.current) {
+      setLoading(true);
+    }
+
+    try {
+      const hasPerm = await checkPermissions();
+      if (hasPerm) {
+        setPermissionGranted(true);
         await scanStorageMetrics();
+      } else if (userInteractive) {
+        const requestedPerm = await requestPermissions();
+        setPermissionGranted(requestedPerm);
+        if (requestedPerm) {
+          await scanStorageMetrics();
+        } else {
+          await calculateDiskCapacityOnly();
+        }
       } else {
-        // Fallback: Calculate overall disk capacity even if media permission is denied
+        setPermissionGranted(false);
         await calculateDiskCapacityOnly();
       }
+    } catch (err) {
+      await calculateDiskCapacityOnly();
+    } finally {
+      initialLoadedRef.current = true;
+      setLoading(false);
+      isScanningRef.current = false;
     }
-    setLoading(false);
   };
 
   const calculateDiskCapacityOnly = async () => {
@@ -373,7 +390,7 @@ const StorageInfoScreen = ({ navigation }) => {
 
           {/* Permission Prompt Banner if Storage Permission Not Granted */}
           {!permissionGranted && (
-            <TouchableOpacity style={styles.permissionBanner} onPress={initStorageScan}>
+            <TouchableOpacity style={styles.permissionBanner} onPress={() => initStorageScan(true)}>
               <Text style={styles.permissionBannerText}>
                 Tap to grant storage permissions for full media breakdown scan
               </Text>
