@@ -42,6 +42,10 @@ const BULK_UNINSTALLER_SVG = `<svg width="28" height="28" viewBox="0 0 33 24" fi
 <path d="M21.45 22.3448V19.0345H28.05V22.3448H21.45ZM21.45 9.10345V5.7931H33V9.10345H21.45ZM21.45 15.7241V12.4138H31.35V15.7241H21.45ZM1.65 5.7931H0V2.48276H6.6V0H13.2V2.48276H19.8V5.7931H18.15V20.6897C18.15 21.6 17.8269 22.3793 17.1806 23.0276C16.5344 23.6759 15.7575 24 14.85 24H4.95C4.0425 24 3.26563 23.6759 2.61937 23.0276C1.97313 22.3793 1.65 21.6 1.65 20.6897V5.7931ZM4.95 5.7931V20.6897H14.85V5.7931H4.95Z" fill="#FFB4AB"/>
 </svg>`;
 
+const AI_ASSIST_SVG = `<svg width="26" height="26" viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M24.5455 10.9091L22.8409 7.15909L19.0909 5.45455L22.8409 3.75L24.5455 0L26.25 3.75L30 5.45455L26.25 7.15909L24.5455 10.9091ZM24.5455 30L22.8409 26.25L19.0909 24.5455L22.8409 22.8409L24.5455 19.0909L26.25 22.8409L30 24.5455L26.25 26.25L24.5455 30ZM10.9091 25.9091L7.5 18.4091L0 15L7.5 11.5909L10.9091 4.09091L14.3182 11.5909L21.8182 15L14.3182 18.4091L10.9091 25.9091ZM10.9091 19.2955L12.2727 16.3636L15.2045 15L12.2727 13.6364L10.9091 10.7045L9.54545 13.6364L6.61364 15L9.54545 16.3636L10.9091 19.2955Z" fill="white"/>
+</svg>`;
+
 const AI_ICON = require('../assets/ai_assistant_icon.png');
 const OS_UPDATE_ICON = require('../assets/os_update_icon.png');
 const BULK_UNINSTALLER_ICON = require('../assets/bulk_uninstaller_icon.png');
@@ -371,7 +375,7 @@ const HomeScreen = ({ navigation }) => {
               <View style={styles.linearGradientHighlight} />
 
               <View style={[styles.iconSquare, styles.aiIconSquare]}>
-                <Image source={AI_ICON} style={{ width: 26, height: 26 }} resizeMode="contain" />
+                <SvgXml xml={AI_ASSIST_SVG} width={26} height={26} />
               </View>
               <Text style={[styles.gridCardTitle, { color: '#FFFFFF' }]}>AI Assistant</Text>
               <Text style={[styles.gridCardSub, { color: 'rgba(255,255,255,0.9)' }]}>SMART OPTIMIZATION</Text>
