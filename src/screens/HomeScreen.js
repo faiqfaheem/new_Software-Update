@@ -12,6 +12,7 @@ import {
   StatusBar,
   NativeModules,
   Image,
+  ActivityIndicator,
 } from 'react-native';
 import DeviceInfo from 'react-native-device-info';
 import { useLanguage } from '../i18n/LanguageContext';
@@ -50,11 +51,12 @@ const HomeScreen = ({ navigation }) => {
   const [activeTab, setActiveTab] = useState('home');
 
   const [storageAnalytics, setStorageAnalytics] = useState({
-    healthPercentage: 82,
-    healthLabel: '82% Healthy',
-    installedAppsCount: 0,
-    systemAppsCount: 0,
-    optimizedPercentage: '95%',
+    isLoading: true,
+    healthPercentage: 0,
+    healthLabel: '',
+    installedAppsCount: '--',
+    systemAppsCount: '--',
+    optimizedPercentage: '--',
   });
 
   useEffect(() => {
@@ -189,10 +191,12 @@ const HomeScreen = ({ navigation }) => {
         freeDisk = await DeviceInfo.getFreeDiskStorage();
       } catch (_e) { }
 
-      let healthPct = 82;
+      let healthPct = 0;
       if (totalDisk > 0 && freeDisk > 0) {
         const freeRatio = freeDisk / totalDisk;
         healthPct = Math.min(Math.max(Math.round(freeRatio * 100) + 35, 30), 98);
+      } else {
+        healthPct = 75;
       }
 
       // 2. Fetch Installed Apps & System Apps counts from Native AppPermissionModule
@@ -213,16 +217,22 @@ const HomeScreen = ({ navigation }) => {
 
       // 3. Optimization Score based on Free Storage & App ratio
       const totalApps = installedCount + systemCount;
-      const optPct = totalApps > 0 ? Math.min(Math.max(100 - Math.round((installedCount / totalApps) * 20), 80), 99) : 95;
+      const optPct = totalApps > 0 ? Math.min(Math.max(100 - Math.round((installedCount / totalApps) * 20), 80), 99) : 90;
 
       setStorageAnalytics({
+        isLoading: false,
         healthPercentage: healthPct,
         healthLabel: `${healthPct}% Healthy`,
         installedAppsCount: installedCount,
         systemAppsCount: systemCount,
         optimizedPercentage: `${optPct}%`,
       });
-    } catch (_e) { }
+    } catch (_e) {
+      setStorageAnalytics((prev) => ({
+        ...prev,
+        isLoading: false,
+      }));
+    }
   };
 
   // --- Home Tab Action Handlers ---
@@ -363,7 +373,11 @@ const HomeScreen = ({ navigation }) => {
           >
             <View style={styles.statsHeaderRow}>
               <Text style={styles.statsTitle}>Storage Health</Text>
-              <Text style={styles.statsHealthBadge}>{storageAnalytics.healthLabel}</Text>
+              {storageAnalytics.isLoading ? (
+                <ActivityIndicator size="small" color="#64748B" />
+              ) : (
+                <Text style={styles.statsHealthBadge}>{storageAnalytics.healthLabel}</Text>
+              )}
             </View>
 
             {/* Dynamic Progress Bar */}
@@ -380,23 +394,35 @@ const HomeScreen = ({ navigation }) => {
             <View style={styles.statsColumnsRow}>
               <View style={styles.statCol}>
                 <Text style={styles.statLabel}>INSTALLED</Text>
-                <Text style={styles.statVal}>{storageAnalytics.installedAppsCount}</Text>
+                {storageAnalytics.isLoading ? (
+                  <ActivityIndicator size="small" color="#64748B" style={{ marginVertical: 2 }} />
+                ) : (
+                  <Text style={styles.statVal}>{storageAnalytics.installedAppsCount}</Text>
+                )}
               </View>
 
               <View style={styles.statDivider} />
 
               <View style={styles.statCol}>
                 <Text style={styles.statLabel}>SYSTEM</Text>
-                <Text style={[styles.statVal, { color: '#FB923C' }]}>
-                  {storageAnalytics.systemAppsCount}
-                </Text>
+                {storageAnalytics.isLoading ? (
+                  <ActivityIndicator size="small" color="#64748B" style={{ marginVertical: 2 }} />
+                ) : (
+                  <Text style={[styles.statVal, { color: '#FB923C' }]}>
+                    {storageAnalytics.systemAppsCount}
+                  </Text>
+                )}
               </View>
 
               <View style={styles.statDivider} />
 
               <View style={styles.statCol}>
                 <Text style={styles.statLabel}>OPTIMIZED</Text>
-                <Text style={styles.statVal}>{storageAnalytics.optimizedPercentage}</Text>
+                {storageAnalytics.isLoading ? (
+                  <ActivityIndicator size="small" color="#64748B" style={{ marginVertical: 2 }} />
+                ) : (
+                  <Text style={styles.statVal}>{storageAnalytics.optimizedPercentage}</Text>
+                )}
               </View>
             </View>
           </TouchableOpacity>
