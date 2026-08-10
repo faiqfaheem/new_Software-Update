@@ -1,3 +1,4 @@
+import { SvgXml } from 'react-native-svg';
 import React, { useState, useRef } from 'react';
 import {
   View,

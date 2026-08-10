@@ -39,10 +39,12 @@ const WhitePlaceholder = ({ size = 22, borderRadius = 4, color = '#FFFFFF', opac
   />
 );
 
-const BACK_ARROW_ICON = require('../assets/back_arrow_icon.png');
+const BACK_ARROW_SVG = `<svg width="22" height="20" viewBox="0 0 22 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M21.4142 9.70703H1.41422M10.4142 18.707L1.41422 9.70703L10.4142 0.707031" stroke="#DAE2FD" stroke-width="2"/>
+</svg>`;
 
 const BackArrow = ({ size = 20 }) => (
-  <Image source={BACK_ARROW_ICON} style={{ width: size, height: size }} resizeMode="contain" />
+  <SvgXml xml={BACK_ARROW_SVG} width={size} height={Math.round(size * (20 / 22))} />
 );
 
 const IMAGE_EXTS = ['.jpg', '.jpeg', '.png', '.heic', '.webp', '.gif', '.bmp'];

@@ -57,9 +57,12 @@ const MAIN_AI_LOGO_SVG = `<svg width="110" height="110" viewBox="0 0 128 128" fi
 <path d="M50.3901 58.4004H77.6101C78.4058 58.4004 79.1689 58.7165 79.7315 59.2791C80.2941 59.8417 80.6101 60.6047 80.6101 61.4004V63.0004H47.3901V61.4004C47.3901 60.6047 47.7062 59.8417 48.2688 59.2791C48.8314 58.7165 49.5945 58.4004 50.3901 58.4004Z" fill="#C5D0F3"/>
 </svg>`;
 
+const BACK_ARROW_SVG = `<svg width="22" height="20" viewBox="0 0 22 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M21.4142 9.70703H1.41422M10.4142 18.707L1.41422 9.70703L10.4142 0.707031" stroke="#DAE2FD" stroke-width="2"/>
+</svg>`;
+
 const AI_ICON = require('../assets/ai_assistant_icon.png');
 const VIRTUAL_ASSISTANT_LOGO = require('../assets/virtual_assistant_icon.png');
-const BACK_ARROW_ICON = require('../assets/back_arrow_icon.png');
 const SEND_SVG_ICON = require('../assets/send_icon_svg.png');
 
 /* ─────────────────────────────────────────────────────────────────
@@ -248,7 +251,7 @@ const AIAssistantScreen = ({ navigation }) => {
       {/* ── Header ── */}
       <View style={styles.header}>
         <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
-          <Image source={BACK_ARROW_ICON} style={{ width: 20, height: 20 }} resizeMode="contain" />
+          <SvgXml xml={BACK_ARROW_SVG} width={20} height={18} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>AI Assistant</Text>
       </View>
