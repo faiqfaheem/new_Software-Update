@@ -109,7 +109,7 @@ const HeadphonesTestScreen = ({ navigation }) => {
       <View style={styles.headerBar}>
         <View style={styles.headerLeftGroup}>
           <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-            <BackArrow size={22} color="#FFFFFF" />
+            <BackArrow size={15} color="#FFFFFF" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Headphones Test</Text>
         </View>
@@ -233,11 +233,11 @@ const styles = StyleSheet.create({
   backButton: {
     padding: 6,
     marginRight: 12,
+    marginTop: 2,
   },
   headerTitle: {
-    fontSize: 24,
-    fontFamily: 'Gilroy-Bold',
-    fontWeight: 'bold',
+    fontSize: 16,
+    fontWeight: '500',
     color: '#DAE2FD',
     letterSpacing: 0.3,
   },

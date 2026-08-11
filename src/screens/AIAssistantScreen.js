@@ -251,7 +251,7 @@ const AIAssistantScreen = ({ navigation }) => {
       {/* ── Header ── */}
       <View style={styles.header}>
         <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
-          <SvgXml xml={BACK_ARROW_SVG} width={20} height={18} />
+          <SvgXml xml={BACK_ARROW_SVG} width={15} height={15} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>AI Assistant</Text>
       </View>
@@ -324,9 +324,9 @@ const styles = StyleSheet.create({
     borderBottomColor: '#1E293B',
     backgroundColor: '#0B1120',
   },
-  backBtn: { padding: 6, marginRight: 10 },
+  backBtn: { padding: 6, marginRight: 10, marginTop: 2 },
   backArrow: { color: '#FFFFFF', fontSize: 22, fontWeight: 'bold' },
-  headerTitle: { color: '#DAE2FD', fontSize: 20, fontWeight: 'bold' },
+  headerTitle: { color: '#DAE2FD', fontSize: 16, fontWeight: '500' },
 
   /* Hero section */
   heroSection: {

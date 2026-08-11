@@ -15,6 +15,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import DeviceInfo from 'react-native-device-info';
+import RNFS from 'react-native-fs';
 import { SvgXml } from 'react-native-svg';
 import { useLanguage } from '../i18n/LanguageContext';
 
@@ -220,12 +221,18 @@ const HomeScreen = ({ navigation }) => {
         freeDisk = await DeviceInfo.getFreeDiskStorage();
       } catch (_e) { }
 
-      let healthPct = 0;
-      if (totalDisk > 0 && freeDisk > 0) {
+      if (!totalDisk || !freeDisk || totalDisk <= 0) {
+        try {
+          const stat = await RNFS.statStorage();
+          totalDisk = stat.totalSpace;
+          freeDisk = stat.freeSpace;
+        } catch (_e) { }
+      }
+
+      let freePercentage = 0;
+      if (totalDisk > 0 && freeDisk >= 0) {
         const freeRatio = freeDisk / totalDisk;
-        healthPct = Math.min(Math.max(Math.round(freeRatio * 100) + 35, 30), 98);
-      } else {
-        healthPct = 75;
+        freePercentage = Math.round(freeRatio * 100);
       }
 
       // 2. Fetch Installed Apps & System Apps counts from Native AppPermissionModule
@@ -250,8 +257,8 @@ const HomeScreen = ({ navigation }) => {
 
       setStorageAnalytics({
         isLoading: false,
-        healthPercentage: healthPct,
-        healthLabel: `${healthPct}% Healthy`,
+        healthPercentage: freePercentage,
+        healthLabel: `${freePercentage}% Free`,
         installedAppsCount: installedCount,
         systemAppsCount: systemCount,
         optimizedPercentage: `${optPct}%`,
