@@ -242,6 +242,11 @@ const AvailableUpdatesScreen = ({ route, navigation }) => {
             renderItem={renderAppItem}
             contentContainerStyle={styles.listContent}
             showsVerticalScrollIndicator={false}
+            ListFooterComponent={() => (
+              <Text style={styles.disclaimerText}>
+                Updates depend on Google Play phased rollouts and may vary slightly per device model.
+              </Text>
+            )}
           />
         )}
       </View>
@@ -395,6 +400,14 @@ const styles = StyleSheet.create({
     color: '#002E6A',
     fontSize: 14,
     fontWeight: 'bold',
+  },
+  disclaimerText: {
+    color: '#64748B',
+    fontSize: 12,
+    textAlign: 'center',
+    marginTop: 16,
+    paddingHorizontal: 10,
+    fontStyle: 'italic',
   },
 });
 

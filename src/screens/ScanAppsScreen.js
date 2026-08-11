@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -12,9 +12,12 @@ import {
   StatusBar,
   NativeModules,
   Image,
+  Animated,
 } from 'react-native';
 import Svg, { Circle, SvgXml } from 'react-native-svg';
 import { scanInstalledAppsForUpdates } from '../utils/playStoreScraper';
+
+const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 
 const LAYER_35_SVG = `<svg width="26" height="26" viewBox="0 0 31 32" fill="none" xmlns="http://www.w3.org/2000/svg">
 <path d="M22.3399 2.23399V27.9249C22.3399 29.7679 20.832 31.2759 18.9889 31.2759H3.35099C1.50794 31.2759 0 29.7679 0 27.9249V3.35099C0 1.50794 1.50794 0 3.35099 0H20.1059C21.3346 0 22.3399 1.0053 22.3399 2.23399Z" fill="#F95A5A"/>
@@ -92,6 +95,22 @@ const ScanAppsScreen = ({ navigation }) => {
   const [systemAppsCount, setSystemAppsCount] = useState('0');
   const [availableUpdatesCount, setAvailableUpdatesCount] = useState('0');
   const [candidateUpdateAppsList, setCandidateUpdateAppsList] = useState([]);
+
+  const animatedProgress = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.timing(animatedProgress, {
+      toValue: progress,
+      duration: 600,
+      useNativeDriver: false,
+    }).start();
+  }, [progress, animatedProgress]);
+
+  const strokeDashoffset = animatedProgress.interpolate({
+    inputRange: [0, 100],
+    outputRange: [433.54, 0],
+    extrapolate: 'clamp',
+  });
 
   useEffect(() => {
     startRealtimeAppScan();
@@ -301,22 +320,20 @@ const ScanAppsScreen = ({ navigation }) => {
                 fill="none"
               />
               {/* Dynamic Progress Arc Circle */}
-              {progress > 0 && (
-                <Circle
-                  cx={75}
-                  cy={75}
-                  r={69}
-                  stroke="#ADC6FF"
-                  strokeWidth={12}
-                  fill="none"
-                  strokeDasharray={433.54}
-                  strokeDashoffset={433.54 - (433.54 * Math.min(progress, 100)) / 100}
-                  strokeLinecap="round"
-                  originX={75}
-                  originY={75}
-                  rotation="-90"
-                />
-              )}
+              <AnimatedCircle
+                cx={75}
+                cy={75}
+                r={69}
+                stroke="#ADC6FF"
+                strokeWidth={12}
+                fill="none"
+                strokeDasharray={433.54}
+                strokeDashoffset={strokeDashoffset}
+                strokeLinecap="round"
+                originX={75}
+                originY={75}
+                rotation="-90"
+              />
             </Svg>
             <View style={styles.circleInnerContainer}>
               <Text style={styles.percentageText}>{progress}%</Text>
