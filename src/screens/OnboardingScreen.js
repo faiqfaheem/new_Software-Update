@@ -57,7 +57,6 @@ const OnboardingScreen = ({ navigation }) => {
   const handleNext = async () => {
     if (currentIndex < SLIDES.length - 1) {
       const nextIndex = currentIndex + 1;
-      setCurrentIndex(nextIndex);
       flatListRef.current?.scrollToIndex({ index: nextIndex, animated: true });
     } else {
       await handleFinishOnboarding();
@@ -67,6 +66,25 @@ const OnboardingScreen = ({ navigation }) => {
   const handleSkip = async () => {
     await handleFinishOnboarding();
   };
+
+  const onViewableItemsChanged = useRef(({ viewableItems }) => {
+    if (viewableItems && viewableItems.length > 0) {
+      const index = viewableItems[0].index;
+      if (index !== null && index !== undefined) {
+        setCurrentIndex(index);
+      }
+    }
+  }).current;
+
+  const viewabilityConfig = useRef({
+    itemVisiblePercentThreshold: 50,
+  }).current;
+
+  const getItemLayout = (_, index) => ({
+    length: width,
+    offset: width * index,
+    index,
+  });
 
   const renderSlide = ({ item }) => {
     return (
@@ -85,14 +103,6 @@ const OnboardingScreen = ({ navigation }) => {
         <Text style={styles.description}>{item.description}</Text>
       </View>
     );
-  };
-
-  const onScroll = (event) => {
-    const slideSize = event.nativeEvent.layoutMeasurement.width;
-    const index = Math.round(event.nativeEvent.contentOffset.x / slideSize);
-    if (index !== currentIndex && index >= 0 && index < SLIDES.length) {
-      setCurrentIndex(index);
-    }
   };
 
   const isLastSlide = currentIndex === SLIDES.length - 1;
@@ -121,8 +131,9 @@ const OnboardingScreen = ({ navigation }) => {
         pagingEnabled
         showsHorizontalScrollIndicator={false}
         keyExtractor={(item) => item.id}
-        onScroll={onScroll}
-        scrollEventThrottle={16}
+        onViewableItemsChanged={onViewableItemsChanged}
+        viewabilityConfig={viewabilityConfig}
+        getItemLayout={getItemLayout}
       />
 
       {/* Bottom Footer Stack: Centered Page Indicators & Centered Next Button */}
