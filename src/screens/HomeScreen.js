@@ -81,9 +81,14 @@ const HomeScreen = ({ navigation }) => {
   const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState('home');
   const pulseAnim = useRef(new Animated.Value(1)).current;
+  const animRef = useRef(null);
 
-  useEffect(() => {
-    const pulseAnimation = Animated.loop(
+  const startPulseAnimation = () => {
+    if (animRef.current) {
+      try { animRef.current.stop(); } catch (_e) { }
+    }
+    pulseAnim.setValue(1);
+    animRef.current = Animated.loop(
       Animated.sequence([
         Animated.timing(pulseAnim, {
           toValue: 0.94,
@@ -97,10 +102,29 @@ const HomeScreen = ({ navigation }) => {
         }),
       ])
     );
-    pulseAnimation.start();
+    animRef.current.start();
+  };
 
-    return () => pulseAnimation.stop();
-  }, [pulseAnim]);
+  useEffect(() => {
+    if (activeTab === 'home') {
+      startPulseAnimation();
+    }
+  }, [activeTab]);
+
+  useEffect(() => {
+    const unsubscribeFocus = navigation.addListener('focus', () => {
+      if (activeTab === 'home') {
+        startPulseAnimation();
+      }
+    });
+
+    return () => {
+      if (animRef.current) {
+        try { animRef.current.stop(); } catch (_e) { }
+      }
+      unsubscribeFocus();
+    };
+  }, [navigation, activeTab]);
 
   const [storageAnalytics, setStorageAnalytics] = useState({
     isLoading: true,
