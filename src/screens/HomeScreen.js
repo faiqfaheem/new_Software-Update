@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -13,6 +13,7 @@ import {
   NativeModules,
   Image,
   ActivityIndicator,
+  Animated,
 } from 'react-native';
 import DeviceInfo from 'react-native-device-info';
 import RNFS from 'react-native-fs';
@@ -79,6 +80,27 @@ const ChevronRight = ({ color = '#64748B' }) => (
 const HomeScreen = ({ navigation }) => {
   const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState('home');
+  const pulseAnim = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    const pulseAnimation = Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulseAnim, {
+          toValue: 0.94,
+          duration: 900,
+          useNativeDriver: true,
+        }),
+        Animated.timing(pulseAnim, {
+          toValue: 1,
+          duration: 900,
+          useNativeDriver: true,
+        }),
+      ])
+    );
+    pulseAnimation.start();
+
+    return () => pulseAnimation.stop();
+  }, [pulseAnim]);
 
   const [storageAnalytics, setStorageAnalytics] = useState({
     isLoading: true,
@@ -334,17 +356,19 @@ const HomeScreen = ({ navigation }) => {
           {/* Hero Card - Scan Apps */}
           <View style={styles.heroCard}>
             <View style={styles.heroGlowBackdrop}>
-              <TouchableOpacity
-                style={styles.heroCircleButton}
-                onPress={handleScanAppUpdates}
-                activeOpacity={0.85}
-              >
-                <View style={styles.heroIconWrapper}>
-                  <Image source={SCAN_APPS_ICON} style={{ width: 36, height: 36 }} resizeMode="contain" />
-                </View>
-                <Text style={styles.heroTitle}>Scan Apps</Text>
-                <Text style={styles.heroSub}>Check Updates</Text>
-              </TouchableOpacity>
+              <Animated.View style={{ transform: [{ scale: pulseAnim }] }}>
+                <TouchableOpacity
+                  style={styles.heroCircleButton}
+                  onPress={handleScanAppUpdates}
+                  activeOpacity={0.85}
+                >
+                  <View style={styles.heroIconWrapper}>
+                    <Image source={SCAN_APPS_ICON} style={{ width: 36, height: 36 }} resizeMode="contain" />
+                  </View>
+                  <Text style={styles.heroTitle}>Scan Apps</Text>
+                  <Text style={styles.heroSub}>Check Updates</Text>
+                </TouchableOpacity>
+              </Animated.View>
             </View>
           </View>
 
