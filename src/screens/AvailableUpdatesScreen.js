@@ -218,13 +218,6 @@ const AvailableUpdatesScreen = ({ route, navigation }) => {
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Available Updates</Text>
         </View>
-
-        <TouchableOpacity
-          style={styles.settingsButton}
-          onPress={() => navigation.navigate('SettingsScreen')}
-        >
-          <SvgXml xml={SETTINGS_SVG} width={22} height={22} />
-        </TouchableOpacity>
       </View>
 
       {/* Sub-header Bar (Update All) */}

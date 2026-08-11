@@ -274,10 +274,6 @@ const BulkUninstallerScreen = ({ navigation }) => {
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Bulk Uninstaller</Text>
         </View>
-
-        <TouchableOpacity style={styles.settingsButton} onPress={handleSettingsPress}>
-          <SvgXml xml={SETTINGS_SVG} width={22} height={22} />
-        </TouchableOpacity>
       </View>
 
       <View style={styles.container}>

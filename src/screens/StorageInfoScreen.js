@@ -336,10 +336,6 @@ const StorageInfoScreen = ({ navigation }) => {
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Mobile Storage</Text>
         </View>
-
-        <TouchableOpacity style={styles.settingsButton} onPress={handleSettingsPress}>
-          <SvgXml xml={SETTINGS_SVG} width={22} height={22} />
-        </TouchableOpacity>
       </View>
 
       {/* Main Content Body */}

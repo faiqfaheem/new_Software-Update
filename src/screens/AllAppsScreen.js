@@ -312,10 +312,6 @@ const AllAppsScreen = ({ route, navigation }) => {
           </TouchableOpacity>
           <Text style={styles.headerTitle}>All Apps ({apps.length})</Text>
         </View>
-
-        <TouchableOpacity style={styles.settingsButton} onPress={handleSettingsPress}>
-          <SvgXml xml={SETTINGS_SVG} width={22} height={22} />
-        </TouchableOpacity>
       </View>
 
       <View style={styles.container}>
