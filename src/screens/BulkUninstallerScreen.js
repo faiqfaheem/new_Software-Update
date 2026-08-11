@@ -283,7 +283,7 @@ const BulkUninstallerScreen = ({ navigation }) => {
         <View style={styles.topActionRow}>
           <TouchableOpacity onPress={handleSelectAll} disabled={apps.length === 0}>
             <Text style={styles.selectAllText}>
-              {isAllSelected ? 'Deselect All' : 'Select All'}
+              {isAllSelected ? t('deselectAll') : t('selectAll')}
             </Text>
           </TouchableOpacity>
         </View>
@@ -292,7 +292,7 @@ const BulkUninstallerScreen = ({ navigation }) => {
         {loading ? (
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="large" color="#3B82F6" />
-            <Text style={styles.loadingText}>Fetching Installed Apps...</Text>
+            <Text style={styles.loadingText}>{t('fetchingApps')}</Text>
           </View>
         ) : (
           <FlatList
@@ -303,7 +303,7 @@ const BulkUninstallerScreen = ({ navigation }) => {
             showsVerticalScrollIndicator={false}
             ListEmptyComponent={
               <View style={styles.emptyContainer}>
-                <Text style={styles.emptyText}>No uninstallable user apps found.</Text>
+                <Text style={styles.emptyText}>{t('noAppsFound')}</Text>
               </View>
             }
           />
