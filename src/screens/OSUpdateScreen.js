@@ -250,7 +250,7 @@ const OSUpdateScreen = ({ navigation }) => {
 
           {/* Action Disclaimer Subtext */}
           <Text style={styles.disclaimerText}>
-            Tapping this button will open your phone's official System Update settings screen.
+            {t('osUpdateNote')}
           </Text>
         </ScrollView>
       )}
