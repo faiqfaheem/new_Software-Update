@@ -389,8 +389,8 @@ const HomeScreen = ({ navigation }) => {
                   <View style={styles.heroIconWrapper}>
                     <Image source={SCAN_APPS_ICON} style={{ width: 36, height: 36 }} resizeMode="contain" />
                   </View>
-                  <Text style={styles.heroTitle}>Scan Apps</Text>
-                  <Text style={styles.heroSub}>Check Updates</Text>
+                  <Text style={styles.heroTitle}>{t('scanAppsTitle')}</Text>
+                  <Text style={styles.heroSub}>{t('checkUpdatesSub')}</Text>
                 </TouchableOpacity>
               </Animated.View>
             </View>
@@ -402,8 +402,8 @@ const HomeScreen = ({ navigation }) => {
               <SvgXml xml={ALL_APPS_SVG} width={26} height={26} />
             </View>
             <View style={styles.rowCardTextContainer}>
-              <Text style={styles.rowCardTitle}>All Apps</Text>
-              <Text style={styles.rowCardSub}>All Installed Apps</Text>
+              <Text style={styles.rowCardTitle}>{t('allAppsTitle')}</Text>
+              <Text style={styles.rowCardSub}>{t('allInstalledAppsSub')}</Text>
             </View>
             <ChevronRight />
           </TouchableOpacity>
@@ -415,8 +415,8 @@ const HomeScreen = ({ navigation }) => {
               <View style={[styles.iconSquare, { backgroundColor: '#93000A', marginBottom: 16 }]}>
                 <SvgXml xml={OS_UPDATE_SVG} width={28} height={28} />
               </View>
-              <Text style={styles.gridCardTitle}>OS Update</Text>
-              <Text style={styles.gridCardSub}>UPDATE AVAILABLE</Text>
+              <Text style={styles.gridCardTitle}>{t('osUpdateTitle')}</Text>
+              <Text style={styles.gridCardSub}>{t('updateAvailableSub')}</Text>
             </TouchableOpacity>
 
             {/* AI Assistant Card (Full Linear Fill Gradient Effect) */}
@@ -432,8 +432,8 @@ const HomeScreen = ({ navigation }) => {
               <View style={[styles.iconSquare, styles.aiIconSquare]}>
                 <SvgXml xml={AI_ASSIST_SVG} width={26} height={26} />
               </View>
-              <Text style={[styles.gridCardTitle, { color: '#FFFFFF' }]}>AI Assistant</Text>
-              <Text style={[styles.gridCardSub, { color: 'rgba(255,255,255,0.9)' }]}>SMART OPTIMIZATION</Text>
+              <Text style={[styles.gridCardTitle, { color: '#FFFFFF' }]}>{t('aiAssistantTitle')}</Text>
+              <Text style={[styles.gridCardSub, { color: 'rgba(255,255,255,0.9)' }]}>{t('smartOptimizationSub')}</Text>
             </TouchableOpacity>
           </View>
 
@@ -443,8 +443,8 @@ const HomeScreen = ({ navigation }) => {
               <SvgXml xml={BULK_UNINSTALLER_SVG} width={28} height={28} />
             </View>
             <View style={styles.rowCardTextContainer}>
-              <Text style={styles.rowCardTitle}>Bulk Uninstaller</Text>
-              <Text style={styles.rowCardSub}>Remove Multiple Apps At Once</Text>
+              <Text style={styles.rowCardTitle}>{t('bulkUninstallerTitle')}</Text>
+              <Text style={styles.rowCardSub}>{t('removeMultipleAppsSub')}</Text>
             </View>
             <ChevronRight />
           </TouchableOpacity>
@@ -456,7 +456,7 @@ const HomeScreen = ({ navigation }) => {
             onPress={handleStorageInfo}
           >
             <View style={styles.statsHeaderRow}>
-              <Text style={styles.statsTitle}>Storage Health</Text>
+              <Text style={styles.statsTitle}>{t('storageHealthTitle')}</Text>
               {storageAnalytics.isLoading ? (
                 <ActivityIndicator size="small" color="#64748B" />
               ) : (
@@ -477,7 +477,7 @@ const HomeScreen = ({ navigation }) => {
             {/* Dynamic Stats Columns */}
             <View style={styles.statsColumnsRow}>
               <View style={styles.statCol}>
-                <Text style={styles.statLabel}>INSTALLED</Text>
+                <Text style={styles.statLabel}>{t('installedLabel')}</Text>
                 {storageAnalytics.isLoading ? (
                   <ActivityIndicator size="small" color="#64748B" style={{ marginVertical: 2 }} />
                 ) : (
@@ -488,7 +488,7 @@ const HomeScreen = ({ navigation }) => {
               <View style={styles.statDivider} />
 
               <View style={styles.statCol}>
-                <Text style={styles.statLabel}>SYSTEM</Text>
+                <Text style={styles.statLabel}>{t('systemLabel')}</Text>
                 {storageAnalytics.isLoading ? (
                   <ActivityIndicator size="small" color="#64748B" style={{ marginVertical: 2 }} />
                 ) : (
@@ -501,7 +501,7 @@ const HomeScreen = ({ navigation }) => {
               <View style={styles.statDivider} />
 
               <View style={styles.statCol}>
-                <Text style={styles.statLabel}>OPTIMIZED</Text>
+                <Text style={styles.statLabel}>{t('optimizedLabel')}</Text>
                 {storageAnalytics.isLoading ? (
                   <ActivityIndicator size="small" color="#64748B" style={{ marginVertical: 2 }} />
                 ) : (
@@ -525,7 +525,7 @@ const HomeScreen = ({ navigation }) => {
               <View style={styles.toolIconWrapper}>
                 <Image source={TOOL_STORAGE_INFO_ICON} style={{ width: 44, height: 44 }} resizeMode="contain" />
               </View>
-              <Text style={styles.toolCardTitle}>Storage INFO</Text>
+              <Text style={styles.toolCardTitle}>{t('storageInfoTool')}</Text>
             </TouchableOpacity>
 
             {/* Tool 2: Permission Manager */}
@@ -533,7 +533,7 @@ const HomeScreen = ({ navigation }) => {
               <View style={styles.toolIconWrapper}>
                 <Image source={TOOL_PERMISSION_MANAGER_ICON} style={{ width: 44, height: 44 }} resizeMode="contain" />
               </View>
-              <Text style={styles.toolCardTitle}>Permission Manager</Text>
+              <Text style={styles.toolCardTitle}>{t('permissionManagerTool')}</Text>
             </TouchableOpacity>
 
             {/* Tool 3: Phone Sensor */}
@@ -541,7 +541,7 @@ const HomeScreen = ({ navigation }) => {
               <View style={styles.toolIconWrapper}>
                 <Image source={TOOL_PHONE_SENSOR_ICON} style={{ width: 44, height: 44 }} resizeMode="contain" />
               </View>
-              <Text style={styles.toolCardTitle}>Phone Sensor</Text>
+              <Text style={styles.toolCardTitle}>{t('phoneSensorTool')}</Text>
             </TouchableOpacity>
           </View>
         </ScrollView>
@@ -559,7 +559,7 @@ const HomeScreen = ({ navigation }) => {
             height={22}
           />
           <Text style={[styles.tabLabel, activeTab === 'home' && styles.tabLabelActive]}>
-            Home
+            {t('homeTab')}
           </Text>
         </TouchableOpacity>
 
@@ -573,7 +573,7 @@ const HomeScreen = ({ navigation }) => {
             height={22}
           />
           <Text style={[styles.tabLabel, activeTab === 'tools' && styles.tabLabelActive]}>
-            Tools
+            {t('toolsTab')}
           </Text>
         </TouchableOpacity>
       </View>

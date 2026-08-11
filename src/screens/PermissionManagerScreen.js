@@ -19,6 +19,7 @@ import {
 } from 'react-native';
 import Svg, { Circle, SvgXml } from 'react-native-svg';
 import { checkNativeUsagePermission } from '../utils/permissions';
+import { useLanguage } from '../i18n/LanguageContext';
 
 const WhitePlaceholder = ({ size = 22, borderRadius = 4, color = '#FFFFFF', opacity = 1 }) => (
   <View
@@ -248,6 +249,7 @@ const RISK_COLORS = {
 };
 
 const PermissionManagerScreen = ({ navigation }) => {
+  const { t } = useLanguage();
   const [hasAgreed, setHasAgreed] = useState(false);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('Installed Apps'); // 'Installed Apps', 'System Apps'
@@ -591,15 +593,14 @@ const PermissionManagerScreen = ({ navigation }) => {
           <View style={styles.bottomSheetContainer}>
             <View style={styles.dragHandle} />
 
-            <Text style={styles.consentTitle}>Permission Manager</Text>
+            <Text style={styles.consentTitle}>{t('permissionConsentTitle')}</Text>
 
             <Text style={styles.consentBodyText}>
-              To help see which apps have access to things like your camera, location, microphone, and more, this app needs permission to read the list of permissions each installed app is using. The scan happens only on your device - nothing is collected or shared. It's used only to show you which apps have access to sensitive features, so you can decide what to keep or change.
-
+              {t('permissionConsentBody')}
             </Text>
 
             <TouchableOpacity style={styles.agreeButton} onPress={handleAgreeAndContinue}>
-              <Text style={styles.agreeButtonText}>Agree & Continue</Text>
+              <Text style={styles.agreeButtonText}>{t('agreeAndContinue')}</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -612,7 +613,9 @@ const PermissionManagerScreen = ({ navigation }) => {
             <BackArrow size={15} color="#FFFFFF" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>
-            {selectedRiskDetail !== null ? `${selectedRiskDetail} Risk Apps` : 'App Permission'}
+            {selectedRiskDetail !== null 
+              ? `${t(selectedRiskDetail === 'None' ? 'noRisk' : selectedRiskDetail.toLowerCase() + 'Risk')} Apps` 
+              : t('appPermissionTitle')}
           </Text>
         </View>
       </View>
@@ -621,7 +624,7 @@ const PermissionManagerScreen = ({ navigation }) => {
       {loading ? (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#3B82F6" />
-          <Text style={styles.loadingText}>Scanning App Permissions...</Text>
+          <Text style={styles.loadingText}>{t('scanningPermissions')}</Text>
         </View>
       ) : (
         <View style={styles.container}>
@@ -632,6 +635,7 @@ const PermissionManagerScreen = ({ navigation }) => {
               <View style={styles.filterRow}>
                 {['Installed Apps', 'System Apps'].map((tab) => {
                   const isActive = activeTab === tab;
+                  const label = tab === 'Installed Apps' ? t('installedApps') : t('systemApps');
                   return (
                     <TouchableOpacity
                       key={tab}
@@ -639,7 +643,7 @@ const PermissionManagerScreen = ({ navigation }) => {
                       onPress={() => setActiveTab(tab)}
                     >
                       <Text style={[styles.filterPillText, isActive && styles.filterPillTextActive]}>
-                        {tab}
+                        {label}
                       </Text>
                     </TouchableOpacity>
                   );
@@ -661,7 +665,7 @@ const PermissionManagerScreen = ({ navigation }) => {
                     percentage={computePercentage(currentCategoryData.High.length)}
                     ringColor="#EF4444"
                   />
-                  <Text style={styles.riskTitle}>High Risk</Text>
+                  <Text style={styles.riskTitle}>{t('highRisk')}</Text>
                   <View style={styles.badgeChevronContainer}>
                     <View style={styles.greenCountBadge}>
                       <Text style={styles.countText}>{currentCategoryData.High.length}</Text>
@@ -679,7 +683,7 @@ const PermissionManagerScreen = ({ navigation }) => {
                     percentage={computePercentage(currentCategoryData.Medium.length)}
                     ringColor="#06B6D4"
                   />
-                  <Text style={styles.riskTitle}>Medium Risk</Text>
+                  <Text style={styles.riskTitle}>{t('mediumRisk')}</Text>
                   <View style={styles.badgeChevronContainer}>
                     <View style={styles.greenCountBadge}>
                       <Text style={styles.countText}>{currentCategoryData.Medium.length}</Text>
@@ -697,7 +701,7 @@ const PermissionManagerScreen = ({ navigation }) => {
                     percentage={computePercentage(currentCategoryData.Low.length)}
                     ringColor="#EAB308"
                   />
-                  <Text style={styles.riskTitle}>Low Risk</Text>
+                  <Text style={styles.riskTitle}>{t('lowRisk')}</Text>
                   <View style={styles.badgeChevronContainer}>
                     <View style={styles.greenCountBadge}>
                       <Text style={styles.countText}>{currentCategoryData.Low.length}</Text>
@@ -715,7 +719,7 @@ const PermissionManagerScreen = ({ navigation }) => {
                     percentage={computePercentage(currentCategoryData.None.length)}
                     ringColor="#10B981"
                   />
-                  <Text style={styles.riskTitle}>No Risk</Text>
+                  <Text style={styles.riskTitle}>{t('noRisk')}</Text>
                   <View style={styles.badgeChevronContainer}>
                     <View style={styles.greenCountBadge}>
                       <Text style={styles.countText}>{currentCategoryData.None.length}</Text>
@@ -731,10 +735,10 @@ const PermissionManagerScreen = ({ navigation }) => {
               {/* 4-Pills Row: High, Medium, Low, None */}
               <View style={styles.detailPillsRow}>
                 {[
-                  { key: 'High', label: 'High' },
-                  { key: 'Medium', label: 'Medium' },
-                  { key: 'Low', label: 'Low' },
-                  { key: 'None', label: 'None' },
+                  { key: 'High', label: t('highRisk') },
+                  { key: 'Medium', label: t('mediumRisk') },
+                  { key: 'Low', label: t('lowRisk') },
+                  { key: 'None', label: t('noRisk') },
                 ].map((pill) => {
                   const isActive = selectedRiskDetail === pill.key;
                   return (
@@ -760,7 +764,7 @@ const PermissionManagerScreen = ({ navigation }) => {
                 showsVerticalScrollIndicator={false}
                 ListEmptyComponent={
                   <View style={styles.emptyContainer}>
-                    <Text style={styles.emptyText}>No apps found in this risk category.</Text>
+                    <Text style={styles.emptyText}>{t('noAppsInRisk')}</Text>
                   </View>
                 }
               />

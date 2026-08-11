@@ -14,6 +14,7 @@ import {
   Alert,
   Image,
 } from 'react-native';
+import { useLanguage } from '../i18n/LanguageContext';
 
 import CustomModal from '../components/CustomModal';
 
@@ -91,6 +92,7 @@ const RATE_US_SVG = `<svg width="40" height="40" viewBox="0 0 40 40" fill="none"
 </svg>`;
 
 const SettingsScreen = ({ navigation }) => {
+  const { t } = useLanguage();
   const [privacyModalVisible, setPrivacyModalVisible] = useState(false);
 
   // Custom Theme Modal State
@@ -165,7 +167,7 @@ const SettingsScreen = ({ navigation }) => {
         <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
           <BackArrow size={15} color="#FFFFFF" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Settings</Text>
+        <Text style={styles.headerTitle}>{t('settings')}</Text>
       </View>
 
       {/* Main Settings List */}
@@ -183,7 +185,7 @@ const SettingsScreen = ({ navigation }) => {
           <View style={[styles.iconCircle, { backgroundColor: 'transparent' }]}>
             <SvgXml xml={PRIVACY_POLICY_SVG} width={30} height={30} />
           </View>
-          <Text style={styles.settingsTitle}>Privacy Policy</Text>
+          <Text style={styles.settingsTitle}>{t('privacyPolicy')}</Text>
         </TouchableOpacity>
 
         {/* Item 2: Languages */}
@@ -195,7 +197,7 @@ const SettingsScreen = ({ navigation }) => {
           <View style={[styles.iconCircle, { backgroundColor: 'transparent' }]}>
             <SvgXml xml={LANGUAGES_SVG} width={30} height={30} />
           </View>
-          <Text style={styles.settingsTitle}>Languages</Text>
+          <Text style={styles.settingsTitle}>{t('languages')}</Text>
         </TouchableOpacity>
 
         {/* Item 3: Share App */}
@@ -207,7 +209,7 @@ const SettingsScreen = ({ navigation }) => {
           <View style={[styles.iconCircle, { backgroundColor: 'transparent' }]}>
             <SvgXml xml={SHARE_APP_SVG} width={30} height={30} />
           </View>
-          <Text style={styles.settingsTitle}>Share App</Text>
+          <Text style={styles.settingsTitle}>{t('shareApp')}</Text>
         </TouchableOpacity>
 
         {/* Item 4: Rate Us */}
@@ -219,7 +221,7 @@ const SettingsScreen = ({ navigation }) => {
           <View style={[styles.iconCircle, { backgroundColor: 'transparent' }]}>
             <SvgXml xml={RATE_US_SVG} width={30} height={30} />
           </View>
-          <Text style={styles.settingsTitle}>Rate Us</Text>
+          <Text style={styles.settingsTitle}>{t('rateUs')}</Text>
         </TouchableOpacity>
       </ScrollView>
 
@@ -232,7 +234,7 @@ const SettingsScreen = ({ navigation }) => {
       >
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Privacy Policy</Text>
+            <Text style={styles.modalTitle}>{t('privacyPolicy')}</Text>
             <ScrollView style={styles.modalScroll}>
               <Text style={styles.modalText}>
                 Your privacy is important to us. Software Update Utility App scans installed packages and permissions locally on your device to help you manage sensitive accesses.

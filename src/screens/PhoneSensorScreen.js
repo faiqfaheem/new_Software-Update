@@ -14,6 +14,7 @@ import {
   Image,
 } from 'react-native';
 import { getStoredTestResults } from '../utils/storage';
+import { useLanguage } from '../i18n/LanguageContext';
 
 const DISPLAY_ICON = require('../assets/display_icon.png');
 const FLASHLIGHT_ICON = require('../assets/flashlight_icon.png');
@@ -81,19 +82,20 @@ const FAIL_SVG = `<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xm
 </svg>`;
 
 const SENSOR_TESTS = [
-  { id: '1', title: 'Display', subtitle: 'Test Screen Functionality', icon: DISPLAY_ICON },
-  { id: '2', title: 'Flash Light', subtitle: 'Camera Flash Test', icon: FLASHLIGHT_ICON },
-  { id: '3', title: 'Tap Test', subtitle: 'Multi-Touch Test', icon: TAP_ICON },
-  { id: '4', title: 'Screen Area', subtitle: 'Display Area Test', icon: SCREEN_AREA_ICON },
-  { id: '5', title: 'Accelerometer', subtitle: 'Motion Sensor Test', icon: ACCELEROMETER_ICON },
-  { id: '6', title: 'Headphones', subtitle: 'Headphones Test', icon: HEADPHONES_ICON },
-  { id: '7', title: 'Wifi Test', subtitle: 'Wifi Test', icon: WIFI_ICON },
-  { id: '8', title: 'Vibration', subtitle: 'Haptics & Vibration Test', icon: VIBRATION_ICON },
-  { id: '9', title: 'Brightness', subtitle: 'Screen Brightness', icon: BRIGHTNESS_ICON },
-  { id: '10', title: 'Speaker Test', subtitle: 'Speaker Audio Test', icon: SPEAKER_ICON },
+  { id: '1', title: 'Display', titleKey: 'sensorDisplay', subtitleKey: 'sensorDisplaySub', subtitle: 'Test Screen Functionality', icon: DISPLAY_ICON },
+  { id: '2', title: 'Flash Light', titleKey: 'sensorFlash', subtitleKey: 'sensorFlashSub', subtitle: 'Camera Flash Test', icon: FLASHLIGHT_ICON },
+  { id: '3', title: 'Tap Test', titleKey: 'sensorTap', subtitleKey: 'sensorTapSub', subtitle: 'Touch Test', icon: TAP_ICON },
+  { id: '4', title: 'Screen Area', titleKey: 'sensorScreenArea', subtitleKey: 'sensorScreenAreaSub', subtitle: 'Display Area Test', icon: SCREEN_AREA_ICON },
+  { id: '5', title: 'Accelerometer', titleKey: 'sensorAccelerometer', subtitleKey: 'sensorAccelerometerSub', subtitle: 'Motion Sensor Test', icon: ACCELEROMETER_ICON },
+  { id: '6', title: 'Headphones', titleKey: 'sensorHeadphones', subtitleKey: 'sensorHeadphonesSub', subtitle: 'Headphones Test', icon: HEADPHONES_ICON },
+  { id: '7', title: 'Wifi Test', titleKey: 'sensorWifi', subtitleKey: 'sensorWifiSub', subtitle: 'Wifi Test', icon: WIFI_ICON },
+  { id: '8', title: 'Vibration', titleKey: 'sensorVibration', subtitleKey: 'sensorVibrationSub', subtitle: 'Haptics & Vibration Test', icon: VIBRATION_ICON },
+  { id: '9', title: 'Brightness', titleKey: 'sensorBrightness', subtitleKey: 'sensorBrightnessSub', subtitle: 'Screen Brightness', icon: BRIGHTNESS_ICON },
+  { id: '10', title: 'Speaker Test', titleKey: 'sensorSpeaker', subtitleKey: 'sensorSpeakerSub', subtitle: 'Speaker Audio Test', icon: SPEAKER_ICON },
 ];
 
 const PhoneSensorScreen = ({ navigation }) => {
+  const { t } = useLanguage();
   const [testResults, setTestResults] = useState({});
 
   useEffect(() => {
@@ -135,7 +137,7 @@ const PhoneSensorScreen = ({ navigation }) => {
     } else if (test.title === 'Loud Speaker' || test.title === 'Speaker Test' || test.id === '10') {
       navigation.navigate('SpeakerTestScreen');
     } else {
-      Alert.alert(test.title, `${test.subtitle}\n\n[Sensor Test Launched]`);
+      Alert.alert(t(test.titleKey), `${t(test.subtitleKey)}\n\n[Sensor Test Launched]`);
     }
   };
 
@@ -149,7 +151,7 @@ const PhoneSensorScreen = ({ navigation }) => {
           <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
             <BackArrow size={15} color="#FFFFFF" />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Phone Sensor</Text>
+          <Text style={styles.headerTitle}>{t('phoneSensorTool')}</Text>
         </View>
       </View>
 
@@ -179,8 +181,8 @@ const PhoneSensorScreen = ({ navigation }) => {
 
               {/* Middle Info */}
               <View style={styles.infoContainer}>
-                <Text style={styles.sensorTitle}>{test.title}</Text>
-                <Text style={styles.sensorSubtitle}>{test.subtitle}</Text>
+                <Text style={styles.sensorTitle}>{t(test.titleKey)}</Text>
+                <Text style={styles.sensorSubtitle}>{t(test.subtitleKey)}</Text>
               </View>
 
               {/* Right Result Badge (Pass Green Check / Default Orange Exclamation Icon) */}

@@ -25,6 +25,7 @@ import {
 } from 'react-native';
 import { SvgXml } from 'react-native-svg';
 import { GROQ_API_KEY } from '../config/env';
+import { useLanguage } from '../i18n/LanguageContext';
 
 const SEND_BUTTON_SVG = `<svg width="42" height="42" viewBox="0 0 38 38" fill="none" xmlns="http://www.w3.org/2000/svg">
 <rect width="37.8462" height="37.8462" rx="12.6154" fill="#3B82F6"/>
@@ -116,11 +117,11 @@ const PulseDot = () => {
 /* ─────────────────────────────────────────────────────────────────
    TYPING BUBBLE
 ───────────────────────────────────────────────────────────────── */
-const TypingBubble = () => (
+const TypingBubble = ({ t }) => (
   <View style={styles.messageRowBot}>
     <View style={styles.typingBubble}>
       <ActivityIndicator size="small" color="#60A5FA" />
-      <Text style={styles.typingText}>AI is typing…</Text>
+      <Text style={styles.typingText}>{t('aiIsTyping')}</Text>
     </View>
   </View>
 );
@@ -144,7 +145,7 @@ const MessageBubble = ({ item }) => {
 /* ─────────────────────────────────────────────────────────────────
    HERO SECTION (shown above the chat list as ListHeaderComponent)
 ───────────────────────────────────────────────────────────────── */
-const HeroHeader = () => (
+const HeroHeader = ({ t }) => (
   <View style={styles.heroSection}>
     {/* ── Virtual Assistant Logo ── */}
     <View style={{ marginBottom: 16 }}>
@@ -154,7 +155,7 @@ const HeroHeader = () => (
     {/* ── SYSTEMS ONLINE ── */}
     <View style={styles.statusRow}>
       <PulseDot />
-      <Text style={styles.statusText}>SYSTEMS ONLINE</Text>
+      <Text style={styles.statusText}>{t('systemsOnline')}</Text>
     </View>
   </View>
 );
@@ -162,13 +163,13 @@ const HeroHeader = () => (
 /* ─────────────────────────────────────────────────────────────────
    MAIN SCREEN
 ───────────────────────────────────────────────────────────────── */
-const INITIAL_MESSAGE = {
-  id: 'init-1',
-  text: "Hi, I'm your Software Update assistant. I can help you with app features, device optimization, and software-related questions.",
-  sender: 'assistant',
-};
-
 const AIAssistantScreen = ({ navigation }) => {
+  const { t } = useLanguage();
+  const INITIAL_MESSAGE = {
+    id: 'init-1',
+    text: t('aiWelcomeMessage'),
+    sender: 'assistant',
+  };
   const [messages, setMessages] = useState([INITIAL_MESSAGE]);
   const [inputText, setInputText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -253,7 +254,7 @@ const AIAssistantScreen = ({ navigation }) => {
         <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
           <SvgXml xml={BACK_ARROW_SVG} width={15} height={15} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>AI Assistant</Text>
+        <Text style={styles.headerTitle}>{t('aiAssistantTitle')}</Text>
       </View>
 
       <KeyboardAvoidingView
@@ -270,15 +271,15 @@ const AIAssistantScreen = ({ navigation }) => {
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
           onContentSizeChange={scrollToBottom}
-          ListHeaderComponent={<HeroHeader />}
-          ListFooterComponent={isLoading ? <TypingBubble /> : null}
+          ListHeaderComponent={<HeroHeader t={t} />}
+          ListFooterComponent={isLoading ? <TypingBubble t={t} /> : null}
         />
 
         {/* ── Input bar ── */}
         <View style={styles.inputBar}>
           <TextInput
             style={styles.textInput}
-            placeholder="Type here..."
+            placeholder={t('typeHere')}
             placeholderTextColor="#64748B"
             value={inputText}
             onChangeText={setInputText}

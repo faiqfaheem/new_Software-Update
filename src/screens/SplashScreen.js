@@ -10,11 +10,13 @@ import {
   Dimensions,
 } from 'react-native';
 import { getFirstLaunchCompleted } from '../utils/storage';
+import { useLanguage } from '../i18n/LanguageContext';
 
 const { width } = Dimensions.get('window');
 const SCAN_APPS_ICON = require('../assets/scan_apps_icon.png');
 
 const SplashScreen = ({ navigation }) => {
+  const { t } = useLanguage();
   const progressAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -80,7 +82,7 @@ const SplashScreen = ({ navigation }) => {
         </View>
 
         <Text style={styles.appTitle}>Software Update</Text>
-        <Text style={styles.appSubTitle}>Phone Update & System Tools</Text>
+        <Text style={styles.appSubTitle}>{t('appHeaderSub')}</Text>
       </View>
 
       {/* Bottom Moving Animated Progress Indicator */}

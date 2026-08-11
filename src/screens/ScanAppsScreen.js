@@ -16,6 +16,7 @@ import {
 } from 'react-native';
 import Svg, { Circle, SvgXml } from 'react-native-svg';
 import { scanInstalledAppsForUpdates } from '../utils/playStoreScraper';
+import { useLanguage } from '../i18n/LanguageContext';
 
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 
@@ -87,6 +88,7 @@ const BackArrow = ({ size = 20 }) => (
 );
 
 const ScanAppsScreen = ({ navigation }) => {
+  const { t } = useLanguage();
   const [progress, setProgress] = useState(0);
   const [isScanning, setIsScanning] = useState(true);
 
@@ -296,7 +298,7 @@ const ScanAppsScreen = ({ navigation }) => {
           <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
             <BackArrow size={15} color="#FFFFFF" />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Scan Apps</Text>
+          <Text style={styles.headerTitle}>{t('scanAppsTitle')}</Text>
         </View>
       </View>
 
@@ -341,7 +343,7 @@ const ScanAppsScreen = ({ navigation }) => {
           </View>
 
           <Text style={styles.scanStatusText}>
-            {isScanning ? 'Scanning Installed & System Packages...' : 'Realtime Scan Completed'}
+            {isScanning ? t('scanningSystemText') : t('scanCompletedText')}
           </Text>
         </View>
 
@@ -355,8 +357,8 @@ const ScanAppsScreen = ({ navigation }) => {
             <SvgXml xml={LAYER_35_SVG} width={26} height={26} />
           </View>
           <View style={styles.statTextGroup}>
-            <Text style={styles.statCardTitle}>Installed Apps</Text>
-            <Text style={styles.statCardSubText}>User Downloaded Packages</Text>
+            <Text style={styles.statCardTitle}>{t('installedAppsTitle')}</Text>
+            <Text style={styles.statCardSubText}>{t('installedAppsSub')}</Text>
           </View>
           <Text style={styles.statCardCount}>{installedAppsCount}</Text>
         </TouchableOpacity>
@@ -371,8 +373,8 @@ const ScanAppsScreen = ({ navigation }) => {
             <SvgXml xml={GROUP_SVG} width={26} height={26} />
           </View>
           <View style={styles.statTextGroup}>
-            <Text style={styles.statCardTitle}>System Apps</Text>
-            <Text style={styles.statCardSubText}>OS Pre-Installed Packages</Text>
+            <Text style={styles.statCardTitle}>{t('systemAppsTitle')}</Text>
+            <Text style={styles.statCardSubText}>{t('systemAppsSub')}</Text>
           </View>
           <Text style={styles.statCardCount}>{systemAppsCount}</Text>
         </TouchableOpacity>
@@ -387,8 +389,8 @@ const ScanAppsScreen = ({ navigation }) => {
             <SvgXml xml={UPDATE_SVG} width={26} height={26} />
           </View>
           <View style={styles.statTextGroup}>
-            <Text style={styles.statCardTitle}>Available Updates</Text>
-            <Text style={styles.statCardSubText}>Pending App Update Candidates</Text>
+            <Text style={styles.statCardTitle}>{t('availableUpdatesTitle')}</Text>
+            <Text style={styles.statCardSubText}>{t('availableUpdatesSub')}</Text>
           </View>
           <Text style={[styles.statCardCount, { color: '#4ADE80' }]}>
             {availableUpdatesCount}
@@ -401,7 +403,7 @@ const ScanAppsScreen = ({ navigation }) => {
         <View style={styles.bottomButtonContainer}>
           <TouchableOpacity style={styles.bulkUpdateButton} onPress={handleBulkUpdate}>
             <Text style={styles.bulkButtonText}>
-              View Available Updates ({availableUpdatesCount})
+              {t('viewAvailableUpdates')} ({availableUpdatesCount})
             </Text>
           </TouchableOpacity>
         </View>

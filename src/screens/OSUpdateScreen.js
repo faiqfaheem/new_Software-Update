@@ -14,6 +14,7 @@ import {
 } from 'react-native';
 import DeviceInfo from 'react-native-device-info';
 import { SvgXml } from 'react-native-svg';
+import { useLanguage } from '../i18n/LanguageContext';
 
 const CONTAINER_SVG = `<svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
 <rect width="64" height="64" rx="16" fill="url(#paint0_linear_124_411)"/>
@@ -41,6 +42,7 @@ const BackArrow = ({ size = 20 }) => (
 );
 
 const OSUpdateScreen = ({ navigation }) => {
+  const { t } = useLanguage();
   const [loading, setLoading] = useState(true);
   const [deviceDetails, setDeviceDetails] = useState({
     androidVersion: '',
@@ -164,7 +166,7 @@ const OSUpdateScreen = ({ navigation }) => {
           <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
             <BackArrow size={15} color="#FFFFFF" />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Phone Update</Text>
+          <Text style={styles.headerTitle}>{t('osUpdateTitle')}</Text>
         </View>
       </View>
 
@@ -172,7 +174,7 @@ const OSUpdateScreen = ({ navigation }) => {
       {loading ? (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#3B82F6" />
-          <Text style={styles.loadingText}>Reading Native OS Specifications...</Text>
+          <Text style={styles.loadingText}>{t('checkingUpdates')}</Text>
         </View>
       ) : (
         <ScrollView
@@ -226,7 +228,7 @@ const OSUpdateScreen = ({ navigation }) => {
 
             {/* Spec Row 5: Android Security Patch */}
             <View style={styles.specRow}>
-              <Text style={styles.specLabel}>Security Patch Level</Text>
+              <Text style={styles.specLabel}>{t('securityPatch')}</Text>
               <Text style={[styles.specValue, { color: '#ffffff' }]}>
                 {deviceDetails.securityPatch}
               </Text>
@@ -243,7 +245,7 @@ const OSUpdateScreen = ({ navigation }) => {
 
           {/* Check OS Update Button */}
           <TouchableOpacity style={styles.checkOsButton} onPress={handleCheckOSUpdateAction}>
-            <Text style={styles.checkOsButtonText}>Check OS Update</Text>
+            <Text style={styles.checkOsButtonText}>{t('checkUpdatesBtn')}</Text>
           </TouchableOpacity>
 
           {/* Action Disclaimer Subtext */}
