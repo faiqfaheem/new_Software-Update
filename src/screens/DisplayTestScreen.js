@@ -1,6 +1,7 @@
 import { SvgXml } from 'react-native-svg';
 import React, { useState } from 'react';
 import { setStoredTestResult } from '../utils/storage';
+import { useLanguage } from '../i18n/LanguageContext';
 import {
   View,
   Text,
@@ -39,6 +40,7 @@ const BackArrow = ({ size = 20 }) => (
 const TEST_COLORS = ['#FFFFFF', '#EF4444', '#22C55E', '#3B82F6'];
 
 const DisplayTestScreen = ({ navigation }) => {
+  const { t } = useLanguage();
   const [colorIndex, setColorIndex] = useState(0);
   const [isFullscreenColorActive, setIsFullscreenColorActive] = useState(false);
 
@@ -81,7 +83,7 @@ const DisplayTestScreen = ({ navigation }) => {
           onPress={handleCycleColor}
         >
           <Text style={[styles.tapToCycleText, { color: colorIndex === 0 ? '#1E293B' : '#FFFFFF' }]}>
-            Tap anywhere to cycle color ({colorIndex + 1}/{TEST_COLORS.length})
+            {t('tapToCycleColor')} ({colorIndex + 1}/{TEST_COLORS.length})
           </Text>
         </TouchableOpacity>
       </Modal>
@@ -92,7 +94,7 @@ const DisplayTestScreen = ({ navigation }) => {
           <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
             <BackArrow size={15} color="#FFFFFF" />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Display Test</Text>
+          <Text style={styles.headerTitle}>{t('displayTestTitle')}</Text>
         </View>
       </View>
 
@@ -105,17 +107,17 @@ const DisplayTestScreen = ({ navigation }) => {
           </View>
 
           <Text style={styles.instructionText}>
-            Tap next to go through different screen colors : white, red, green and blue.
+            {t('displayInstruction')}
           </Text>
 
           <TouchableOpacity style={styles.nextButton} onPress={handleNextColor}>
-            <Text style={styles.nextButtonText}>Next</Text>
+            <Text style={styles.nextButtonText}>{t('nextBtn')}</Text>
           </TouchableOpacity>
         </View>
 
         {/* Bottom Question & Feedback Buttons (Moved Up & Solid White Placeholder Circles) */}
         <View style={styles.bottomFeedbackSection}>
-          <Text style={styles.questionText}>Is the display working?</Text>
+          <Text style={styles.questionText}>{t('isDisplayWorking')}</Text>
 
           <View style={styles.feedbackButtonsRow}>
             {/* Pass Icon Button */}

@@ -1,6 +1,7 @@
 import { SvgXml } from 'react-native-svg';
 import React, { useState } from 'react';
 import { setStoredTestResult } from '../utils/storage';
+import { useLanguage } from '../i18n/LanguageContext';
 import {
   View,
   Text,
@@ -37,6 +38,7 @@ const BackArrow = ({ size = 20 }) => (
 );
 
 const TapTestScreen = ({ navigation }) => {
+  const { t } = useLanguage();
   const [isFullscreenTapActive, setIsFullscreenTapActive] = useState(false);
   const [tapCount, setTapCount] = useState(0);
   const [ripples, setRipples] = useState([]);
@@ -97,11 +99,11 @@ const TapTestScreen = ({ navigation }) => {
                 handleCloseCanvas();
               }}
             >
-              <Text style={styles.closeCanvasText}>✕ Exit Test</Text>
+              <Text style={styles.closeCanvasText}>{t('exitTest')}</Text>
             </TouchableOpacity>
 
             <View style={styles.canvasTapCountBadge} pointerEvents="none">
-              <Text style={styles.canvasTapCountText}>Taps: {tapCount}</Text>
+              <Text style={styles.canvasTapCountText}>{t('tapCount')}: {tapCount}</Text>
             </View>
           </View>
 
@@ -120,7 +122,7 @@ const TapTestScreen = ({ navigation }) => {
           {tapCount === 0 && (
             <View style={styles.canvasInstructionBadge} pointerEvents="none">
               <Text style={styles.canvasInstructionText}>
-                Tap anywhere on the screen to test touch
+                {t('tapScreenInstruction')}
               </Text>
             </View>
           )}
@@ -133,7 +135,7 @@ const TapTestScreen = ({ navigation }) => {
           <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
             <BackArrow size={15} color="#FFFFFF" />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Tap Test</Text>
+          <Text style={styles.headerTitle}>{t('tapTestTitle')}</Text>
         </View>
       </View>
 
@@ -146,23 +148,23 @@ const TapTestScreen = ({ navigation }) => {
           </View>
 
           <Text style={styles.instructionText}>
-            Tap to check the screen touch.
+            {t('tapInstruction')}
           </Text>
 
           <TouchableOpacity style={styles.startTestButton} onPress={handleStartTapTest}>
-            <Text style={styles.startTestButtonText}>Start Tap Test</Text>
+            <Text style={styles.startTestButtonText}>{t('startTapTest')}</Text>
           </TouchableOpacity>
 
           {tapCount > 0 && (
             <View style={styles.tapsRecordedBadge}>
-              <Text style={styles.tapsRecordedText}>Recorded Taps: {tapCount}</Text>
+              <Text style={styles.tapsRecordedText}>{t('recordedTaps')}: {tapCount}</Text>
             </View>
           )}
         </View>
 
         {/* Bottom Question & Feedback Buttons (Same exact position & white placeholder circles) */}
         <View style={styles.bottomFeedbackSection}>
-          <Text style={styles.questionText}>Is the tap sensor working?</Text>
+          <Text style={styles.questionText}>{t('isTapWorking')}</Text>
 
           <View style={styles.feedbackButtonsRow}>
             {/* Pass Icon Button */}

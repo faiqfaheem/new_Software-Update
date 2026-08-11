@@ -1,6 +1,7 @@
 import { SvgXml } from 'react-native-svg';
 import React, { useState, useEffect } from 'react';
 import { setStoredTestResult } from '../utils/storage';
+import { useLanguage } from '../i18n/LanguageContext';
 import {
   View,
   Text,
@@ -37,6 +38,7 @@ const BackArrow = ({ size = 20 }) => (
 );
 
 const BrightnessTestScreen = ({ navigation }) => {
+  const { t } = useLanguage();
   const [brightnessLevel, setBrightnessLevel] = useState('max'); // 'min' | 'max'
 
   useEffect(() => {
@@ -78,7 +80,7 @@ const BrightnessTestScreen = ({ navigation }) => {
           <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
             <BackArrow size={15} color="#FFFFFF" />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Brightness Test</Text>
+          <Text style={styles.headerTitle}>{t('brightnessTestTitle')}</Text>
         </View>
       </View>
 
@@ -91,11 +93,11 @@ const BrightnessTestScreen = ({ navigation }) => {
           </View>
 
           <Text style={styles.instructionText}>
-            Test physical brightness control of your screen.
+            {t('brightnessInstruction')}
           </Text>
 
           <Text style={styles.sectionTitle}>
-            Screen Brightness Mode
+            {t('brightnessMode')}
           </Text>
 
           {/* Real-time Hardware Brightness Controls */}
@@ -113,7 +115,7 @@ const BrightnessTestScreen = ({ navigation }) => {
                   brightnessLevel === 'min' ? styles.modeTextActive : styles.modeTextInactive,
                 ]}
               >
-                Minimum (Dim)
+                {t('brightnessDim')}
               </Text>
             </TouchableOpacity>
 
@@ -130,7 +132,7 @@ const BrightnessTestScreen = ({ navigation }) => {
                   brightnessLevel === 'max' ? styles.modeTextActive : styles.modeTextInactive,
                 ]}
               >
-                Maximum (Bright)
+                {t('brightnessBright')}
               </Text>
             </TouchableOpacity>
           </View>
@@ -138,7 +140,7 @@ const BrightnessTestScreen = ({ navigation }) => {
 
         {/* Bottom Question & Feedback Buttons (Consistent Template) */}
         <View style={styles.bottomFeedbackSection}>
-          <Text style={styles.questionText}>Is the brightness working?</Text>
+          <Text style={styles.questionText}>{t('isBrightnessWorking')}</Text>
 
           <View style={styles.feedbackButtonsRow}>
             {/* Pass Icon Button */}

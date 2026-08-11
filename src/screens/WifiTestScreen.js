@@ -1,6 +1,7 @@
 import { SvgXml } from 'react-native-svg';
 import React, { useState, useEffect } from 'react';
 import { setStoredTestResult } from '../utils/storage';
+import { useLanguage } from '../i18n/LanguageContext';
 import {
   View,
   Text,
@@ -38,6 +39,7 @@ const BackArrow = ({ size = 20 }) => (
 );
 
 const WifiTestScreen = ({ navigation }) => {
+  const { t } = useLanguage();
   const [isConnected, setIsConnected] = useState(false);
 
   // Subscribe to real-time Android Wifi Hardware connectivity events
@@ -85,7 +87,7 @@ const WifiTestScreen = ({ navigation }) => {
           <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
             <BackArrow size={15} color="#FFFFFF" />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Wifi Test</Text>
+          <Text style={styles.headerTitle}>{t('wifiTestTitle')}</Text>
         </View>
       </View>
 
@@ -98,11 +100,11 @@ const WifiTestScreen = ({ navigation }) => {
           </View>
 
           <Text style={styles.instructionText}>
-            Test your wifi connection.
+            {t('wifiInstruction')}
           </Text>
 
           <Text style={styles.sectionTitle}>
-            Wifi Test
+            {t('wifiTestTitle')}
           </Text>
 
           {/* Real-time Hardware WiFi Status Indicator */}
@@ -110,12 +112,12 @@ const WifiTestScreen = ({ navigation }) => {
             {isConnected ? (
               <View style={styles.statusBadgeConnected}>
                 <View style={styles.whiteDot} />
-                <Text style={styles.statusTextConnected}>Connected</Text>
+                <Text style={styles.statusTextConnected}>{t('wifiConnected')}</Text>
               </View>
             ) : (
               <View style={styles.statusBadgeDisconnected}>
                 <View style={styles.redDot} />
-                <Text style={styles.statusTextDisconnected}>Not Connected</Text>
+                <Text style={styles.statusTextDisconnected}>{t('wifiNotConnected')}</Text>
               </View>
             )}
           </View>
@@ -123,7 +125,7 @@ const WifiTestScreen = ({ navigation }) => {
 
         {/* Bottom Question & Feedback Buttons (Consistent Template) */}
         <View style={styles.bottomFeedbackSection}>
-          <Text style={styles.questionText}>Is the wifi working?</Text>
+          <Text style={styles.questionText}>{t('isWifiWorking')}</Text>
 
           <View style={styles.feedbackButtonsRow}>
             {/* Pass Icon Button */}

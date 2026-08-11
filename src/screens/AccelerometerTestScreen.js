@@ -1,6 +1,7 @@
 import { SvgXml } from 'react-native-svg';
 import React, { useState, useEffect } from 'react';
 import { setStoredTestResult } from '../utils/storage';
+import { useLanguage } from '../i18n/LanguageContext';
 import {
   View,
   Text,
@@ -39,6 +40,7 @@ const BackArrow = ({ size = 20 }) => (
 );
 
 const AccelerometerTestScreen = ({ navigation }) => {
+  const { t } = useLanguage();
   const [isTestModalActive, setIsTestModalActive] = useState(false);
   const [bubblePos, setBubblePos] = useState({ x: 0, y: 0 });
   const [pitch, setPitch] = useState(0);
@@ -179,7 +181,7 @@ const AccelerometerTestScreen = ({ navigation }) => {
           <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
             <BackArrow size={15} color="#FFFFFF" />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Accelerometer Test</Text>
+          <Text style={styles.headerTitle}>{t('accelTestTitle')}</Text>
         </View>
       </View>
 
@@ -192,17 +194,17 @@ const AccelerometerTestScreen = ({ navigation }) => {
           </View>
 
           <Text style={styles.instructionText}>
-            Shake or tilt your device to test accelerometer.
+            {t('accelInstruction')}
           </Text>
 
           <TouchableOpacity style={styles.startTestButton} onPress={handleStartTest}>
-            <Text style={styles.startTestButtonText}>Start Accelerometer Test</Text>
+            <Text style={styles.startTestButtonText}>{t('startAccelTest')}</Text>
           </TouchableOpacity>
         </View>
 
         {/* Bottom Question & Feedback Buttons (Consistent Template) */}
         <View style={styles.bottomFeedbackSection}>
-          <Text style={styles.questionText}>Is the accelerometer working?</Text>
+          <Text style={styles.questionText}>{t('isAccelWorking')}</Text>
 
           <View style={styles.feedbackButtonsRow}>
             {/* Pass Icon Button */}

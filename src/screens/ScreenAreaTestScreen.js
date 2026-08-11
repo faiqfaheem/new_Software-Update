@@ -1,6 +1,7 @@
 import { SvgXml } from 'react-native-svg';
 import React, { useState, useRef } from 'react';
 import { setStoredTestResult } from '../utils/storage';
+import { useLanguage } from '../i18n/LanguageContext';
 import {
   View,
   Text,
@@ -44,6 +45,7 @@ const GRID_ROWS = 14;
 const TOTAL_CELLS = GRID_COLS * GRID_ROWS;
 
 const ScreenAreaTestScreen = ({ navigation }) => {
+  const { t } = useLanguage();
   const [isDrawingActive, setIsDrawingActive] = useState(false);
   const [filledCells, setFilledCells] = useState({});
 
@@ -155,7 +157,7 @@ const ScreenAreaTestScreen = ({ navigation }) => {
           <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
             <BackArrow size={15} color="#FFFFFF" />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Screen Area Test</Text>
+          <Text style={styles.headerTitle}>{t('screenAreaTitle')}</Text>
         </View>
       </View>
 
@@ -168,11 +170,11 @@ const ScreenAreaTestScreen = ({ navigation }) => {
           </View>
 
           <Text style={styles.instructionText}>
-            Touch the screen to test its response.
+            {t('screenAreaInstruction')}
           </Text>
 
           <TouchableOpacity style={styles.startDrawingButton} onPress={handleStartDrawing}>
-            <Text style={styles.startDrawingButtonText}>Start Drawing Test</Text>
+            <Text style={styles.startDrawingButtonText}>{t('startDrawing')}</Text>
           </TouchableOpacity>
 
           {coveredCount > 0 && (
@@ -184,7 +186,7 @@ const ScreenAreaTestScreen = ({ navigation }) => {
 
         {/* Bottom Question & Feedback Buttons (Consistent template) */}
         <View style={styles.bottomFeedbackSection}>
-          <Text style={styles.questionText}>Is the display working?</Text>
+          <Text style={styles.questionText}>{t('isScreenAreaWorking')}</Text>
 
           <View style={styles.feedbackButtonsRow}>
             {/* Pass Icon Button */}

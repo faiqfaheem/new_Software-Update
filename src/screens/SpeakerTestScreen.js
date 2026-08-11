@@ -1,6 +1,7 @@
 import { SvgXml } from 'react-native-svg';
 import React, { useState } from 'react';
 import { setStoredTestResult } from '../utils/storage';
+import { useLanguage } from '../i18n/LanguageContext';
 import {
   View,
   Text,
@@ -37,6 +38,7 @@ const BackArrow = ({ size = 20 }) => (
 );
 
 const SpeakerTestScreen = ({ navigation }) => {
+  const { t } = useLanguage();
   const [isPlayingAudio, setIsPlayingAudio] = useState(false);
 
   const handleTestSpeaker = () => {
@@ -66,7 +68,7 @@ const SpeakerTestScreen = ({ navigation }) => {
           <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
             <BackArrow size={15} color="#FFFFFF" />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Speaker Test</Text>
+          <Text style={styles.headerTitle}>{t('speakerTestTitle')}</Text>
         </View>
       </View>
 
@@ -79,7 +81,7 @@ const SpeakerTestScreen = ({ navigation }) => {
           </View>
 
           <Text style={styles.instructionText}>
-            Test the physical loud speaker output of your device.
+            {t('speakerInstruction')}
           </Text>
 
           <TouchableOpacity
@@ -88,14 +90,14 @@ const SpeakerTestScreen = ({ navigation }) => {
             onPress={handleTestSpeaker}
           >
             <Text style={styles.testButtonText}>
-              {isPlayingAudio ? 'Playing Sound...' : 'Test Speaker'}
+              {isPlayingAudio ? t('playingSound') : t('testSpeaker')}
             </Text>
           </TouchableOpacity>
         </View>
 
         {/* Bottom Question & Feedback Buttons (Consistent Template) */}
         <View style={styles.bottomFeedbackSection}>
-          <Text style={styles.questionText}>Is the speaker working?</Text>
+          <Text style={styles.questionText}>{t('isSpeakerWorking')}</Text>
 
           <View style={styles.feedbackButtonsRow}>
             {/* Pass Icon Button */}

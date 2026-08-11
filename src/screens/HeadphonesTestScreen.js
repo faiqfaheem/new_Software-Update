@@ -1,6 +1,7 @@
 import { SvgXml } from 'react-native-svg';
 import React, { useState, useEffect } from 'react';
 import { setStoredTestResult } from '../utils/storage';
+import { useLanguage } from '../i18n/LanguageContext';
 import {
   View,
   Text,
@@ -40,6 +41,7 @@ const BackArrow = ({ size = 20 }) => (
 );
 
 const HeadphonesTestScreen = ({ navigation }) => {
+  const { t } = useLanguage();
   const [isConnected, setIsConnected] = useState(false);
   const [activeTestingChannel, setActiveTestingChannel] = useState(null); // 'LEFT' | 'RIGHT' | null
 
@@ -111,7 +113,7 @@ const HeadphonesTestScreen = ({ navigation }) => {
           <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
             <BackArrow size={15} color="#FFFFFF" />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Headphones Test</Text>
+          <Text style={styles.headerTitle}>{t('headphonesTestTitle')}</Text>
         </View>
       </View>
 
@@ -124,7 +126,7 @@ const HeadphonesTestScreen = ({ navigation }) => {
           </View>
 
           <Text style={styles.instructionText}>
-            Connect headphones and test audio output.
+            {t('headphonesInstruction')}
           </Text>
 
           {/* Real-time Hardware Connection Status Indicator */}
@@ -132,12 +134,12 @@ const HeadphonesTestScreen = ({ navigation }) => {
             {isConnected ? (
               <View style={styles.statusBadgeConnected}>
                 <View style={styles.greenDot} />
-                <Text style={styles.statusTextConnected}>Earphones Connected</Text>
+                <Text style={styles.statusTextConnected}>{t('earphonesConnected')}</Text>
               </View>
             ) : (
               <View style={styles.statusBadgeDisconnected}>
                 <View style={styles.redDot} />
-                <Text style={styles.statusTextDisconnected}>Earphones Not Connected</Text>
+                <Text style={styles.statusTextDisconnected}>{t('earphonesNotConnected')}</Text>
               </View>
             )}
           </View>
@@ -148,7 +150,7 @@ const HeadphonesTestScreen = ({ navigation }) => {
             <View style={styles.channelCard}>
               <View style={styles.channelHeader}>
                 <Image source={LEFT_EARPHONE_ICON} style={{ width: 28, height: 28 }} resizeMode="contain" />
-                <Text style={styles.channelTitle}>Left Earphone</Text>
+                <Text style={styles.channelTitle}>{t('leftEarphone')}</Text>
               </View>
               <TouchableOpacity
                 style={[
@@ -158,7 +160,7 @@ const HeadphonesTestScreen = ({ navigation }) => {
                 onPress={handleTestLeftStereo}
               >
                 <Text style={styles.testPillText}>
-                  {activeTestingChannel === 'LEFT' ? 'Testing Left ' : 'Test'}
+                  {activeTestingChannel === 'LEFT' ? t('testingLeft') : t('testBtn')}
                 </Text>
               </TouchableOpacity>
             </View>
@@ -167,7 +169,7 @@ const HeadphonesTestScreen = ({ navigation }) => {
             <View style={styles.channelCard}>
               <View style={styles.channelHeader}>
                 <Image source={RIGHT_EARPHONE_ICON} style={{ width: 28, height: 28 }} resizeMode="contain" />
-                <Text style={styles.channelTitle}>Right Earphone</Text>
+                <Text style={styles.channelTitle}>{t('rightEarphone')}</Text>
               </View>
               <TouchableOpacity
                 style={[
@@ -177,7 +179,7 @@ const HeadphonesTestScreen = ({ navigation }) => {
                 onPress={handleTestRightStereo}
               >
                 <Text style={styles.testPillText}>
-                  {activeTestingChannel === 'RIGHT' ? 'Testing Right ' : 'Test'}
+                  {activeTestingChannel === 'RIGHT' ? t('testingRight') : t('testBtn')}
                 </Text>
               </TouchableOpacity>
             </View>
@@ -186,7 +188,7 @@ const HeadphonesTestScreen = ({ navigation }) => {
 
         {/* Bottom Question & Feedback Buttons (Same exact position & white placeholder circles) */}
         <View style={styles.bottomFeedbackSection}>
-          <Text style={styles.questionText}>Is the earphone working?</Text>
+          <Text style={styles.questionText}>{t('isEarphoneWorking')}</Text>
 
           <View style={styles.feedbackButtonsRow}>
             {/* Pass Icon Button */}

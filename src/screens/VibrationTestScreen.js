@@ -1,6 +1,7 @@
 import { SvgXml } from 'react-native-svg';
 import React, { useState } from 'react';
 import { setStoredTestResult } from '../utils/storage';
+import { useLanguage } from '../i18n/LanguageContext';
 import {
   View,
   Text,
@@ -37,6 +38,7 @@ const BackArrow = ({ size = 20 }) => (
 );
 
 const VibrationTestScreen = ({ navigation }) => {
+  const { t } = useLanguage();
   const [isVibrating, setIsVibrating] = useState(false);
 
   const handleTestVibration = () => {
@@ -66,7 +68,7 @@ const VibrationTestScreen = ({ navigation }) => {
           <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
             <BackArrow size={15} color="#FFFFFF" />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Vibration Test</Text>
+          <Text style={styles.headerTitle}>{t('vibrationTestTitle')}</Text>
         </View>
       </View>
 
@@ -79,7 +81,7 @@ const VibrationTestScreen = ({ navigation }) => {
           </View>
 
           <Text style={styles.instructionText}>
-            Test your vibration motor of your device.
+            {t('vibrationInstruction')}
           </Text>
 
           <TouchableOpacity
@@ -88,14 +90,14 @@ const VibrationTestScreen = ({ navigation }) => {
             onPress={handleTestVibration}
           >
             <Text style={styles.testButtonText}>
-              {isVibrating ? 'Vibrating...' : 'Test Vibration'}
+              {isVibrating ? t('vibrating') : t('testVibration')}
             </Text>
           </TouchableOpacity>
         </View>
 
         {/* Bottom Question & Feedback Buttons (Consistent Template) */}
         <View style={styles.bottomFeedbackSection}>
-          <Text style={styles.questionText}>Is the vibration working?</Text>
+          <Text style={styles.questionText}>{t('isVibrationWorking')}</Text>
 
           <View style={styles.feedbackButtonsRow}>
             {/* Pass Icon Button */}

@@ -1,6 +1,7 @@
 import { SvgXml } from 'react-native-svg';
 import React, { useState, useEffect } from 'react';
 import { setStoredTestResult } from '../utils/storage';
+import { useLanguage } from '../i18n/LanguageContext';
 import {
   View,
   Text,
@@ -37,6 +38,7 @@ const BackArrow = ({ size = 20 }) => (
 );
 
 const FlashlightTestScreen = ({ navigation }) => {
+  const { t } = useLanguage();
   const [isFlashlightOn, setIsFlashlightOn] = useState(false);
 
   useEffect(() => {
@@ -86,7 +88,7 @@ const FlashlightTestScreen = ({ navigation }) => {
           <TouchableOpacity style={styles.backButton} onPress={handleBack}>
             <BackArrow size={15} color="#FFFFFF" />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Flash Light Test</Text>
+          <Text style={styles.headerTitle}>{t('flashTestTitle')}</Text>
         </View>
       </View>
 
@@ -99,11 +101,11 @@ const FlashlightTestScreen = ({ navigation }) => {
           </View>
 
           <Text style={styles.instructionText}>
-            Tap to turn the flashlight ON/OFF.
+            {t('flashInstruction')}
           </Text>
 
           <Text style={styles.sectionTitle}>
-            Flashlight Functionality
+            {t('flashFunctionality')}
           </Text>
 
           {/* Toggle Buttons Row (ON / OFF) */}
@@ -138,7 +140,7 @@ const FlashlightTestScreen = ({ navigation }) => {
 
         {/* Bottom Question & Feedback Buttons (Moved Up & Solid White Placeholder Circles) */}
         <View style={styles.bottomFeedbackSection}>
-          <Text style={styles.questionText}>Is the flashlight working?</Text>
+          <Text style={styles.questionText}>{t('isFlashWorking')}</Text>
 
           <View style={styles.feedbackButtonsRow}>
             {/* Pass Icon Button */}
